@@ -1,24 +1,11 @@
 import { Component } from '@angular/core';
-import { UsuarioLogadoService } from '../../../autenticacao/services/usuario-logado.service';
+import { CabecalhoComponent } from '../cabecalho/cabecalho.component';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [],
+  imports: [CabecalhoComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
 export class DashboardComponent {
-
-  perfis: string[] | null = [];
-
-  constructor(
-    public readonly usuarioLogado: UsuarioLogadoService
-  ) {
-    usuarioLogado.retornarPerfis().subscribe({
-      next: (perfis) => {
-        this.perfis = perfis;
-      }
-    });
-  }
-
 }

@@ -1,16 +1,15 @@
 import { Injectable } from '@angular/core';
 import { TokenService } from './token.service';
-import { BehaviorSubject } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
-import { Perfis } from '../interfaces/perfis';
+import { UsuarioLogado } from '../interfaces/usuario-logado';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UsuarioLogadoService {
 
-  private readonly usuarioSubject = new BehaviorSubject<string[] | null>(null);
   perfis: string[] = [];
+  usuarioLogado!: UsuarioLogado;
 
   constructor(private readonly tokenService: TokenService) {
     if (this.tokenService.possuiToken()) {
@@ -20,12 +19,12 @@ export class UsuarioLogadoService {
 
   decodificarJWT() {
     const token = this.tokenService.retornarToken();
-    this.perfis = jwtDecode<Perfis>(token).perfis.split(',');
-    this.usuarioSubject.next(this.perfis);
+    this.usuarioLogado = jwtDecode<UsuarioLogado>(token);
+    this.perfis = this.usuarioLogado.perfis.split(',');
   }
 
-  retornarPerfis() {
-    return this.usuarioSubject.asObservable();
+  retornarUsuario() {
+    return this.usuarioLogado;
   }
 
   salvarToken(token: string) {
@@ -35,7 +34,7 @@ export class UsuarioLogadoService {
 
   logout() {
     this.tokenService.excluirToken();
-    this.usuarioSubject.next(null);
+    this.usuarioLogado = { nome: '', email: '', perfis: ''};
   }
 
   estaLogado() {

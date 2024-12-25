@@ -38,7 +38,6 @@ export class LoginComponent implements OnInit {
 
     this.loginService.autenticar(email, senha).subscribe({
       next: (value) => {
-        console.log("Login realizado com sucesso", value);
         this.router.navigate(['/dashboard']);
       },
       error: (error) => {
