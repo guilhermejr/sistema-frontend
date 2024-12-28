@@ -1,0 +1,10 @@
+services:
+  frontend:
+    image: guilhermejr/sistema-frontend
+    container_name: frontend
+    restart: always
+
+networks:
+  default:
+    external: true
+    name: rede
