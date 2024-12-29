@@ -184,4 +184,5 @@ export class BarraComponent implements OnInit {
     });
 
   }
+
 }
