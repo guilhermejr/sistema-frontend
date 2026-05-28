@@ -1,15 +1,897 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <title>Sistema</title>
-  <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard de Energia</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .login-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            border: none;
+        }
+
+        .dashboard-header,
+        .card-resumo,
+        .grafico-card {
+            border-radius: 16px;
+            border: none;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .grafico-card {
+            margin-bottom: 20px;
+        }
+
+        canvas {
+            max-height: 420px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
 </head>
-<body class="mat-typography">
-  <app-root></app-root>
+<body>
+
+    <!-- LOGIN -->
+    <div id="login-section" class="login-wrapper container">
+        <div class="card login-card p-4">
+            <div class="card-body">
+                <h2 class="text-center mb-2">Entrar</h2>
+                <p class="text-muted text-center mb-4">Faça login para acessar o dashboard</p>
+
+                <div id="login-alert" class="alert alert-danger hidden" role="alert"></div>
+
+                <form id="login-form">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Usuário</label>
+                        <input id="username" type="text" class="form-control" placeholder="Digite seu usuário" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Senha</label>
+                        <input id="password" type="password" class="form-control" placeholder="Digite sua senha" required />
+                    </div>
+
+                    <div class="d-grid">
+                        <button id="login-button" type="submit" class="btn btn-primary">
+                            Entrar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard-section" class="container py-4 hidden">
+
+        <!-- Cabeçalho -->
+        <div class="card dashboard-header mb-4">
+            <div class="card-body d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                <div>
+                    <h2 class="mb-1">Dashboard de Energia</h2>
+                    <p class="text-muted mb-0">Geração, consumo e saldo</p>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <span id="usuario-logado" class="badge text-bg-secondary p-2">Usuário</span>
+                    <button class="btn btn-outline-danger" onclick="logout()">Sair</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensagens -->
+        <div id="dashboard-alert" class="alert alert-danger hidden" role="alert"></div>
+
+        <!-- Loader -->
+        <div id="dashboard-loading" class="text-center my-4 hidden">
+            <div class="spinner-border text-primary" role="status"></div>
+            <div class="mt-2">Carregando dashboard...</div>
+        </div>
+
+        <!-- Resumo -->
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <h5 class="mb-3">Desde o início do contrato</h5>
+            </div>
+
+            <div class="col-12 col-lg-4 mb-3">
+                <div class="card card-resumo text-center">
+                    <div class="card-body">
+                        <h6 class="text-muted">Geração</h6>
+                        <div id="card-geracao-contrato" class="fs-4 fw-bold">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-4 mb-3">
+                <div class="card card-resumo text-center">
+                    <div class="card-body">
+                        <h6 class="text-muted">Consumo</h6>
+                        <div id="card-consumo-contrato" class="fs-4 fw-bold">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-4 mb-3">
+                <div class="card card-resumo text-center">
+                    <div class="card-body">
+                        <h6 class="text-muted">Saldo</h6>
+                        <div id="card-saldo-contrato" class="fs-4 fw-bold">--</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-2">
+            <div class="col-12">
+                <h5 class="mb-3">Últimos 12 meses</h5>
+            </div>
+
+            <div class="col-12 col-lg-4 mb-3">
+                <div class="card card-resumo text-center">
+                    <div class="card-body">
+                        <h6 class="text-muted">Geração</h6>
+                        <div id="card-geracao" class="fs-4 fw-bold">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-4 mb-3">
+                <div class="card card-resumo text-center">
+                    <div class="card-body">
+                        <h6 class="text-muted">Consumo</h6>
+                        <div id="card-consumo" class="fs-4 fw-bold">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-4 mb-3">
+                <div class="card card-resumo text-center">
+                    <div class="card-body">
+                        <h6 class="text-muted">Saldo</h6>
+                        <div id="card-saldo" class="fs-4 fw-bold">--</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráficos -->
+        <div class="card grafico-card">
+            <div class="card-body">
+                <canvas id="geracao-diaria"></canvas>
+            </div>
+        </div>
+
+        <div class="card grafico-card">
+            <div class="card-body">
+                <canvas id="geracao-consumo"></canvas>
+            </div>
+        </div>
+
+        <div class="card grafico-card">
+            <div class="card-body">
+                <canvas id="saldo"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        Chart.register(ChartDataLabels);
+
+        // ============================================
+        // CONFIGURAÇÃO
+        // ============================================
+        const API_BASE = 'https://sistema-backend.guilhermejr.net';
+
+        const LOGIN_URL = `${API_BASE}/autenticacao-service/login`;       // AJUSTE SE NECESSÁRIO
+        const REFRESH_URL = `${API_BASE}/autenticacao-service/refresh-token`;   // AJUSTE SE NECESSÁRIO
+
+        const ENERGIA_BASE_URL = `${API_BASE}/energia-service/acompanhamentos/`;
+        const ENERGIA_TOTAL_URL = `${API_BASE}/energia-service/total`; // Ex.: /energia-service/contrato/resumo
+
+        const TOKEN_BUFFER_SECONDS = 60; // renova 60s antes de expirar
+
+        // ============================================
+        // ESTADO DOS GRÁFICOS
+        // ============================================
+        let graficoGeracaoDiaria = null;
+        let graficoGeracaoConsumo = null;
+        let graficoSaldo = null;
+
+        // ============================================
+        // HELPERS DE UI
+        // ============================================
+        function show(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function hide(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function setLoginError(message) {
+            const alert = document.getElementById('login-alert');
+            alert.textContent = message;
+            show('login-alert');
+        }
+
+        function clearLoginError() {
+            const alert = document.getElementById('login-alert');
+            alert.textContent = '';
+            hide('login-alert');
+        }
+
+        function setDashboardError(message) {
+            const alert = document.getElementById('dashboard-alert');
+            alert.textContent = message;
+            show('dashboard-alert');
+        }
+
+        function clearDashboardError() {
+            const alert = document.getElementById('dashboard-alert');
+            alert.textContent = '';
+            hide('dashboard-alert');
+        }
+
+        function toggleLoginLoading(loading) {
+            const btn = document.getElementById('login-button');
+            btn.disabled = loading;
+            btn.textContent = loading ? 'Entrando...' : 'Entrar';
+        }
+
+        function toggleDashboardLoading(loading) {
+            if (loading) show('dashboard-loading');
+            else hide('dashboard-loading');
+        }
+
+        function mostrarLogin() {
+            show('login-section');
+            hide('dashboard-section');
+        }
+
+        function mostrarDashboard() {
+            hide('login-section');
+            show('dashboard-section');
+            document.getElementById('usuario-logado').textContent = obterUsuario() || 'Usuário';
+        }
+
+        // ============================================
+        // STORAGE
+        // ============================================
+        function salvarTokens(accessToken, refreshToken) {
+            localStorage.setItem('accessToken', accessToken);
+            localStorage.setItem('refreshToken', refreshToken);
+        }
+
+        function obterAccessToken() {
+            return localStorage.getItem('accessToken');
+        }
+
+        function obterRefreshToken() {
+            return localStorage.getItem('refreshToken');
+        }
+
+        function removerTokens() {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+        }
+
+        function salvarUsuario(username) {
+            localStorage.setItem('usuarioLogado', username);
+        }
+
+        function obterUsuario() {
+            return localStorage.getItem('usuarioLogado');
+        }
+
+        function limparSessaoCompleta() {
+            removerTokens();
+            localStorage.removeItem('usuarioLogado');
+        }
+
+        // ============================================
+        // JWT HELPERS
+        // ============================================
+        function parseJwt(token) {
+            try {
+                const payloadBase64 = token.split('.')[1];
+                if (!payloadBase64) return null;
+
+                const payloadJson = atob(
+                    payloadBase64.replace(/-/g, '+').replace(/_/g, '/')
+                );
+
+                return JSON.parse(payloadJson);
+            } catch (error) {
+                console.error('Erro ao decodificar JWT:', error);
+                return null;
+            }
+        }
+
+        function obterExpiracaoJwt(token) {
+            const payload = parseJwt(token);
+            return payload?.exp || null; // exp vem em segundos
+        }
+
+        function tokenExpirou(token) {
+            const exp = obterExpiracaoJwt(token);
+            if (!exp) return true;
+
+            const agoraEmSegundos = Math.floor(Date.now() / 1000);
+            return agoraEmSegundos >= exp;
+        }
+
+        function tokenVaiExpirarEmBreve(token, bufferSeconds = TOKEN_BUFFER_SECONDS) {
+            const exp = obterExpiracaoJwt(token);
+            if (!exp) return true;
+
+            const agoraEmSegundos = Math.floor(Date.now() / 1000);
+            return (exp - agoraEmSegundos) <= bufferSeconds;
+        }
+
+        // ============================================
+        // AUTENTICAÇÃO
+        // ============================================
+        async function fazerLogin(email, senha) {
+            const response = await fetch(LOGIN_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email,
+                    senha
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Usuário ou senha inválidos.');
+            }
+
+            const data = await response.json();
+
+            // AJUSTE ESSES CAMPOS CONFORME SUA API
+            const accessToken = data.token;
+            const refreshToken = data.refreshToken;
+
+            if (!accessToken || !refreshToken) {
+                throw new Error('A API de login não retornou accessToken e refreshToken.');
+            }
+
+            salvarTokens(accessToken, refreshToken);
+            salvarUsuario(email);
+
+            return { accessToken, refreshToken };
+        }
+
+        async function renovarToken() {
+            const refreshToken = obterRefreshToken();
+
+            if (!refreshToken) {
+                throw new Error('Refresh token não encontrado.');
+            }
+
+            const response = await fetch(REFRESH_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    refreshToken
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Não foi possível renovar o token.');
+            }
+
+            const data = await response.json();
+
+            // AJUSTE ESSES CAMPOS CONFORME SUA API
+            const novoAccessToken = data.token;
+            const novoRefreshToken = data.refreshToken || refreshToken;
+
+            if (!novoAccessToken) {
+                throw new Error('A API de refresh não retornou accessToken.');
+            }
+
+            salvarTokens(novoAccessToken, novoRefreshToken);
+
+            return novoAccessToken;
+        }
+
+        async function garantirAccessTokenValido() {
+            const accessToken = obterAccessToken();
+            const refreshToken = obterRefreshToken();
+
+            // Se não há accessToken mas há refreshToken, tenta renovar
+            if (!accessToken && refreshToken) {
+                return await renovarToken();
+            }
+
+            // Se não tem nenhum, precisa logar
+            if (!accessToken && !refreshToken) {
+                throw new Error('Usuário não autenticado.');
+            }
+
+            // Se já expirou ou está prestes a expirar, renova
+            if (tokenExpirou(accessToken) || tokenVaiExpirarEmBreve(accessToken)) {
+                return await renovarToken();
+            }
+
+            return accessToken;
+        }
+
+        function logout() {
+            limparSessaoCompleta();
+            limparDashboard();
+            mostrarLogin();
+            setLoginError('Faça login para continuar.');
+        }
+
+        // ============================================
+        // API REQUEST COM REFRESH AUTOMÁTICO
+        // ============================================
+        async function apiRequest({
+            url,
+            method = 'GET',
+            headers = {},
+            body = null
+        }) {
+            let accessToken = await garantirAccessTokenValido();
+
+            async function executarRequisicao(token) {
+                const config = {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...headers,
+                        'Authorization': `Bearer ${token}`
+                    }
+                };
+
+                if (body) {
+                    config.body = JSON.stringify(body);
+                }
+
+                return fetch(url, config);
+            }
+
+            let response = await executarRequisicao(accessToken);
+
+            // Segurança extra: se mesmo assim der 401/403, tenta renovar e refazer
+            if (response.status === 401 || response.status === 403) {
+                accessToken = await renovarToken();
+                response = await executarRequisicao(accessToken);
+            }
+
+            if (response.status === 401 || response.status === 403) {
+                throw new Error('Sessão expirada. Faça login novamente.');
+            }
+
+            if (!response.ok) {
+                throw new Error(`Erro HTTP: ${response.status}`);
+            }
+
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                return await response.json();
+            }
+
+            const text = await response.text();
+            return text || null;
+        }
+
+        // ============================================
+        // FORMATAÇÃO
+        // ============================================
+        function formatarKwh(valor) {
+            return `${Number(valor || 0).toLocaleString('pt-BR', {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1
+            })} kWh`;
+        }
+
+        function formatarPeriodoMesAno(periodo) {
+            // Ex.: "05/2026" -> "Mai/26"
+            if (!periodo || !periodo.includes('/')) return periodo;
+
+            const [mes, ano] = periodo.split('/');
+
+            const meses = {
+                '01': 'Jan',
+                '02': 'Fev',
+                '03': 'Mar',
+                '04': 'Abr',
+                '05': 'Mai',
+                '06': 'Jun',
+                '07': 'Jul',
+                '08': 'Ago',
+                '09': 'Set',
+                '10': 'Out',
+                '11': 'Nov',
+                '12': 'Dez'
+            };
+
+            return `${meses[mes] || mes}/${ano.slice(2)}`;
+        }
+
+        // ============================================
+        // DADOS
+        // ============================================
+        function ordenarCrescente(lista) {
+            return [...lista].reverse();
+        }
+
+        function extrairDadosMensais(lista) {
+            return {
+                labels: lista.map(item => formatarPeriodoMesAno(item.periodo)),
+                valores: lista.map(item => Number(item.valor))
+            };
+        }
+
+        function extrairDadosDiarios(lista) {
+            // Aceita respostas como:
+            // [{ periodo: '24/05', valor: 18.2 }]
+            // [{ data: '24/05', valor: 18.2 }]
+            // [{ dia: '24/05', valor: 18.2 }]
+            return {
+                labels: lista.map(item => item.periodo || item.data || item.dia || item.label),
+                valores: lista.map(item => Number(item.valor))
+            };
+        }
+
+        function somarValores(lista) {
+            return lista.reduce((total, item) => total + Number(item.valor || 0), 0);
+        }
+
+        // ============================================
+        // GRÁFICOS
+        // ============================================
+        function destruirGraficos() {
+            if (graficoGeracaoDiaria) {
+                graficoGeracaoDiaria.destroy();
+                graficoGeracaoDiaria = null;
+            }
+
+            if (graficoGeracaoConsumo) {
+                graficoGeracaoConsumo.destroy();
+                graficoGeracaoConsumo = null;
+            }
+
+            if (graficoSaldo) {
+                graficoSaldo.destroy();
+                graficoSaldo = null;
+            }
+        }
+
+        function limparDashboard() {
+            destruirGraficos();
+            document.getElementById('card-geracao').textContent = '--';
+            document.getElementById('card-consumo').textContent = '--';
+            document.getElementById('card-saldo').textContent = '--';
+            document.getElementById('card-geracao-contrato').textContent = '--';    
+            document.getElementById('card-consumo-contrato').textContent = '--';    
+            document.getElementById('card-saldo-contrato').textContent = '--';
+            clearDashboardError();
+        }
+
+        function criarGraficoGeracaoDiaria(labels, dados) {
+            const ctx = document.getElementById('geracao-diaria');
+
+            graficoGeracaoDiaria = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'kWh',
+                            data: dados,
+                            borderWidth: 2,
+                            tension: 0.3,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Geração Diária',
+                            font: {
+                                size: 18
+                            }
+                        },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: '#333',
+                            font: {
+                                weight: 'bold'
+                            },
+                            formatter: function(value) {
+                                return value;
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function criarGraficoGeracaoConsumo(labels, geracao, consumo) {
+            const ctx = document.getElementById('geracao-consumo');
+
+            graficoGeracaoConsumo = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Gerada',
+                            data: geracao,
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Consumida',
+                            data: consumo,
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Energia Gerada / Energia Consumida',
+                            font: {
+                                size: 18
+                            }
+                        },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: '#333',
+                            font: {
+                                weight: 'bold'
+                            },
+                            formatter: function(value) {
+                                return value;
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function criarGraficoSaldo(labels, dados) {
+            const ctx = document.getElementById('saldo');
+
+            graficoSaldo = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Saldo (kWh)',
+                            data: dados,
+                            borderWidth: 2,
+                            tension: 0.3,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Saldo de Energia',
+                            font: {
+                                size: 18
+                            }
+                        },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: '#333',
+                            font: {
+                                weight: 'bold'
+                            },
+                            formatter: function(value) {
+                                return value;
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ============================================
+        // CARREGAMENTO DO DASHBOARD
+        // ============================================
+        async function carregarDashboard() {
+            clearDashboardError();
+            toggleDashboardLoading(true);
+            destruirGraficos();
+
+            try {
+                const [
+                    geracao30Dias,
+                    geracao12Meses,
+                    consumo12Meses,
+                    saldo12Meses,
+                    totais
+                ] = await Promise.all([
+                    apiRequest({
+                        url: `${ENERGIA_BASE_URL}geracaoultimos30dias`
+                    }),
+                    apiRequest({
+                        url: `${ENERGIA_BASE_URL}geracaoultimos12meses`
+                    }),
+                    apiRequest({
+                        url: `${ENERGIA_BASE_URL}consumoultimos12meses`
+                    }),
+                    apiRequest({
+                        url: `${ENERGIA_BASE_URL}saldoultimos12meses`
+                    }),
+                    apiRequest({
+                        url: `${ENERGIA_TOTAL_URL}`
+                    })
+                ]);
+
+                const geracao12Ordenado = ordenarCrescente(geracao12Meses);
+                const consumo12Ordenado = ordenarCrescente(consumo12Meses);
+                const saldo12Ordenado = ordenarCrescente(saldo12Meses);
+                const geracao30Ordenado = ordenarCrescente(geracao30Dias);
+
+                const dadosGeracaoMensal = extrairDadosMensais(geracao12Ordenado);
+                const dadosConsumoMensal = extrairDadosMensais(consumo12Ordenado);
+                const dadosSaldoMensal = extrairDadosMensais(saldo12Ordenado);
+                const dadosGeracaoDiaria = extrairDadosDiarios(geracao30Ordenado);
+
+                criarGraficoGeracaoDiaria(
+                    dadosGeracaoDiaria.labels,
+                    dadosGeracaoDiaria.valores
+                );
+
+                criarGraficoGeracaoConsumo(
+                    dadosGeracaoMensal.labels,
+                    dadosGeracaoMensal.valores,
+                    dadosConsumoMensal.valores
+                );
+
+                criarGraficoSaldo(
+                    dadosSaldoMensal.labels,
+                    dadosSaldoMensal.valores
+                );
+
+                document.getElementById('card-geracao').textContent = formatarKwh(somarValores(geracao12Meses));
+                document.getElementById('card-consumo').textContent = formatarKwh(somarValores(consumo12Meses));
+                document.getElementById('card-saldo').textContent = formatarKwh(somarValores(saldo12Meses));
+                document.getElementById('card-geracao-contrato').textContent = formatarKwh(totais.energiaGerada);    
+                document.getElementById('card-consumo-contrato').textContent = formatarKwh(totais.energiaConsumidaTotal);    
+                document.getElementById('card-saldo-contrato').textContent = formatarKwh(totais.saldoMes);
+
+            } catch (error) {
+                console.error(error);
+
+                if (error.message.includes('Sessão expirada') || error.message.includes('autenticado')) {
+                    limparSessaoCompleta();
+                    mostrarLogin();
+                    setLoginError('Sua sessão expirou. Faça login novamente.');
+                    return;
+                }
+
+                setDashboardError(error.message || 'Erro ao carregar dashboard.');
+            } finally {
+                toggleDashboardLoading(false);
+            }
+        }
+
+        // ============================================
+        // EVENTOS
+        // ============================================
+        document.getElementById('login-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            clearLoginError();
+
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                setLoginError('Informe usuário e senha.');
+                return;
+            }
+
+            try {
+                toggleLoginLoading(true);
+
+                await fazerLogin(username, password);
+
+                mostrarDashboard();
+                await carregarDashboard();
+
+            } catch (error) {
+                console.error(error);
+                setLoginError(error.message || 'Falha ao fazer login.');
+            } finally {
+                toggleLoginLoading(false);
+            }
+        });
+
+        // ============================================
+        // INICIALIZAÇÃO
+        // ============================================
+        async function init() {
+            const accessToken = obterAccessToken();
+            const refreshToken = obterRefreshToken();
+
+            if (!accessToken && !refreshToken) {
+                mostrarLogin();
+                return;
+            }
+
+            try {
+                // Se necessário, já renova antes mesmo de iniciar o dashboard
+                await garantirAccessTokenValido();
+
+                mostrarDashboard();
+                await carregarDashboard();
+
+            } catch (error) {
+                console.error(error);
+                limparSessaoCompleta();
+                mostrarLogin();
+                setLoginError('Faça login para continuar.');
+            }
+        }
+
+        init();
+    </script>
 </body>
 </html>
