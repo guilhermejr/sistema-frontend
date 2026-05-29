@@ -204,8 +204,13 @@
         // ============================================
         // CONFIGURAÇÃO
         // ============================================
-        const API_BASE = 'https://sistema-backend.guilhermejr.net';
-        //const API_BASE = 'http://localhost:8080';
+        //
+
+        let API_BASE = 'https://sistema-backend.guilhermejr.net';
+        
+        if (window.location.hostname === 'localhost') {
+            API_BASE = 'http://localhost:8080';
+        }
 
         const LOGIN_URL = `${API_BASE}/autenticacao-service/login`;       // AJUSTE SE NECESSÁRIO
         const REFRESH_URL = `${API_BASE}/autenticacao-service/refresh-token`;   // AJUSTE SE NECESSÁRIO
