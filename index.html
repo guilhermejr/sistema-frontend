@@ -321,7 +321,7 @@
                     </div>
                 </div>
 
-                <div class="card grafico-card">
+                <!-- <div class="card grafico-card">
                     <div class="card-body">
                         <canvas id="salario-proventos-descontos"></canvas>
                     </div>
@@ -331,7 +331,7 @@
                     <div class="card-body">
                         <canvas id="salario-tipo-folha"></canvas>
                     </div>
-                </div>
+                </div> -->
 
                 <!-- Opção A: tabela detalhada das folhas -->
                 <div class="card table-card">
@@ -348,7 +348,6 @@
                             <table class="table table-striped align-middle">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>ID</th>
                                         <th>Data de pagamento</th>
                                         <th>Tipo de folha</th>
                                         <th>Proventos</th>
@@ -462,7 +461,7 @@
             const tbody = document.getElementById('tabela-salario-body');
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="6" class="text-center text-muted">Nenhum dado carregado.</td>
+                    <td colspan="5" class="text-center text-muted">Nenhum dado carregado.</td>
                 </tr>
             `;
             document.getElementById('salario-total-registros').textContent = '0 registros';
@@ -485,7 +484,7 @@
                     <div class="card card-resumo type-card text-center border-info">
                         <div class="card-body d-flex flex-column justify-content-center">
                             <h6 class="text-muted mb-2">${escapeHtml(item.tipo)}</h6>
-                            <div class="fs-5 fw-bold text-info mb-2">${formatarMoedaBR(item.totalLiquido)}</div>
+                            <div class="fs-5 fw-bold mb-2">${formatarMoedaBR(item.totalLiquido)}</div>
                             <div class="small-muted">${item.quantidade} registro(s)</div>
                         </div>
                     </div>
@@ -504,7 +503,6 @@
 
             tbody.innerHTML = folhas.map(folha => `
                 <tr>
-                    <td>${folha.id ?? '--'}</td>
                     <td>${escapeHtml(folha.dataPagamento || '--')}</td>
                     <td>${escapeHtml(folha?.tipoFolha?.descricao || 'Não identificado')}</td>
                     <td>${formatarMoedaBR(parseMoedaBR(folha.totalProventos))}</td>
@@ -1085,53 +1083,53 @@
             });
         }
 
-        function criarGraficoSalarioProventosDescontos(labels, proventos, descontos) {
-            const ctx = document.getElementById('salario-proventos-descontos');
-            graficoSalarioProventosDescontos = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels,
-                    datasets: [
-                        { label: 'Proventos', data: proventos, borderWidth: 1 },
-                        { label: 'Descontos', data: descontos, borderWidth: 1 }
-                    ]
-                },
-                options: {
-                    ...opcoesPadraoComDatalabels('Proventos x Descontos por Mês', value => formatarMoedaBR(value)),
-                    scales: { y: { beginAtZero: true } }
-                }
-            });
-        }
+        // function criarGraficoSalarioProventosDescontos(labels, proventos, descontos) {
+        //     const ctx = document.getElementById('salario-proventos-descontos');
+        //     graficoSalarioProventosDescontos = new Chart(ctx, {
+        //         type: 'bar',
+        //         data: {
+        //             labels,
+        //             datasets: [
+        //                 { label: 'Proventos', data: proventos, borderWidth: 1 },
+        //                 { label: 'Descontos', data: descontos, borderWidth: 1 }
+        //             ]
+        //         },
+        //         options: {
+        //             ...opcoesPadraoComDatalabels('Proventos x Descontos por Mês', value => formatarMoedaBR(value)),
+        //             scales: { y: { beginAtZero: true } }
+        //         }
+        //     });
+        // }
 
-        function criarGraficoSalarioTipoFolha(labels, dados) {
-            const ctx = document.getElementById('salario-tipo-folha');
-            graficoSalarioTipoFolha = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels,
-                    datasets: [{ data: dados, borderWidth: 1 }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'Distribuição do Líquido por Tipo de Folha',
-                            font: { size: 18 }
-                        },
-                        legend: { position: 'top' },
-                        datalabels: {
-                            color: '#fff',
-                            font: { weight: 'bold' },
-                            formatter: function(value, context) {
-                                const label = context.chart.data.labels[context.dataIndex];
-                                return `${label}\n${formatarMoedaBR(value)}`;
-                            }
-                        }
-                    }
-                }
-            });
-        }
+        // function criarGraficoSalarioTipoFolha(labels, dados) {
+        //     const ctx = document.getElementById('salario-tipo-folha');
+        //     graficoSalarioTipoFolha = new Chart(ctx, {
+        //         type: 'pie',
+        //         data: {
+        //             labels,
+        //             datasets: [{ data: dados, borderWidth: 1 }]
+        //         },
+        //         options: {
+        //             responsive: true,
+        //             plugins: {
+        //                 title: {
+        //                     display: true,
+        //                     text: 'Distribuição do Líquido por Tipo de Folha',
+        //                     font: { size: 18 }
+        //                 },
+        //                 legend: { position: 'top' },
+        //                 datalabels: {
+        //                     color: '#fff',
+        //                     font: { weight: 'bold' },
+        //                     formatter: function(value, context) {
+        //                         const label = context.chart.data.labels[context.dataIndex];
+        //                         return `${label}\n${formatarMoedaBR(value)}`;
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     });
+        // }
 
         // ============================================
         // CARGAS DE DADOS
@@ -1198,10 +1196,10 @@
             const liquidoMes = folhasPorMes.map(item => item.liquido);
 
             criarGraficoSalarioLiquidoMes(labelsSalario, liquidoMes);
-            criarGraficoSalarioProventosDescontos(labelsSalario, proventosMes, descontosMes);
+            //criarGraficoSalarioProventosDescontos(labelsSalario, proventosMes, descontosMes);
 
             const tipoFolhaAgrupado = agruparFolhasPorTipo(folhas);
-            criarGraficoSalarioTipoFolha(tipoFolhaAgrupado.labels, tipoFolhaAgrupado.valores);
+            //criarGraficoSalarioTipoFolha(tipoFolhaAgrupado.labels, tipoFolhaAgrupado.valores);
             renderizarCardsTiposFolha(tipoFolhaAgrupado.lista);
 
             const folhasOrdenadas = [...folhas].sort((a, b) => {
