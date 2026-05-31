@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard de Energia</title>
+    <title>Dashboard de Energia e Salário</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
@@ -11,6 +11,11 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
     <style>
+        :root {
+            --shadow-soft: 0 6px 20px rgba(0, 0, 0, 0.05);
+            --shadow-strong: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
         body {
             background-color: #f8f9fa;
         }
@@ -26,19 +31,23 @@
             width: 100%;
             max-width: 420px;
             border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            box-shadow: var(--shadow-strong);
             border: none;
         }
 
         .dashboard-header,
         .card-resumo,
-        .grafico-card {
+        .grafico-card,
+        .table-card,
+        .filtro-card {
             border-radius: 16px;
             border: none;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+            box-shadow: var(--shadow-soft);
         }
 
-        .grafico-card {
+        .grafico-card,
+        .table-card,
+        .filtro-card {
             margin-bottom: 20px;
         }
 
@@ -48,6 +57,33 @@
 
         .hidden {
             display: none !important;
+        }
+
+        .nav-tabs .nav-link {
+            border-radius: 12px 12px 0 0;
+            font-weight: 600;
+        }
+
+        .type-card {
+            min-height: 120px;
+        }
+
+        .table thead th {
+            white-space: nowrap;
+        }
+
+        .small-muted {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+
+        .tab-pane {
+            animation: fadeIn .2s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -85,13 +121,12 @@
 
     <!-- DASHBOARD -->
     <div id="dashboard-section" class="container py-4 hidden">
-
         <!-- Cabeçalho -->
         <div class="card dashboard-header mb-4">
             <div class="card-body d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
                 <div>
-                    <h2 class="mb-1">Dashboard de Energia</h2>
-                    <p class="text-muted mb-0">Geração, consumo e saldo</p>
+                    <h2 class="mb-1">Dashboard</h2>
+                    <p class="text-muted mb-0">Energia e salário em abas com autenticação compartilhada</p>
                 </div>
 
                 <div class="d-flex align-items-center gap-2">
@@ -110,90 +145,226 @@
             <div class="mt-2">Carregando dashboard...</div>
         </div>
 
-        <!-- Resumo -->
+        <!-- Abas -->
+        <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="energia-tab" data-bs-toggle="tab" data-bs-target="#tab-energia" type="button" role="tab">
+                    Energia
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="salario-tab" data-bs-toggle="tab" data-bs-target="#tab-salario" type="button" role="tab">
+                    Salário
+                </button>
+            </li>
+        </ul>
 
-        <div class="row mb-4">
-            <div class="col-12">
-                <h5 class="mb-3">Desde o início do contrato (11/11/2021)</h5>
-            </div>
+        <div class="tab-content">
+            <!-- ABA ENERGIA -->
+            <div class="tab-pane fade show active" id="tab-energia" role="tabpanel" aria-labelledby="energia-tab">
+                
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="mb-3">Desde o início do contrato (11/11/2021)</h5>
+                    </div>
 
-            <div class="col-12 col-lg-4 mb-3">
-                <div class="card card-resumo text-center">
+                    <div class="col-12 col-lg-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Geração</h6>
+                                <div id="card-geracao-contrato" class="fs-4 fw-bold">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Consumo</h6>
+                                <div id="card-consumo-contrato" class="fs-4 fw-bold">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Saldo</h6>
+                                <div id="card-saldo-contrato" class="fs-4 fw-bold">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-2">
+                    <div class="col-12">
+                        <h5 class="mb-3">Últimos 12 meses</h5>
+                    </div>
+
+                    <div class="col-12 col-lg-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Geração</h6>
+                                <div id="card-geracao" class="fs-4 fw-bold">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Consumo</h6>
+                                <div id="card-consumo" class="fs-4 fw-bold">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Saldo</h6>
+                                <div id="card-saldo" class="fs-4 fw-bold">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card grafico-card">
                     <div class="card-body">
-                        <h6 class="text-muted">Geração</h6>
-                        <div id="card-geracao-contrato" class="fs-4 fw-bold">--</div>
+                        <canvas id="geracao-diaria"></canvas>
+                    </div>
+                </div>
+
+                <div class="card grafico-card">
+                    <div class="card-body">
+                        <canvas id="geracao-consumo"></canvas>
+                    </div>
+                </div>
+
+                <div class="card grafico-card">
+                    <div class="card-body">
+                        <canvas id="saldo"></canvas>
                     </div>
                 </div>
             </div>
 
-            <div class="col-12 col-lg-4 mb-3">
-                <div class="card card-resumo text-center">
+            <!-- ABA SALÁRIO -->
+            <div class="tab-pane fade" id="tab-salario" role="tabpanel" aria-labelledby="salario-tab">
+                <!-- Opção B: filtro por ano -->
+                <div class="card filtro-card">
                     <div class="card-body">
-                        <h6 class="text-muted">Consumo</h6>
-                        <div id="card-consumo-contrato" class="fs-4 fw-bold">--</div>
+                        <div class="row g-3 align-items-end">
+                            <div class="col-12 col-md-4 col-lg-3">
+                                <label for="salario-ano" class="form-label">Ano da folha</label>
+                                <select id="salario-ano" class="form-select"></select>
+                            </div>
+                            <div class="col-12 col-md-4 col-lg-3">
+                                <button id="btn-recarregar-salario" class="btn btn-primary w-100" type="button">
+                                    Atualizar salário
+                                </button>
+                            </div>
+                            <div class="col-12 col-md-4 col-lg-6">
+                                <div class="small-muted">Usa o mesmo token de autenticação do módulo de energia.</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="col-12 col-lg-4 mb-3">
-                <div class="card card-resumo text-center">
-                    <div class="card-body">
-                        <h6 class="text-muted">Saldo</h6>
-                        <div id="card-saldo-contrato" class="fs-4 fw-bold">--</div>
+                <!-- Cards principais -->
+                <div class="row mb-2">
+                    <div class="col-12">
+                        <h5 class="mb-3">Salário - Resumo do ano</h5>
+                    </div>
+
+                    <div class="col-12 col-lg-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Total de Proventos</h6>
+                                <div id="card-salario-proventos" class="fs-4 fw-bold">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Total de Descontos</h6>
+                                <div id="card-salario-descontos" class="fs-4 fw-bold">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Total Líquido</h6>
+                                <div id="card-salario-liquido" class="fs-4 fw-bold">--</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <div class="row mb-2">
-            <div class="col-12">
-                <h5 class="mb-3">Últimos 12 meses</h5>
-            </div>
-
-            <div class="col-12 col-lg-4 mb-3">
-                <div class="card card-resumo text-center">
-                    <div class="card-body">
-                        <h6 class="text-muted">Geração</h6>
-                        <div id="card-geracao" class="fs-4 fw-bold">--</div>
+                <!-- Opção C: cards por tipo -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="mb-3">Salário - Totais por tipo de folha</h5>
+                    </div>
+                    <div id="cards-salario-tipos" class="col-12">
+                        <div class="row" id="cards-salario-tipos-row"></div>
                     </div>
                 </div>
-            </div>
 
-            <div class="col-12 col-lg-4 mb-3">
-                <div class="card card-resumo text-center">
+                <!-- Gráficos salário -->
+                <div class="card grafico-card">
                     <div class="card-body">
-                        <h6 class="text-muted">Consumo</h6>
-                        <div id="card-consumo" class="fs-4 fw-bold">--</div>
+                        <canvas id="salario-liquido-mes"></canvas>
                     </div>
                 </div>
-            </div>
 
-            <div class="col-12 col-lg-4 mb-3">
-                <div class="card card-resumo text-center">
+                <div class="card grafico-card">
                     <div class="card-body">
-                        <h6 class="text-muted">Saldo</h6>
-                        <div id="card-saldo" class="fs-4 fw-bold">--</div>
+                        <canvas id="salario-proventos-descontos"></canvas>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Gráficos -->
-        <div class="card grafico-card">
-            <div class="card-body">
-                <canvas id="geracao-diaria"></canvas>
-            </div>
-        </div>
+                <div class="card grafico-card">
+                    <div class="card-body">
+                        <canvas id="salario-tipo-folha"></canvas>
+                    </div>
+                </div>
 
-        <div class="card grafico-card">
-            <div class="card-body">
-                <canvas id="geracao-consumo"></canvas>
-            </div>
-        </div>
+                <!-- Opção A: tabela detalhada das folhas -->
+                <div class="card table-card">
+                    <div class="card-body">
+                        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2 mb-3">
+                            <div>
+                                <h5 class="mb-1">Detalhamento das folhas</h5>
+                                <div class="small-muted">Lista todas as folhas retornadas pelo endpoint do ano selecionado.</div>
+                            </div>
+                            <div class="small-muted" id="salario-total-registros">0 registros</div>
+                        </div>
 
-        <div class="card grafico-card">
-            <div class="card-body">
-                <canvas id="saldo"></canvas>
+                        <div class="table-responsive">
+                            <table class="table table-striped align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Data de pagamento</th>
+                                        <th>Tipo de folha</th>
+                                        <th>Proventos</th>
+                                        <th>Descontos</th>
+                                        <th>Líquido</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-salario-body">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">Nenhum dado carregado.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -204,21 +375,20 @@
         // ============================================
         // CONFIGURAÇÃO
         // ============================================
-        //
-
         let API_BASE = 'https://sistema-backend.guilhermejr.net';
         
         if (window.location.hostname === 'localhost') {
             API_BASE = 'http://localhost:8080';
         }
 
-        const LOGIN_URL = `${API_BASE}/autenticacao-service/login`;       // AJUSTE SE NECESSÁRIO
-        const REFRESH_URL = `${API_BASE}/autenticacao-service/refresh-token`;   // AJUSTE SE NECESSÁRIO
+        const LOGIN_URL = `${API_BASE}/autenticacao-service/login`;
+        const REFRESH_URL = `${API_BASE}/autenticacao-service/refresh-token`;
 
         const ENERGIA_BASE_URL = `${API_BASE}/energia-service/acompanhamentos/`;
-        const ENERGIA_TOTAL_URL = `${API_BASE}/energia-service/total`; // Ex.: /energia-service/contrato/resumo
-
-        const TOKEN_BUFFER_SECONDS = 60; // renova 60s antes de expirar
+        const ENERGIA_TOTAL_URL = `${API_BASE}/energia-service/total`;
+        const SALARIO_BASE_URL = `${API_BASE}/salario-service/folha/ano/`;
+        
+        const TOKEN_BUFFER_SECONDS = 60;
 
         // ============================================
         // ESTADO DOS GRÁFICOS
@@ -226,6 +396,10 @@
         let graficoGeracaoDiaria = null;
         let graficoGeracaoConsumo = null;
         let graficoSaldo = null;
+
+        let graficoSalarioLiquidoMes = null;
+        let graficoSalarioProventosDescontos = null;
+        let graficoSalarioTipoFolha = null;
 
         // ============================================
         // HELPERS DE UI
@@ -284,6 +458,71 @@
             document.getElementById('usuario-logado').textContent = obterUsuario() || 'Usuário';
         }
 
+        function limparTabelaSalario() {
+            const tbody = document.getElementById('tabela-salario-body');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center text-muted">Nenhum dado carregado.</td>
+                </tr>
+            `;
+            document.getElementById('salario-total-registros').textContent = '0 registros';
+        }
+
+        function renderizarCardsTiposFolha(itens) {
+            const row = document.getElementById('cards-salario-tipos-row');
+
+            if (!itens.length) {
+                row.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-light border text-muted mb-0">Nenhum tipo de folha encontrado para o ano selecionado.</div>
+                    </div>
+                `;
+                return;
+            }
+
+            row.innerHTML = itens.map(item => `
+                <div class="col-12 col-md-6 col-xl-3 mb-3">
+                    <div class="card card-resumo type-card text-center border-info">
+                        <div class="card-body d-flex flex-column justify-content-center">
+                            <h6 class="text-muted mb-2">${escapeHtml(item.tipo)}</h6>
+                            <div class="fs-5 fw-bold text-info mb-2">${formatarMoedaBR(item.totalLiquido)}</div>
+                            <div class="small-muted">${item.quantidade} registro(s)</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderizarTabelaSalario(folhas) {
+            const tbody = document.getElementById('tabela-salario-body');
+            document.getElementById('salario-total-registros').textContent = `${folhas.length} registro(s)`;
+
+            if (!folhas.length) {
+                limparTabelaSalario();
+                return;
+            }
+
+            tbody.innerHTML = folhas.map(folha => `
+                <tr>
+                    <td>${folha.id ?? '--'}</td>
+                    <td>${escapeHtml(folha.dataPagamento || '--')}</td>
+                    <td>${escapeHtml(folha?.tipoFolha?.descricao || 'Não identificado')}</td>
+                    <td>${formatarMoedaBR(parseMoedaBR(folha.totalProventos))}</td>
+                    <td>${formatarMoedaBR(parseMoedaBR(folha.totalDescontos))}</td>
+                    <td>${formatarMoedaBR(parseMoedaBR(folha.totalLiquido))}</td>
+                </tr>
+            `).join('');
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
+
         // ============================================
         // STORAGE
         // ============================================
@@ -313,6 +552,14 @@
             return localStorage.getItem('usuarioLogado');
         }
 
+        function salvarAnoSalario(ano) {
+            localStorage.setItem('anoSalarioSelecionado', String(ano));
+        }
+
+        function obterAnoSalario() {
+            return localStorage.getItem('anoSalarioSelecionado');
+        }
+
         function limparSessaoCompleta() {
             removerTokens();
             localStorage.removeItem('usuarioLogado');
@@ -339,7 +586,7 @@
 
         function obterExpiracaoJwt(token) {
             const payload = parseJwt(token);
-            return payload?.exp || null; // exp vem em segundos
+            return payload?.exp || null;
         }
 
         function tokenExpirou(token) {
@@ -367,10 +614,7 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    email,
-                    senha
-                })
+                body: JSON.stringify({ email, senha })
             });
 
             if (!response.ok) {
@@ -378,8 +622,6 @@
             }
 
             const data = await response.json();
-
-            // AJUSTE ESSES CAMPOS CONFORME SUA API
             const accessToken = data.token;
             const refreshToken = data.refreshToken;
 
@@ -405,9 +647,7 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    refreshToken
-                })
+                body: JSON.stringify({ refreshToken })
             });
 
             if (!response.ok) {
@@ -415,8 +655,6 @@
             }
 
             const data = await response.json();
-
-            // AJUSTE ESSES CAMPOS CONFORME SUA API
             const novoAccessToken = data.token;
             const novoRefreshToken = data.refreshToken || refreshToken;
 
@@ -425,7 +663,6 @@
             }
 
             salvarTokens(novoAccessToken, novoRefreshToken);
-
             return novoAccessToken;
         }
 
@@ -433,17 +670,14 @@
             const accessToken = obterAccessToken();
             const refreshToken = obterRefreshToken();
 
-            // Se não há accessToken mas há refreshToken, tenta renovar
             if (!accessToken && refreshToken) {
                 return await renovarToken();
             }
 
-            // Se não tem nenhum, precisa logar
             if (!accessToken && !refreshToken) {
                 throw new Error('Usuário não autenticado.');
             }
 
-            // Se já expirou ou está prestes a expirar, renova
             if (tokenExpirou(accessToken) || tokenVaiExpirarEmBreve(accessToken)) {
                 return await renovarToken();
             }
@@ -461,12 +695,7 @@
         // ============================================
         // API REQUEST COM REFRESH AUTOMÁTICO
         // ============================================
-        async function apiRequest({
-            url,
-            method = 'GET',
-            headers = {},
-            body = null
-        }) {
+        async function apiRequest({ url, method = 'GET', headers = {}, body = null }) {
             let accessToken = await garantirAccessTokenValido();
 
             async function executarRequisicao(token) {
@@ -488,7 +717,6 @@
 
             let response = await executarRequisicao(accessToken);
 
-            // Segurança extra: se mesmo assim der 401/403, tenta renovar e refazer
             if (response.status === 401 || response.status === 403) {
                 accessToken = await renovarToken();
                 response = await executarRequisicao(accessToken);
@@ -521,35 +749,44 @@
             })} kWh`;
         }
 
+        function formatarMoedaBR(valor) {
+            return Number(valor || 0).toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            });
+        }
+
         function formatarPeriodoMesAno(periodo) {
-            // Ex.: "05/2026" -> "Mai/26"
             if (!periodo || !periodo.includes('/')) return periodo;
 
             const [mes, ano] = periodo.split('/');
 
             const meses = {
-                '01': 'Jan',
-                '02': 'Fev',
-                '03': 'Mar',
-                '04': 'Abr',
-                '05': 'Mai',
-                '06': 'Jun',
-                '07': 'Jul',
-                '08': 'Ago',
-                '09': 'Set',
-                '10': 'Out',
-                '11': 'Nov',
-                '12': 'Dez'
+                '01': 'Jan', '02': 'Fev', '03': 'Mar', '04': 'Abr',
+                '05': 'Mai', '06': 'Jun', '07': 'Jul', '08': 'Ago',
+                '09': 'Set', '10': 'Out', '11': 'Nov', '12': 'Dez'
             };
 
             return `${meses[mes] || mes}/${ano.slice(2)}`;
+        }
+
+        function parseMoedaBR(valor) {
+            if (typeof valor === 'number') return valor;
+            if (!valor) return 0;
+
+            return Number(
+                String(valor)
+                    .replace(/\./g, '')
+                    .replace(',', '.')
+                    .trim()
+            ) || 0;
         }
 
         // ============================================
         // DADOS
         // ============================================
         function ordenarCrescente(lista) {
-            return [...lista].reverse();
+            return Array.isArray(lista) ? [...lista].reverse() : [];
         }
 
         function extrairDadosMensais(lista) {
@@ -560,10 +797,6 @@
         }
 
         function extrairDadosDiarios(lista) {
-            // Aceita respostas como:
-            // [{ periodo: '24/05', valor: 18.2 }]
-            // [{ data: '24/05', valor: 18.2 }]
-            // [{ dia: '24/05', valor: 18.2 }]
             return {
                 labels: lista.map(item => item.periodo || item.data || item.dia || item.label),
                 valores: lista.map(item => Number(item.valor))
@@ -571,165 +804,253 @@
         }
 
         function somarValores(lista) {
+            if (!Array.isArray(lista)) return 0;
             return lista.reduce((total, item) => total + Number(item.valor || 0), 0);
+        }
+
+        function extrairValorResumo(resposta) {
+            if (typeof resposta === 'number') return resposta;
+
+            if (typeof resposta === 'string' && resposta.trim() !== '') {
+                const numero = Number(resposta);
+                return Number.isNaN(numero) ? 0 : numero;
+            }
+
+            if (Array.isArray(resposta)) {
+                if (resposta.length === 0) return 0;
+                return extrairValorResumo(resposta[0]);
+            }
+
+            if (resposta && typeof resposta === 'object') {
+                if (resposta.valor != null) return Number(resposta.valor);
+                if (resposta.total != null) return Number(resposta.total);
+                if (resposta.saldo != null) return Number(resposta.saldo);
+                if (resposta.geracao != null) return Number(resposta.geracao);
+                if (resposta.consumo != null) return Number(resposta.consumo);
+            }
+
+            return 0;
+        }
+
+        function extrairMesAnoDataPagamento(dataPagamento) {
+            if (!dataPagamento || !dataPagamento.includes('/')) return '';
+            const partes = dataPagamento.split('/');
+            const mes = partes[1];
+            const ano = partes[2];
+            return `${mes}/${ano}`;
+        }
+
+        function agruparFolhasPorMes(folhas) {
+            const mapa = {};
+
+            folhas.forEach(folha => {
+                const periodo = extrairMesAnoDataPagamento(folha.dataPagamento);
+                if (!periodo) return;
+
+                if (!mapa[periodo]) {
+                    mapa[periodo] = {
+                        periodo,
+                        proventos: 0,
+                        descontos: 0,
+                        liquido: 0
+                    };
+                }
+
+                mapa[periodo].proventos += parseMoedaBR(folha.totalProventos);
+                mapa[periodo].descontos += parseMoedaBR(folha.totalDescontos);
+                mapa[periodo].liquido += parseMoedaBR(folha.totalLiquido);
+            });
+
+            const lista = Object.values(mapa);
+            lista.sort((a, b) => {
+                const [mesA, anoA] = a.periodo.split('/').map(Number);
+                const [mesB, anoB] = b.periodo.split('/').map(Number);
+                if (anoA !== anoB) return anoA - anoB;
+                return mesA - mesB;
+            });
+
+            return lista;
+        }
+
+        function agruparFolhasPorTipo(folhas) {
+            const mapa = {};
+
+            folhas.forEach(folha => {
+                const tipo = folha?.tipoFolha?.descricao || 'Não identificado';
+                const proventos = parseMoedaBR(folha.totalProventos);
+                const descontos = parseMoedaBR(folha.totalDescontos);
+                const liquido = parseMoedaBR(folha.totalLiquido);
+
+                if (!mapa[tipo]) {
+                    mapa[tipo] = {
+                        tipo,
+                        quantidade: 0,
+                        totalProventos: 0,
+                        totalDescontos: 0,
+                        totalLiquido: 0
+                    };
+                }
+
+                mapa[tipo].quantidade += 1;
+                mapa[tipo].totalProventos += proventos;
+                mapa[tipo].totalDescontos += descontos;
+                mapa[tipo].totalLiquido += liquido;
+            });
+
+            const lista = Object.values(mapa).sort((a, b) => b.totalLiquido - a.totalLiquido);
+
+            return {
+                lista,
+                labels: lista.map(item => item.tipo),
+                valores: lista.map(item => item.totalLiquido)
+            };
+        }
+
+        function popularFiltroAnoSalario() {
+            const select = document.getElementById('salario-ano');
+            const anoAtual = new Date().getFullYear();
+            const anos = [];
+
+            for (let ano = anoAtual - 3; ano <= anoAtual + 1; ano++) {
+                anos.push(ano);
+            }
+
+            select.innerHTML = anos
+                .sort((a, b) => b - a)
+                .map(ano => `<option value="${ano}">${ano}</option>`)
+                .join('');
+
+            const salvo = obterAnoSalario();
+            const valorInicial = salvo && anos.includes(Number(salvo)) ? salvo : String(anoAtual);
+            select.value = valorInicial;
+        }
+
+        function obterAnoSalarioSelecionado() {
+            return document.getElementById('salario-ano').value;
         }
 
         // ============================================
         // GRÁFICOS
         // ============================================
+        function opcoesPadraoComDatalabels(titleText, formatter = value => value) {
+            return {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' },
+                    title: {
+                        display: true,
+                        text: titleText,
+                        font: { size: 18 }
+                    },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        color: '#333',
+                        font: { weight: 'bold' },
+                        formatter
+                    }
+                }
+            };
+        }
+
         function destruirGraficos() {
-            if (graficoGeracaoDiaria) {
-                graficoGeracaoDiaria.destroy();
-                graficoGeracaoDiaria = null;
-            }
+            if (graficoGeracaoDiaria) { graficoGeracaoDiaria.destroy(); graficoGeracaoDiaria = null; }
+            if (graficoGeracaoConsumo) { graficoGeracaoConsumo.destroy(); graficoGeracaoConsumo = null; }
+            if (graficoSaldo) { graficoSaldo.destroy(); graficoSaldo = null; }
+            if (graficoSalarioLiquidoMes) { graficoSalarioLiquidoMes.destroy(); graficoSalarioLiquidoMes = null; }
+            if (graficoSalarioProventosDescontos) { graficoSalarioProventosDescontos.destroy(); graficoSalarioProventosDescontos = null; }
+            if (graficoSalarioTipoFolha) { graficoSalarioTipoFolha.destroy(); graficoSalarioTipoFolha = null; }
+        }
 
-            if (graficoGeracaoConsumo) {
-                graficoGeracaoConsumo.destroy();
-                graficoGeracaoConsumo = null;
-            }
+        function destruirGraficosEnergia() {
+            if (graficoGeracaoDiaria) { graficoGeracaoDiaria.destroy(); graficoGeracaoDiaria = null; }
+            if (graficoGeracaoConsumo) { graficoGeracaoConsumo.destroy(); graficoGeracaoConsumo = null; }
+            if (graficoSaldo) { graficoSaldo.destroy(); graficoSaldo = null; }
+        }
 
-            if (graficoSaldo) {
-                graficoSaldo.destroy();
-                graficoSaldo = null;
-            }
+        function destruirGraficosSalario() {
+            if (graficoSalarioLiquidoMes) { graficoSalarioLiquidoMes.destroy(); graficoSalarioLiquidoMes = null; }
+            if (graficoSalarioProventosDescontos) { graficoSalarioProventosDescontos.destroy(); graficoSalarioProventosDescontos = null; }
+            if (graficoSalarioTipoFolha) { graficoSalarioTipoFolha.destroy(); graficoSalarioTipoFolha = null; }
         }
 
         function limparDashboard() {
             destruirGraficos();
+
+            // Energia
             document.getElementById('card-geracao').textContent = '--';
             document.getElementById('card-consumo').textContent = '--';
             document.getElementById('card-saldo').textContent = '--';
-            document.getElementById('card-geracao-contrato').textContent = '--';    
-            document.getElementById('card-consumo-contrato').textContent = '--';    
+            document.getElementById('card-geracao-contrato').textContent = '--';
+            document.getElementById('card-consumo-contrato').textContent = '--';
             document.getElementById('card-saldo-contrato').textContent = '--';
+
+            // Salário
+            document.getElementById('card-salario-proventos').textContent = '--';
+            document.getElementById('card-salario-descontos').textContent = '--';
+            document.getElementById('card-salario-liquido').textContent = '--';
+            renderizarCardsTiposFolha([]);
+            limparTabelaSalario();
+
             clearDashboardError();
         }
 
         function criarGraficoGeracaoDiaria(labels, dados) {
             const ctx = document.getElementById('geracao-diaria');
-
             graficoGeracaoDiaria = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels,
-                    datasets: [
-                        {
-                            label: 'kWh',
-                            data: dados,
-                            borderWidth: 2,
-                            tension: 0.3,
-                            fill: false
-                        }
-                    ]
+                    datasets: [{
+                        label: 'kWh',
+                        data: dados,
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false
+                    }]
                 },
                 options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    },
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'top'
-                        },
-                        title: {
-                            display: true,
-                            text: 'Geração Diária - Últimos 30 dias',
-                            font: {
-                                size: 18
-                            }
-                        },
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'top',
-                            color: '#333',
-                            font: {
-                                weight: 'bold'
-                            },
-                            formatter: function(value) {
-                                return value;
-                            }
-                        }
-                    }
+                    ...opcoesPadraoComDatalabels('Geração Diária - Últimos 30 dias', value => value),
+                    scales: { y: { beginAtZero: true } }
                 }
             });
         }
 
         function criarGraficoGeracaoConsumo(labels, geracao, consumo) {
             const ctx = document.getElementById('geracao-consumo');
-
             graficoGeracaoConsumo = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels,
                     datasets: [
-                        {
-                            label: 'Gerada',
-                            data: geracao,
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Consumida',
-                            data: consumo,
-                            borderWidth: 1
-                        }
+                        { label: 'Gerada', data: geracao, borderWidth: 1 },
+                        { label: 'Consumida', data: consumo, borderWidth: 1 }
                     ]
                 },
                 options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            position: 'top'
-                        },
-                        title: {
-                            display: true,
-                            text: 'Energia Gerada / Energia Consumida - Últimos 12 meses',
-                            font: {
-                                size: 18
-                            }
-                        },
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'top',
-                            color: '#333',
-                            font: {
-                                weight: 'bold'
-                            },
-                            formatter: function(value) {
-                                return value;
-                            }
-                        }
-                    }
+                    ...opcoesPadraoComDatalabels('Energia Gerada / Energia Consumida - Últimos 12 meses', value => value),
+                    scales: { y: { beginAtZero: true } }
                 }
             });
         }
 
         function criarGraficoSaldo(labels, dados) {
             const ctx = document.getElementById('saldo');
-
             graficoSaldo = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels,
-                    datasets: [
-                        {
-                            label: 'Saldo (kWh)',
-                            data: dados,
-                            borderWidth: 2,
-                            tension: 0.3,
-                            fill: false
-                        }
-                    ]
+                    datasets: [{
+                        label: 'Saldo (kWh)',
+                        data: dados,
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false
+                    }]
                 },
                 options: {
-                    responsive: true,
-                    scales: {
+                    ...opcoesPadraoComDatalabels('Saldo de Energia - Últimos 12 meses', value => value),
+                    scales: { 
                         y: {
                             beginAtZero: false,
                             grid: {
@@ -741,27 +1062,70 @@
                                 }
                             }
                         }
-                    },
+                     }
+                }
+            });
+        }
+
+        function criarGraficoSalarioLiquidoMes(labels, dados) {
+            const ctx = document.getElementById('salario-liquido-mes');
+            graficoSalarioLiquidoMes = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Líquido',
+                        data: dados,
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false
+                    }]
+                },
+                options: opcoesPadraoComDatalabels('Salário Líquido por Mês', value => formatarMoedaBR(value))
+            });
+        }
+
+        function criarGraficoSalarioProventosDescontos(labels, proventos, descontos) {
+            const ctx = document.getElementById('salario-proventos-descontos');
+            graficoSalarioProventosDescontos = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: 'Proventos', data: proventos, borderWidth: 1 },
+                        { label: 'Descontos', data: descontos, borderWidth: 1 }
+                    ]
+                },
+                options: {
+                    ...opcoesPadraoComDatalabels('Proventos x Descontos por Mês', value => formatarMoedaBR(value)),
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function criarGraficoSalarioTipoFolha(labels, dados) {
+            const ctx = document.getElementById('salario-tipo-folha');
+            graficoSalarioTipoFolha = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels,
+                    datasets: [{ data: dados, borderWidth: 1 }]
+                },
+                options: {
+                    responsive: true,
                     plugins: {
-                        legend: {
-                            position: 'top'
-                        },
                         title: {
                             display: true,
-                            text: 'Saldo de Energia - Últimos 12 meses',
-                            font: {
-                                size: 18
-                            }
+                            text: 'Distribuição do Líquido por Tipo de Folha',
+                            font: { size: 18 }
                         },
+                        legend: { position: 'top' },
                         datalabels: {
-                            anchor: 'end',
-                            align: 'top',
-                            color: '#333',
-                            font: {
-                                weight: 'bold'
-                            },
-                            formatter: function(value) {
-                                return value;
+                            color: '#fff',
+                            font: { weight: 'bold' },
+                            formatter: function(value, context) {
+                                const label = context.chart.data.labels[context.dataIndex];
+                                return `${label}\n${formatarMoedaBR(value)}`;
                             }
                         }
                     }
@@ -770,75 +1134,104 @@
         }
 
         // ============================================
-        // CARREGAMENTO DO DASHBOARD
+        // CARGAS DE DADOS
         // ============================================
+        async function carregarEnergiaDashboard() {
+            destruirGraficosEnergia();
+
+            const [
+                geracao30Dias,
+                geracao12Meses,
+                consumo12Meses,
+                saldo12Meses,
+                totais
+            ] = await Promise.all([
+                apiRequest({ url: `${ENERGIA_BASE_URL}geracaoultimos30dias` }),
+                apiRequest({ url: `${ENERGIA_BASE_URL}geracaoultimos12meses` }),
+                apiRequest({ url: `${ENERGIA_BASE_URL}consumoultimos12meses` }),
+                apiRequest({ url: `${ENERGIA_BASE_URL}saldoultimos12meses` }),
+                apiRequest({ url: `${ENERGIA_TOTAL_URL}` })
+            ]);
+
+            const geracao12Ordenado = ordenarCrescente(geracao12Meses);
+            const consumo12Ordenado = ordenarCrescente(consumo12Meses);
+            const saldo12Ordenado = ordenarCrescente(saldo12Meses);
+            const geracao30Ordenado = ordenarCrescente(geracao30Dias);
+
+            const dadosGeracaoMensal = extrairDadosMensais(geracao12Ordenado);
+            const dadosConsumoMensal = extrairDadosMensais(consumo12Ordenado);
+            const dadosSaldoMensal = extrairDadosMensais(saldo12Ordenado);
+            const dadosGeracaoDiaria = extrairDadosDiarios(geracao30Ordenado);
+
+            criarGraficoGeracaoDiaria(dadosGeracaoDiaria.labels, dadosGeracaoDiaria.valores);
+            criarGraficoGeracaoConsumo(dadosGeracaoMensal.labels, dadosGeracaoMensal.valores, dadosConsumoMensal.valores);
+            criarGraficoSaldo(dadosSaldoMensal.labels, dadosSaldoMensal.valores);
+
+            document.getElementById('card-geracao').textContent = formatarKwh(somarValores(geracao12Meses));
+            document.getElementById('card-consumo').textContent = formatarKwh(somarValores(consumo12Meses));
+            document.getElementById('card-saldo').textContent = formatarKwh(somarValores(saldo12Meses));
+            document.getElementById('card-geracao-contrato').textContent = formatarKwh(totais.energiaGerada);
+            document.getElementById('card-consumo-contrato').textContent = formatarKwh(totais.energiaConsumidaTotal);
+            document.getElementById('card-saldo-contrato').textContent = formatarKwh(totais.saldoMes);
+        }
+
+        async function carregarSalarioDashboard(ano) {
+            destruirGraficosSalario();
+            renderizarCardsTiposFolha([]);
+            limparTabelaSalario();
+
+            const folhasSalario = await apiRequest({ url: `${SALARIO_BASE_URL}${ano}` });
+            const folhas = Array.isArray(folhasSalario) ? folhasSalario : [];
+
+            const totalProventos = folhas.reduce((acc, item) => acc + parseMoedaBR(item.totalProventos), 0);
+            const totalDescontos = folhas.reduce((acc, item) => acc + parseMoedaBR(item.totalDescontos), 0);
+            const totalLiquido = folhas.reduce((acc, item) => acc + parseMoedaBR(item.totalLiquido), 0);
+
+            document.getElementById('card-salario-proventos').textContent = formatarMoedaBR(totalProventos);
+            document.getElementById('card-salario-descontos').textContent = formatarMoedaBR(totalDescontos);
+            document.getElementById('card-salario-liquido').textContent = formatarMoedaBR(totalLiquido);
+
+            const folhasPorMes = agruparFolhasPorMes(folhas);
+            const labelsSalario = folhasPorMes.map(item => formatarPeriodoMesAno(item.periodo));
+            const proventosMes = folhasPorMes.map(item => item.proventos);
+            const descontosMes = folhasPorMes.map(item => item.descontos);
+            const liquidoMes = folhasPorMes.map(item => item.liquido);
+
+            criarGraficoSalarioLiquidoMes(labelsSalario, liquidoMes);
+            criarGraficoSalarioProventosDescontos(labelsSalario, proventosMes, descontosMes);
+
+            const tipoFolhaAgrupado = agruparFolhasPorTipo(folhas);
+            criarGraficoSalarioTipoFolha(tipoFolhaAgrupado.labels, tipoFolhaAgrupado.valores);
+            renderizarCardsTiposFolha(tipoFolhaAgrupado.lista);
+
+            const folhasOrdenadas = [...folhas].sort((a, b) => {
+                const [diaA, mesA, anoA] = String(a.dataPagamento || '').split('/').map(Number);
+                const [diaB, mesB, anoB] = String(b.dataPagamento || '').split('/').map(Number);
+                const dateA = new Date(anoA || 0, (mesA || 1) - 1, diaA || 1).getTime();
+                const dateB = new Date(anoB || 0, (mesB || 1) - 1, diaB || 1).getTime();
+                return dateB - dateA;
+            });
+
+            renderizarTabelaSalario(folhasOrdenadas);
+        }
+
         async function carregarDashboard() {
             clearDashboardError();
             toggleDashboardLoading(true);
-            destruirGraficos();
 
             try {
-                const [
-                    geracao30Dias,
-                    geracao12Meses,
-                    consumo12Meses,
-                    saldo12Meses,
-                    totais
-                ] = await Promise.all([
-                    apiRequest({
-                        url: `${ENERGIA_BASE_URL}geracaoultimos30dias`
-                    }),
-                    apiRequest({
-                        url: `${ENERGIA_BASE_URL}geracaoultimos12meses`
-                    }),
-                    apiRequest({
-                        url: `${ENERGIA_BASE_URL}consumoultimos12meses`
-                    }),
-                    apiRequest({
-                        url: `${ENERGIA_BASE_URL}saldoultimos12meses`
-                    }),
-                    apiRequest({
-                        url: `${ENERGIA_TOTAL_URL}`
-                    })
+                const ano = obterAnoSalarioSelecionado();
+                await Promise.all([
+                    carregarEnergiaDashboard(),
+                    carregarSalarioDashboard(ano)
                 ]);
-
-                const geracao12Ordenado = ordenarCrescente(geracao12Meses);
-                const consumo12Ordenado = ordenarCrescente(consumo12Meses);
-                const saldo12Ordenado = ordenarCrescente(saldo12Meses);
-                const geracao30Ordenado = ordenarCrescente(geracao30Dias);
-
-                const dadosGeracaoMensal = extrairDadosMensais(geracao12Ordenado);
-                const dadosConsumoMensal = extrairDadosMensais(consumo12Ordenado);
-                const dadosSaldoMensal = extrairDadosMensais(saldo12Ordenado);
-                const dadosGeracaoDiaria = extrairDadosDiarios(geracao30Ordenado);
-
-                criarGraficoGeracaoDiaria(
-                    dadosGeracaoDiaria.labels,
-                    dadosGeracaoDiaria.valores
-                );
-
-                criarGraficoGeracaoConsumo(
-                    dadosGeracaoMensal.labels,
-                    dadosGeracaoMensal.valores,
-                    dadosConsumoMensal.valores
-                );
-
-                criarGraficoSaldo(
-                    dadosSaldoMensal.labels,
-                    dadosSaldoMensal.valores
-                );
-
-                document.getElementById('card-geracao').textContent = formatarKwh(somarValores(geracao12Meses));
-                document.getElementById('card-consumo').textContent = formatarKwh(somarValores(consumo12Meses));
-                document.getElementById('card-saldo').textContent = formatarKwh(somarValores(saldo12Meses));
-                document.getElementById('card-geracao-contrato').textContent = formatarKwh(totais.energiaGerada);    
-                document.getElementById('card-consumo-contrato').textContent = formatarKwh(totais.energiaConsumidaTotal);    
-                document.getElementById('card-saldo-contrato').textContent = formatarKwh(totais.saldoMes);
-
             } catch (error) {
                 console.error(error);
 
-                if (error.message.includes('Sessão expirada') || error.message.includes('autenticado')) {
+                if (
+                    String(error.message || '').includes('Sessão expirada') ||
+                    String(error.message || '').includes('autenticado')
+                ) {
                     limparSessaoCompleta();
                     mostrarLogin();
                     setLoginError('Sua sessão expirou. Faça login novamente.');
@@ -851,12 +1244,38 @@
             }
         }
 
+        async function carregarSomenteSalario() {
+            clearDashboardError();
+            toggleDashboardLoading(true);
+
+            try {
+                const ano = obterAnoSalarioSelecionado();
+                salvarAnoSalario(ano);
+                await carregarSalarioDashboard(ano);
+            } catch (error) {
+                console.error(error);
+
+                if (
+                    String(error.message || '').includes('Sessão expirada') ||
+                    String(error.message || '').includes('autenticado')
+                ) {
+                    limparSessaoCompleta();
+                    mostrarLogin();
+                    setLoginError('Sua sessão expirou. Faça login novamente.');
+                    return;
+                }
+
+                setDashboardError(error.message || 'Erro ao carregar salário.');
+            } finally {
+                toggleDashboardLoading(false);
+            }
+        }
+
         // ============================================
         // EVENTOS
         // ============================================
         document.getElementById('login-form').addEventListener('submit', async function(event) {
             event.preventDefault();
-
             clearLoginError();
 
             const username = document.getElementById('username').value.trim();
@@ -869,12 +1288,9 @@
 
             try {
                 toggleLoginLoading(true);
-
                 await fazerLogin(username, password);
-
                 mostrarDashboard();
                 await carregarDashboard();
-
             } catch (error) {
                 console.error(error);
                 setLoginError(error.message || 'Falha ao fazer login.');
@@ -883,10 +1299,22 @@
             }
         });
 
+        document.getElementById('btn-recarregar-salario').addEventListener('click', async function() {
+            await carregarSomenteSalario();
+        });
+
+        document.getElementById('salario-ano').addEventListener('change', async function() {
+            salvarAnoSalario(this.value);
+            await carregarSomenteSalario();
+        });
+
         // ============================================
         // INICIALIZAÇÃO
         // ============================================
         async function init() {
+            popularFiltroAnoSalario();
+            renderizarCardsTiposFolha([]);
+
             const accessToken = obterAccessToken();
             const refreshToken = obterRefreshToken();
 
@@ -896,12 +1324,9 @@
             }
 
             try {
-                // Se necessário, já renova antes mesmo de iniciar o dashboard
                 await garantirAccessTokenValido();
-
                 mostrarDashboard();
                 await carregarDashboard();
-
             } catch (error) {
                 console.error(error);
                 limparSessaoCompleta();
