@@ -126,7 +126,7 @@
             <div class="card-body d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
                 <div>
                     <h2 class="mb-1">Dashboard</h2>
-                    <p class="text-muted mb-0">Energia e salário em abas com autenticação compartilhada</p>
+                    <p class="text-muted mb-0">Energia e salário</p>
                 </div>
 
                 <div class="d-flex align-items-center gap-2">
@@ -256,7 +256,14 @@
                         <div class="row g-3 align-items-end">
                             <div class="col-12 col-md-4 col-lg-3">
                                 <label for="salario-ano" class="form-label">Ano da folha</label>
-                                <select id="salario-ano" class="form-select"></select>
+                                <select id="salario-ano" class="form-select">
+                                    <option value="" disabled>Selecione o ano</option>
+                                    <option value="2026">2026</option>
+                                    <option value="2025">2025</option>
+                                    <option value="2024">2024</option>
+                                    <option value="2023">2023</option>
+                                    <option value="2022">2022</option>
+                                </select>
                             </div>
                             <div class="col-12 col-md-4 col-lg-3">
                                 <button id="btn-recarregar-salario" class="btn btn-primary w-100" type="button">
@@ -891,25 +898,6 @@
             };
         }
 
-        function popularFiltroAnoSalario() {
-            const select = document.getElementById('salario-ano');
-            const anoAtual = new Date().getFullYear();
-            const anos = [];
-
-            for (let ano = anoAtual - 3; ano <= anoAtual + 1; ano++) {
-                anos.push(ano);
-            }
-
-            select.innerHTML = anos
-                .sort((a, b) => b - a)
-                .map(ano => `<option value="${ano}">${ano}</option>`)
-                .join('');
-
-            const salvo = obterAnoSalario();
-            const valorInicial = salvo && anos.includes(Number(salvo)) ? salvo : String(anoAtual);
-            select.value = valorInicial;
-        }
-
         function obterAnoSalarioSelecionado() {
             return document.getElementById('salario-ano').value;
         }
@@ -1245,7 +1233,6 @@
         // INICIALIZAÇÃO
         // ============================================
         async function init() {
-            popularFiltroAnoSalario();
             renderizarCardsTiposFolha([]);
 
             const accessToken = obterAccessToken();
