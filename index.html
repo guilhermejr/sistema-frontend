@@ -85,6 +85,27 @@
             from { opacity: 0; transform: translateY(4px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        .linha-folha {
+            cursor: pointer;
+            transition: background-color .15s ease-in-out;
+        }
+
+        .linha-folha:hover {
+            background-color: #eef6ff !important;
+        }
+
+        .modal-detalhe-folha .table td,
+        .modal-detalhe-folha .table th {
+            vertical-align: middle;
+        }
+
+        .item-dica {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+
     </style>
 </head>
 <body>
@@ -364,6 +385,24 @@
         </div>
     </div>
 
+    <!-- MODAL DETALHE DA FOLHA -->
+    <div class="modal fade" id="modal-detalhe-folha" tabindex="-1" aria-labelledby="modal-detalhe-folha-label" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content modal-detalhe-folha">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-detalhe-folha-label">Detalhes da folha</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body" id="modal-detalhe-folha-body">
+                    <div class="text-center py-4 text-muted">Selecione uma folha para visualizar os detalhes.</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         Chart.register(ChartDataLabels);
 
@@ -382,6 +421,7 @@
         const ENERGIA_BASE_URL = `${API_BASE}/energia-service/acompanhamentos/`;
         const ENERGIA_TOTAL_URL = `${API_BASE}/energia-service/total`;
         const SALARIO_BASE_URL = `${API_BASE}/salario-service/folha/ano/`;
+        const SALARIO_DETALHE_URL = `${API_BASE}/salario-service/folha/`;
         
         const TOKEN_BUFFER_SECONDS = 60;
 
@@ -498,7 +538,7 @@
             }
 
             tbody.innerHTML = folhas.map(folha => `
-                <tr>
+                <tr class="linha-folha" data-folha-id="${escapeHtml(folha.id ?? '')}" title="Clique para ver os detalhes da folha">
                     <td>${escapeHtml(folha.dataPagamento || '--')}</td>
                     <td>${escapeHtml(folha?.tipoFolha?.descricao || 'Não identificado')}</td>
                     <td>${formatarMoedaBR(parseMoedaBR(folha.totalProventos))}</td>
@@ -1219,6 +1259,187 @@
             }
         }
 
+        function formatarTexto(valor, fallback = '--') {
+            if (valor == null || valor === '') return fallback;
+            return escapeHtml(String(valor));
+        }
+
+        function badgeTipoItem(tipo) {
+            if (tipo === 'P') return '<span class="badge text-bg-success">Provento</span>';
+            if (tipo === 'D') return '<span class="badge text-bg-danger">Desconto</span>';
+            return '<span class="badge text-bg-secondary">Outro</span>';
+        }
+
+        function renderizarTabelaItensFolha(itens, tipo) {
+            const filtrados = (Array.isArray(itens) ? itens : []).filter(item => item?.tipoItem?.tipo === tipo);
+
+            if (!filtrados.length) {
+                return `
+                    <div class="alert alert-light border text-muted mb-0">
+                        Nenhum item encontrado.
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Descrição</th>
+                                <th>Unidade</th>
+                                <th>Valor</th>
+                                <th>Tipo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filtrados.map(item => `
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">${formatarTexto(item?.tipoItem?.descricao, 'Não identificado')}</div>
+                                        ${item?.tipoItem?.dica
+                                            ? `<div class="item-dica">${formatarTexto(item.tipoItem.dica)}</div>`
+                                            : ''
+                                        }
+                                    </td>
+                                    <td>${formatarTexto(item.unidade, '--')}</td>
+                                    <td>${formatarMoedaBR(parseMoedaBR(item.valor))}</td>
+                                    <td>${badgeTipoItem(item?.tipoItem?.tipo)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderizarDetalheFolhaModal(folha) {
+            const body = document.getElementById('modal-detalhe-folha-body');
+
+            const itens = Array.isArray(folha?.items) ? folha.items : [];
+            const totalItens = itens.length;
+
+            body.innerHTML = `
+                <div class="container-fluid px-0">
+                    <div class="row g-3 mb-4">
+                        <div class="col-12 col-md-3">
+                            <div class="card card-resumo h-100 text-center">
+                                <div class="card-body">
+                                    <h6 class="text-muted">Data de pagamento</h6>
+                                    <div class="fs-6 fw-bold">${formatarTexto(folha?.dataPagamento)}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-3">
+                            <div class="card card-resumo h-100 text-center">
+                                <div class="card-body">
+                                    <h6 class="text-muted">Tipo de folha</h6>
+                                    <div class="fs-6 fw-bold">${formatarTexto(folha?.tipoFolha?.descricao, 'Não identificado')}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-2">
+                            <div class="card card-resumo h-100 text-center">
+                                <div class="card-body">
+                                    <h6 class="text-muted">Proventos</h6>
+                                    <div class="fs-6 fw-bold text-success">${formatarMoedaBR(parseMoedaBR(folha?.totalProventos))}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-2">
+                            <div class="card card-resumo h-100 text-center">
+                                <div class="card-body">
+                                    <h6 class="text-muted">Descontos</h6>
+                                    <div class="fs-6 fw-bold text-danger">${formatarMoedaBR(parseMoedaBR(folha?.totalDescontos))}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-2">
+                            <div class="card card-resumo h-100 text-center">
+                                <div class="card-body">
+                                    <h6 class="text-muted">Líquido</h6>
+                                    <div class="fs-6 fw-bold text-primary">${formatarMoedaBR(parseMoedaBR(folha?.totalLiquido))}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h5 class="mb-1">Itens da folha</h5>
+                            <div class="small-muted">Folha #${formatarTexto(folha?.id)} • ${totalItens} item(ns)</div>
+                        </div>
+                    </div>
+
+                    <ul class="nav nav-tabs mb-3" id="tabs-itens-folha" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="proventos-tab-modal" data-bs-toggle="tab" data-bs-target="#proventos-modal-pane" type="button" role="tab">
+                                Proventos
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="descontos-tab-modal" data-bs-toggle="tab" data-bs-target="#descontos-modal-pane" type="button" role="tab">
+                                Descontos
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="proventos-modal-pane" role="tabpanel" aria-labelledby="proventos-tab-modal">
+                            ${renderizarTabelaItensFolha(itens, 'P')}
+                        </div>
+                        <div class="tab-pane fade" id="descontos-modal-pane" role="tabpanel" aria-labelledby="descontos-tab-modal">
+                            ${renderizarTabelaItensFolha(itens, 'D')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderizarLoadingModalFolha(idFolha) {
+            const body = document.getElementById('modal-detalhe-folha-body');
+            body.innerHTML = `
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary mb-3" role="status"></div>
+                    <div class="text-muted">Carregando detalhes da folha #${escapeHtml(String(idFolha))}...</div>
+                </div>
+            `;
+        }
+
+        function renderizarErroModalFolha(mensagem) {
+            const body = document.getElementById('modal-detalhe-folha-body');
+            body.innerHTML = `
+                <div class="alert alert-danger mb-0">
+                    ${escapeHtml(mensagem || 'Não foi possível carregar os dados da folha.')}
+                </div>
+            `;
+        }
+
+        async function abrirDetalheFolha(idFolha) {
+            if (!idFolha) return;
+
+            const modalElement = document.getElementById('modal-detalhe-folha');
+            const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+            const titulo = document.getElementById('modal-detalhe-folha-label');
+
+            titulo.textContent = `Detalhes da folha #${idFolha}`;
+            renderizarLoadingModalFolha(idFolha);
+            modal.show();
+
+            try {
+                const folha = await apiRequest({ url: `${SALARIO_DETALHE_URL}${idFolha}` });
+                titulo.textContent = `Detalhes da folha #${folha?.id ?? idFolha}`;
+                renderizarDetalheFolhaModal(folha);
+            } catch (error) {
+                console.error(error);
+                renderizarErroModalFolha(error.message || 'Erro ao carregar detalhes da folha.');
+            }
+        }
+
         // ============================================
         // EVENTOS
         // ============================================
@@ -1285,6 +1506,19 @@
             const [ano, mes, dia] = dataISO.split('-');  
             return `${dia}/${mes}/${ano}`;
         }
+
+        document.getElementById('tabela-salario-body').addEventListener('click', async function(event) {
+            const linha = event.target.closest('tr[data-folha-id]');
+            if (!linha) return;
+
+            const idFolha = linha.getAttribute('data-folha-id');
+            if (!idFolha) {
+                setDashboardError('A folha selecionada não possui identificador para consulta de detalhes.');
+                return;
+            }
+
+            await abrirDetalheFolha(idFolha);
+        });
 
         // ============================================
         // INICIALIZAÇÃO
