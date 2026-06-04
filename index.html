@@ -1126,8 +1126,26 @@
             document.getElementById('card-salario-liquido').textContent = formatarMoedaBR(totalLiquido);
 
             const folhasPorMes = agruparFolhasPorMes(folhas);
-            const labelsSalario = folhasPorMes.map(item => formatarPeriodoMesAno(item.periodo));
-            const liquidoMes = folhasPorMes.map(item => item.liquido);
+
+            // cria mapa mês/ano -> valor
+            const mapa = {};
+            folhasPorMes.forEach(item => {
+                mapa[item.periodo] = item.liquido;
+            });
+
+            // garante todos os meses do ano
+            const labelsSalario = [];
+            const liquidoMes = [];
+
+            for (let mes = 1; mes <= 12; mes++) {
+                const mesStr = String(mes).padStart(2, '0');
+                const periodo = `${mesStr}/${ano}`;
+
+                labelsSalario.push(formatarPeriodoMesAno(periodo));
+
+                // se não existir mês → NaN
+                liquidoMes.push(mapa[periodo] ?? NaN);
+            }
 
             criarGraficoSalarioLiquidoMes(labelsSalario, liquidoMes);
 
