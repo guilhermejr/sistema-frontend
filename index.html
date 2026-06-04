@@ -367,9 +367,9 @@
                                     <tr>
                                         <th>Data de pagamento</th>
                                         <th>Tipo de folha</th>
-                                        <th>Proventos</th>
-                                        <th>Descontos</th>
-                                        <th>Líquido</th>
+                                        <th class="text-end">Proventos</th>
+                                        <th class="text-end">Descontos</th>
+                                        <th class="text-end">Líquido</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tabela-salario-body">
@@ -541,9 +541,9 @@
                 <tr class="linha-folha" data-folha-id="${escapeHtml(folha.id ?? '')}" title="Clique para ver os detalhes da folha">
                     <td>${escapeHtml(folha.dataPagamento || '--')}</td>
                     <td>${escapeHtml(folha?.tipoFolha?.descricao || 'Não identificado')}</td>
-                    <td>${formatarMoedaBR(parseMoedaBR(folha.totalProventos))}</td>
-                    <td>${formatarMoedaBR(parseMoedaBR(folha.totalDescontos))}</td>
-                    <td>${formatarMoedaBR(parseMoedaBR(folha.totalLiquido))}</td>
+                    <td class="text-end">${formatarMoedaBR(parseMoedaBR(folha.totalProventos))}</td>
+                    <td class="text-end">${formatarMoedaBR(parseMoedaBR(folha.totalDescontos))}</td>
+                    <td class="text-end">${formatarMoedaBR(parseMoedaBR(folha.totalLiquido))}</td>
                 </tr>
             `).join('');
         }
@@ -1144,7 +1144,7 @@
             document.getElementById('card-saldo-contrato').textContent = formatarKwh(totais.saldoMes);
 
             let texto = document.getElementById('data-contrato').textContent;
-            const textoAtualizado = texto + ` cauculado até ${formatarData(contaUltimoMes.fim)}`;
+            const textoAtualizado = texto + ` calculado até ${formatarData(contaUltimoMes.fim)}`;
             document.getElementById('data-contrato').textContent = textoAtualizado;
 
         }
@@ -1287,9 +1287,8 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Descrição</th>
-                                <th>Unidade</th>
-                                <th>Valor</th>
-                                <th>Tipo</th>
+                                <th class="text-end">Unidade</th>
+                                <th class="text-end">Valor</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1302,9 +1301,8 @@
                                             : ''
                                         }
                                     </td>
-                                    <td>${formatarTexto(item.unidade, '--')}</td>
-                                    <td>${formatarMoedaBR(parseMoedaBR(item.valor))}</td>
-                                    <td>${badgeTipoItem(item?.tipoItem?.tipo)}</td>
+                                    <td class="text-end">${formatarTexto(item.unidade, '--')}</td>
+                                    <td class="text-end">${formatarMoedaBR(parseMoedaBR(item.valor))}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -1343,8 +1341,8 @@
                         <div class="col-12 col-md-2">
                             <div class="card card-resumo h-100 text-center">
                                 <div class="card-body">
-                                    <h6 class="text-muted">Proventos</h6>
-                                    <div class="fs-6 fw-bold text-success">${formatarMoedaBR(parseMoedaBR(folha?.totalProventos))}</div>
+                                    <h6 class="text-muted text">Proventos</h6>
+                                    <div class="fs-6 fw-bold">${formatarMoedaBR(parseMoedaBR(folha?.totalProventos))}</div>
                                 </div>
                             </div>
                         </div>
@@ -1353,7 +1351,7 @@
                             <div class="card card-resumo h-100 text-center">
                                 <div class="card-body">
                                     <h6 class="text-muted">Descontos</h6>
-                                    <div class="fs-6 fw-bold text-danger">${formatarMoedaBR(parseMoedaBR(folha?.totalDescontos))}</div>
+                                    <div class="fs-6 fw-bold">${formatarMoedaBR(parseMoedaBR(folha?.totalDescontos))}</div>
                                 </div>
                             </div>
                         </div>
@@ -1362,7 +1360,7 @@
                             <div class="card card-resumo h-100 text-center">
                                 <div class="card-body">
                                     <h6 class="text-muted">Líquido</h6>
-                                    <div class="fs-6 fw-bold text-primary">${formatarMoedaBR(parseMoedaBR(folha?.totalLiquido))}</div>
+                                    <div class="fs-6 fw-bold">${formatarMoedaBR(parseMoedaBR(folha?.totalLiquido))}</div>
                                 </div>
                             </div>
                         </div>
@@ -1371,7 +1369,7 @@
                     <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <div>
                             <h5 class="mb-1">Itens da folha</h5>
-                            <div class="small-muted">Folha #${formatarTexto(folha?.id)} • ${totalItens} item(ns)</div>
+                            <div class="small-muted">${totalItens} item(ns)</div>
                         </div>
                     </div>
 
