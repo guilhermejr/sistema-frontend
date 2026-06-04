@@ -165,7 +165,9 @@
                 
                 <div class="row mb-4">
                     <div class="col-12">
-                        <h5 id="data-contrato" class="mb-3">Desde o início do contrato (11/11/2021) </h5>
+                        <span data-bs-toggle="tooltip" data-bs-title="Disabled tooltip">
+                            <h5 id="data-contrato" class="mb-3">Desde o início do contrato, </h5>
+                        </span>
                     </div>
 
                     <div class="col-12 col-lg-4 mb-3">
@@ -1069,12 +1071,14 @@
                 geracao12Meses,
                 consumo12Meses,
                 saldo12Meses,
+                contaUltimoMes,
                 totais
             ] = await Promise.all([
                 apiRequest({ url: `${ENERGIA_BASE_URL}geracaoultimos30dias` }),
                 apiRequest({ url: `${ENERGIA_BASE_URL}geracaoultimos12meses` }),
                 apiRequest({ url: `${ENERGIA_BASE_URL}consumoultimos12meses` }),
                 apiRequest({ url: `${ENERGIA_BASE_URL}saldoultimos12meses` }),
+                apiRequest({ url: `${ENERGIA_BASE_URL}contaultimomes` }),
                 apiRequest({ url: `${ENERGIA_TOTAL_URL}` })
             ]);
 
@@ -1098,6 +1102,11 @@
             document.getElementById('card-geracao-contrato').textContent = formatarKwh(totais.energiaGerada);
             document.getElementById('card-consumo-contrato').textContent = formatarKwh(totais.energiaConsumidaTotal);
             document.getElementById('card-saldo-contrato').textContent = formatarKwh(totais.saldoMes);
+
+            let texto = document.getElementById('data-contrato').textContent;
+            const textoAtualizado = texto + ` cauculado até ${formatarData(contaUltimoMes.fim)}`;
+            document.getElementById('data-contrato').textContent = textoAtualizado;
+
         }
 
         async function carregarSalarioDashboard(ano) {
@@ -1254,14 +1263,24 @@
             return `${anos} ano${anos !== 1 ? 's' : ''} e ${meses} mes${meses !== 1 ? 'es' : ''}`;
         }
 
+        function formatarData(dataISO) {  
+            const [ano, mes, dia] = dataISO.split('-');  
+            return `${dia}/${mes}/${ano}`;
+        }
+
         // ============================================
         // INICIALIZAÇÃO
         // ============================================
         async function init() {
 
-            let texto = document.getElementById('data-contrato').textContent;
-            const textoAtualizado = texto + `a ${calcularAnosEMeses('11/11/2021')}`;
-            document.getElementById('data-contrato').textContent = textoAtualizado;
+            // --- Configura tooltip do contrato com cálculo de tempo de contrato ---
+            const elemento = document.querySelector('#data-contrato').parentElement;
+            elemento.setAttribute('data-bs-title', 'Início do contrato em 11/11/2021 a ' + `${calcularAnosEMeses('11/11/2021')}`);
+
+            // --- Inicia tooltips do Bootstrap ---
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
 
             renderizarCardsTiposFolha([]);
 
