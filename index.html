@@ -165,7 +165,7 @@
                 
                 <div class="row mb-4">
                     <div class="col-12">
-                        <h5 class="mb-3">Desde o início do contrato (11/11/2021)</h5>
+                        <h5 id="data-contrato" class="mb-3">Desde o início do contrato (11/11/2021) </h5>
                     </div>
 
                     <div class="col-12 col-lg-4 mb-3">
@@ -1229,10 +1229,40 @@
             await carregarSomenteSalario();
         });
 
+        function calcularAnosEMeses(dataStr) {
+            // Quebra a string DD/MM/YYYY
+            const [dia, mes, ano] = dataStr.split('/').map(Number);
+
+            // Cria a data informada
+            const dataInicial = new Date(ano, mes - 1, dia);
+            const hoje = new Date();
+
+            let anos = hoje.getFullYear() - dataInicial.getFullYear();
+            let meses = hoje.getMonth() - dataInicial.getMonth();
+
+            // Ajuste se o dia atual ainda não chegou no mês
+            if (hoje.getDate() < dataInicial.getDate()) {
+                meses--;
+            }
+
+            // Ajuste se os meses ficaram negativos
+            if (meses < 0) {
+                anos--;
+                meses += 12;
+            }
+
+            return `${anos} ano${anos !== 1 ? 's' : ''} e ${meses} mes${meses !== 1 ? 'es' : ''}`;
+        }
+
         // ============================================
         // INICIALIZAÇÃO
         // ============================================
         async function init() {
+
+            let texto = document.getElementById('data-contrato').textContent;
+            const textoAtualizado = texto + `a ${calcularAnosEMeses('11/11/2021')}`;
+            document.getElementById('data-contrato').textContent = textoAtualizado;
+
             renderizarCardsTiposFolha([]);
 
             const accessToken = obterAccessToken();
