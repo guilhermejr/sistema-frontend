@@ -183,7 +183,7 @@
         <div class="tab-content">
             <!-- ABA ENERGIA -->
             <div class="tab-pane fade show active" id="tab-energia" role="tabpanel" aria-labelledby="energia-tab">
-                
+
                 <div class="row mb-4">
                     <div class="col-12">
                         <span data-bs-toggle="tooltip" data-bs-title="Disabled tooltip">
@@ -247,6 +247,21 @@
                             <div class="card-body">
                                 <h6 class="text-muted">Saldo</h6>
                                 <div id="card-saldo" class="fs-4 fw-bold">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="mb-3">Geração desde a última leitura, <span id="card-geracao-parcial-data">--</span></h5>
+                    </div>
+
+                    <div class="col-12 col-lg-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Geração Parcial</h6>
+                                <div id="card-geracao-parcial" class="fs-4 fw-bold">--</div>
                             </div>
                         </div>
                     </div>
@@ -1000,6 +1015,12 @@
             document.getElementById('card-consumo-contrato').textContent = '--';
             document.getElementById('card-saldo-contrato').textContent = '--';
 
+            // Novos campos do card parcial
+            if (document.getElementById('card-geracao-parcial')) {
+                document.getElementById('card-geracao-parcial').textContent = '--';
+                document.getElementById('card-geracao-parcial-data').textContent = '--';
+            }
+
             // Salário
             document.getElementById('card-salario-proventos').textContent = '--';
             document.getElementById('card-salario-descontos').textContent = '--';
@@ -1112,14 +1133,16 @@
                 consumo12Meses,
                 saldo12Meses,
                 contaUltimoMes,
-                totais
+                totais,
+                geracaoParcial
             ] = await Promise.all([
                 apiRequest({ url: `${ENERGIA_BASE_URL}geracaoultimos30dias` }),
                 apiRequest({ url: `${ENERGIA_BASE_URL}geracaoultimos12meses` }),
                 apiRequest({ url: `${ENERGIA_BASE_URL}consumoultimos12meses` }),
                 apiRequest({ url: `${ENERGIA_BASE_URL}saldoultimos12meses` }),
                 apiRequest({ url: `${ENERGIA_BASE_URL}contaultimomes` }),
-                apiRequest({ url: `${ENERGIA_TOTAL_URL}` })
+                apiRequest({ url: `${ENERGIA_TOTAL_URL}` }),
+                apiRequest({ url: `${ENERGIA_BASE_URL}geradosesdeultimaleitura` })
             ]);
 
             const geracao12Ordenado = ordenarCrescente(geracao12Meses);
@@ -1142,6 +1165,19 @@
             document.getElementById('card-geracao-contrato').textContent = formatarKwh(totais.energiaGerada);
             document.getElementById('card-consumo-contrato').textContent = formatarKwh(totais.energiaConsumidaTotal);
             document.getElementById('card-saldo-contrato').textContent = formatarKwh(totais.saldoMes);
+            document.getElementById('card-geracao-contrato').textContent = formatarKwh(totais.energiaGerada);
+            document.getElementById('card-consumo-contrato').textContent = formatarKwh(totais.energiaConsumidaTotal);
+            document.getElementById('card-saldo-contrato').textContent = formatarKwh(totais.saldoMes);
+
+            if (geracaoParcial) {
+                document.getElementById('card-geracao-parcial').textContent = formatarKwh(geracaoParcial.gerado);
+                
+                if (geracaoParcial.atualizado) {
+                    // Formata a data ISO para o padrão local do Brasil (DD/MM/AAAA HH:MM:SS)
+                    const dataFormatada = new Date(geracaoParcial.atualizado).toLocaleDateString('pt-BR');
+                    document.getElementById('card-geracao-parcial-data').textContent = `calculado a partir de ${dataFormatada}`;
+                }
+            }
 
             let texto = document.getElementById('data-contrato').textContent;
             const textoAtualizado = texto + ` calculado até ${formatarData(contaUltimoMes.fim)}`;
