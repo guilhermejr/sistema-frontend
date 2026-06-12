@@ -1175,7 +1175,7 @@
                 if (geracaoParcial.atualizado) {
                     // Formata a data ISO para o padrão local do Brasil (DD/MM/AAAA HH:MM:SS)
                     const dataFormatada = new Date(geracaoParcial.atualizado).toLocaleDateString('pt-BR');
-                    document.getElementById('card-geracao-parcial-data').textContent = `calculado a partir de ${dataFormatada}`;
+                    document.getElementById('card-geracao-parcial-data').textContent = `calculado até ${dataFormatada}`;
                 }
             }
 
