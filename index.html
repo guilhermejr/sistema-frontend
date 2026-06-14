@@ -1359,7 +1359,7 @@
                     }]
                 },
                 options: {
-                    ...opcoesPadraoComDatalabels('Tempo total de treino por semana', value => formatarNumero(value)),
+                    ...opcoesPadraoComDatalabels('Tempo total de treino por semana', value => formatarNumero(value, 0)),
                     scales: { y: { beginAtZero: true } }
                 }
             });
@@ -1380,7 +1380,7 @@
                     }]
                 },
                 options: {
-                    ...opcoesPadraoComDatalabels('Treino por semana', value => formatarNumero(value)),
+                    ...opcoesPadraoComDatalabels('Treino por semana', value => formatarNumero(value, 0)),
                     scales: { y: { beginAtZero: true } }
                 }
             });
@@ -1401,7 +1401,7 @@
                     }]
                 },
                 options: {
-                    ...opcoesPadraoComDatalabels('Tempo de pé', value => formatarNumero(value)),
+                    ...opcoesPadraoComDatalabels('Tempo de pé', value => formatarNumero(value, 0)),
                     scales: { y: { beginAtZero: true } }
                 }
             });
@@ -1422,7 +1422,7 @@
                     }]
                 },
                 options: {
-                    ...opcoesPadraoComDatalabels('Exposição ao sol', value => formatarNumero(value)),
+                    ...opcoesPadraoComDatalabels('Exposição ao sol', value => formatarNumero(value, 0)),
                     scales: { y: { beginAtZero: true } }
                 }
             });
@@ -1597,16 +1597,16 @@
             document.getElementById('card-saude-energia').textContent = ultimoEnergia ? formatarNumero(ultimoEnergia.valor) : '--';
             document.getElementById('card-saude-energia-periodo').textContent = ultimoEnergia ? ultimoEnergia.periodo : '--';
 
-            document.getElementById('card-saude-tempo').textContent = ultimoTempo ? formatarNumero(ultimoTempo.valor) : '--';
+            document.getElementById('card-saude-tempo').textContent = ultimoTempo ? formatarNumero(ultimoTempo.valor, 0) : '--';
             document.getElementById('card-saude-tempo-periodo').textContent = ultimoTempo ? ultimoTempo.periodo : '--';
 
-            document.getElementById('card-saude-treinos').textContent = ultimoTreino ? formatarNumero(ultimoTreino.valor) : '--';
+            document.getElementById('card-saude-treinos').textContent = ultimoTreino ? formatarNumero(ultimoTreino.valor, 0) : '--';
             document.getElementById('card-saude-treinos-periodo').textContent = ultimoTreino ? ultimoTreino.periodo : '--';
 
-            document.getElementById('card-saude-tempo-pe').textContent = ultimoTempoPe ? formatarNumero(ultimoTempoPe.valor) : '--';
+            document.getElementById('card-saude-tempo-pe').textContent = ultimoTempoPe ? formatarNumero(ultimoTempoPe.valor, 0) : '--';
             document.getElementById('card-saude-tempo-pe-periodo').textContent = ultimoTempoPe ? ultimoTempoPe.periodo : '--';
 
-            document.getElementById('card-saude-sol').textContent = ultimoSol ? formatarNumero(ultimoSol.valor) : '--';
+            document.getElementById('card-saude-sol').textContent = ultimoSol ? formatarNumero(ultimoSol.valor, 0) : '--';
             document.getElementById('card-saude-sol-periodo').textContent = ultimoSol ? ultimoSol.periodo : '--';
         }
 
