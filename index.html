@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard de Energia e Salário</title>
+    <title>Dashboard de Energia, Salário e Saúde</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
@@ -105,7 +105,6 @@
             color: #6c757d;
             margin-top: 4px;
         }
-
     </style>
 </head>
 <body>
@@ -147,7 +146,7 @@
             <div class="card-body d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
                 <div>
                     <h2 class="mb-1">Dashboard</h2>
-                    <p class="text-muted mb-0">Energia e salário</p>
+                    <p class="text-muted mb-0">Energia, salário e saúde</p>
                 </div>
 
                 <div class="d-flex align-items-center gap-2">
@@ -168,21 +167,26 @@
 
         <!-- Abas -->
         <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="energia-tab" data-bs-toggle="tab" data-bs-target="#tab-energia" type="button" role="tab">
-                    Energia
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="salario-tab" data-bs-toggle="tab" data-bs-target="#tab-salario" type="button" role="tab">
-                    Salário
-                </button>
-            </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="saude-tab" data-bs-toggle="tab" data-bs-target="#tab-saude" type="button" role="tab">
+                Saúde
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="energia-tab" data-bs-toggle="tab" data-bs-target="#tab-energia" type="button" role="tab">
+                Energia
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="salario-tab" data-bs-toggle="tab" data-bs-target="#tab-salario" type="button" role="tab">
+                Salário
+            </button>
+          </li>
         </ul>
 
         <div class="tab-content">
             <!-- ABA ENERGIA -->
-            <div class="tab-pane fade show active" id="tab-energia" role="tabpanel" aria-labelledby="energia-tab">
+            <div class="tab-pane fade" id="tab-energia" role="tabpanel" aria-labelledby="energia-tab">
 
                 <div class="row mb-4">
                     <div class="col-12">
@@ -294,7 +298,6 @@
 
             <!-- ABA SALÁRIO -->
             <div class="tab-pane fade" id="tab-salario" role="tabpanel" aria-labelledby="salario-tab">
-                <!-- Opção B: filtro por ano -->
                 <div class="card filtro-card">
                     <div class="card-body">
                         <div class="row g-3 align-items-end">
@@ -321,7 +324,6 @@
                     </div>
                 </div>
 
-                <!-- Cards principais -->
                 <div class="row mb-2">
                     <div class="col-12">
                         <h5 class="mb-3">Resumo do ano</h5>
@@ -355,7 +357,6 @@
                     </div>
                 </div>
 
-                <!-- Opção C: cards por tipo -->
                 <div class="row mb-4">
                     <div class="col-12">
                         <h5 class="mb-3">Totais por tipo de folha</h5>
@@ -365,14 +366,12 @@
                     </div>
                 </div>
 
-                <!-- Gráficos salário -->
                 <div class="card grafico-card">
                     <div class="card-body">
                         <canvas id="salario-liquido-mes"></canvas>
                     </div>
                 </div>
 
-                <!-- Opção A: tabela detalhada das folhas -->
                 <div class="card table-card">
                     <div class="card-body">
                         <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2 mb-3">
@@ -400,6 +399,111 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA SAÚDE -->
+            <div class="tab-pane fade show active" id="tab-saude" role="tabpanel" aria-labelledby="saude-tab">
+                <div class="row mb-2">
+                    <div class="col-12">
+                        <h5 class="mb-3">Resumo semanal</h5>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Distância total</h6>
+                                <div id="card-saude-distancia" class="fs-4 fw-bold">--</div>
+                                <div id="card-saude-distancia-periodo" class="small-muted mt-1">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Energia ativa</h6>
+                                <div id="card-saude-energia" class="fs-4 fw-bold">--</div>
+                                <div id="card-saude-energia-periodo" class="small-muted mt-1">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Tempo total de treino</h6>
+                                <div id="card-saude-tempo" class="fs-4 fw-bold">--</div>
+                                <div id="card-saude-tempo-periodo" class="small-muted mt-1">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Treinos por semana</h6>
+                                <div id="card-saude-treinos" class="fs-4 fw-bold">--</div>
+                                <div id="card-saude-treinos-periodo" class="small-muted mt-1">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Tempo de pé</h6>
+                                <div id="card-saude-tempo-pe" class="fs-4 fw-bold">--</div>
+                                <div id="card-saude-tempo-pe-periodo" class="small-muted mt-1">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Exposição ao sol</h6>
+                                <div id="card-saude-sol" class="fs-4 fw-bold">--</div>
+                                <div id="card-saude-sol-periodo" class="small-muted mt-1">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card grafico-card">
+                    <div class="card-body">
+                        <canvas id="saude-distancia"></canvas>
+                    </div>
+                </div>
+
+                <div class="card grafico-card">
+                    <div class="card-body">
+                        <canvas id="saude-energia"></canvas>
+                    </div>
+                </div>
+
+                <div class="card grafico-card">
+                    <div class="card-body">
+                        <canvas id="saude-tempo"></canvas>
+                    </div>
+                </div>
+
+                <div class="card grafico-card">
+                    <div class="card-body">
+                        <canvas id="saude-treinos"></canvas>
+                    </div>
+                </div>
+
+                <div class="card grafico-card">
+                    <div class="card-body">
+                        <canvas id="saude-tempo-pe"></canvas>
+                    </div>
+                </div>
+
+                <div class="card grafico-card">
+                    <div class="card-body">
+                        <canvas id="saude-sol"></canvas>
                     </div>
                 </div>
             </div>
@@ -431,7 +535,7 @@
         // CONFIGURAÇÃO
         // ============================================
         let API_BASE = 'https://sistema-backend.guilhermejr.net';
-        
+
         if (window.location.hostname === 'localhost') {
             API_BASE = 'http://localhost:8080';
         }
@@ -443,7 +547,14 @@
         const ENERGIA_TOTAL_URL = `${API_BASE}/energia-service/total`;
         const SALARIO_BASE_URL = `${API_BASE}/salario-service/folha/ano/`;
         const SALARIO_DETALHE_URL = `${API_BASE}/salario-service/folha/`;
-        
+
+        const SAUDE_DISTANCIA_URL = `${API_BASE}/saude-service/treinos/distancia_total_por_semana`;
+        const SAUDE_ENERGIA_ATIVA_URL = `${API_BASE}/saude-service/treinos/energia_ativa_por_semana`;
+        const SAUDE_TEMPO_TOTAL_URL = `${API_BASE}/saude-service/treinos/tempo_total_treino_por_semana`;
+        const SAUDE_TREINOS_URL = `${API_BASE}/saude-service/treinos/treino_por_semana`;
+        const SAUDE_TEMPO_PE_URL = `${API_BASE}/saude-service/metricas/tempo_de_pe`;
+        const SAUDE_EXPOSICAO_SOL_URL = `${API_BASE}/saude-service/metricas/exposicao_ao_sol`;
+
         const TOKEN_BUFFER_SECONDS = 60;
 
         // ============================================
@@ -457,6 +568,13 @@
         let graficoSalarioLiquidoMes = null;
         let graficoSalarioProventosDescontos = null;
         let graficoSalarioTipoFolha = null;
+
+        let graficoSaudeDistancia = null;
+        let graficoSaudeEnergia = null;
+        let graficoSaudeTempo = null;
+        let graficoSaudeTreinos = null;
+        let graficoSaudeTempoPe = null;
+        let graficoSaudeSol = null;
 
         // ============================================
         // HELPERS DE UI
@@ -613,7 +731,9 @@
         }
 
         function obterAnoSalario() {
-            return localStorage.getItem('anoSalarioSelecionado');
+            const anoSalvo = localStorage.getItem('anoSalarioSelecionado');
+            if (anoSalvo) return anoSalvo;
+            return String(new Date().getFullYear());
         }
 
         function limparSessaoCompleta() {
@@ -812,6 +932,13 @@
             });
         }
 
+        function formatarNumero(valor, casas = 1) {
+            return Number(valor || 0).toLocaleString('pt-BR', {
+                minimumFractionDigits: casas,
+                maximumFractionDigits: casas
+            });
+        }
+
         function formatarPeriodoMesAno(periodo) {
             if (!periodo || !periodo.includes('/')) return periodo;
 
@@ -859,33 +986,40 @@
             };
         }
 
+        function normalizarDadosSaude(resposta) {
+            let lista = [];
+
+            if (Array.isArray(resposta)) {
+                lista = resposta;
+            } else if (resposta && Array.isArray(resposta.data)) {
+                lista = resposta.data;
+            } else if (resposta && Array.isArray(resposta.dados)) {
+                lista = resposta.dados;
+            }
+
+            return lista
+                .filter(item => item && item.periodo != null && item.valor != null)
+                .map(item => ({
+                    periodo: String(item.periodo),
+                    valor: Number(item.valor)
+                }));
+        }
+
+        function extrairDadosSaude(lista) {
+            return {
+                labels: lista.map(item => item.periodo),
+                valores: lista.map(item => Number(item.valor))
+            };
+        }
+
+        function obterUltimoItem(lista) {
+            if (!Array.isArray(lista) || !lista.length) return null;
+            return lista[lista.length - 1];
+        }
+
         function somarValores(lista) {
             if (!Array.isArray(lista)) return 0;
             return lista.reduce((total, item) => total + Number(item.valor || 0), 0);
-        }
-
-        function extrairValorResumo(resposta) {
-            if (typeof resposta === 'number') return resposta;
-
-            if (typeof resposta === 'string' && resposta.trim() !== '') {
-                const numero = Number(resposta);
-                return Number.isNaN(numero) ? 0 : numero;
-            }
-
-            if (Array.isArray(resposta)) {
-                if (resposta.length === 0) return 0;
-                return extrairValorResumo(resposta[0]);
-            }
-
-            if (resposta && typeof resposta === 'object') {
-                if (resposta.valor != null) return Number(resposta.valor);
-                if (resposta.total != null) return Number(resposta.total);
-                if (resposta.saldo != null) return Number(resposta.saldo);
-                if (resposta.geracao != null) return Number(resposta.geracao);
-                if (resposta.consumo != null) return Number(resposta.consumo);
-            }
-
-            return 0;
         }
 
         function extrairMesAnoDataPagamento(dataPagamento) {
@@ -994,21 +1128,34 @@
             if (graficoGeracaoDiaria) { graficoGeracaoDiaria.destroy(); graficoGeracaoDiaria = null; }
             if (graficoGeracaoConsumo) { graficoGeracaoConsumo.destroy(); graficoGeracaoConsumo = null; }
             if (graficoSaldo) { graficoSaldo.destroy(); graficoSaldo = null; }
+            if (graficoValor) { graficoValor.destroy(); graficoValor = null; }
             if (graficoSalarioLiquidoMes) { graficoSalarioLiquidoMes.destroy(); graficoSalarioLiquidoMes = null; }
-            if (graficoSalarioProventosDescontos) { graficoSalarioProventosDescontos.destroy(); graficoSalarioProventosDescontos = null; }
-            if (graficoSalarioTipoFolha) { graficoSalarioTipoFolha.destroy(); graficoSalarioTipoFolha = null; }
+            if (graficoSaudeDistancia) { graficoSaudeDistancia.destroy(); graficoSaudeDistancia = null; }
+            if (graficoSaudeEnergia) { graficoSaudeEnergia.destroy(); graficoSaudeEnergia = null; }
+            if (graficoSaudeTempo) { graficoSaudeTempo.destroy(); graficoSaudeTempo = null; }
+            if (graficoSaudeTreinos) { graficoSaudeTreinos.destroy(); graficoSaudeTreinos = null; }
+            if (graficoSaudeTempoPe) { graficoSaudeTempoPe.destroy(); graficoSaudeTempoPe = null; }
+            if (graficoSaudeSol) { graficoSaudeSol.destroy(); graficoSaudeSol = null; }
         }
 
         function destruirGraficosEnergia() {
             if (graficoGeracaoDiaria) { graficoGeracaoDiaria.destroy(); graficoGeracaoDiaria = null; }
             if (graficoGeracaoConsumo) { graficoGeracaoConsumo.destroy(); graficoGeracaoConsumo = null; }
             if (graficoSaldo) { graficoSaldo.destroy(); graficoSaldo = null; }
+            if (graficoValor) { graficoValor.destroy(); graficoValor = null; }
         }
 
         function destruirGraficosSalario() {
             if (graficoSalarioLiquidoMes) { graficoSalarioLiquidoMes.destroy(); graficoSalarioLiquidoMes = null; }
-            if (graficoSalarioProventosDescontos) { graficoSalarioProventosDescontos.destroy(); graficoSalarioProventosDescontos = null; }
-            if (graficoSalarioTipoFolha) { graficoSalarioTipoFolha.destroy(); graficoSalarioTipoFolha = null; }
+        }
+
+        function destruirGraficosSaude() {
+            if (graficoSaudeDistancia) { graficoSaudeDistancia.destroy(); graficoSaudeDistancia = null; }
+            if (graficoSaudeEnergia) { graficoSaudeEnergia.destroy(); graficoSaudeEnergia = null; }
+            if (graficoSaudeTempo) { graficoSaudeTempo.destroy(); graficoSaudeTempo = null; }
+            if (graficoSaudeTreinos) { graficoSaudeTreinos.destroy(); graficoSaudeTreinos = null; }
+            if (graficoSaudeTempoPe) { graficoSaudeTempoPe.destroy(); graficoSaudeTempoPe = null; }
+            if (graficoSaudeSol) { graficoSaudeSol.destroy(); graficoSaudeSol = null; }
         }
 
         function limparDashboard() {
@@ -1021,12 +1168,8 @@
             document.getElementById('card-geracao-contrato').textContent = '--';
             document.getElementById('card-consumo-contrato').textContent = '--';
             document.getElementById('card-saldo-contrato').textContent = '--';
-
-            // Novos campos do card parcial
-            if (document.getElementById('card-geracao-parcial')) {
-                document.getElementById('card-geracao-parcial').textContent = '--';
-                document.getElementById('card-geracao-parcial-data').textContent = '--';
-            }
+            document.getElementById('card-geracao-parcial').textContent = '--';
+            document.getElementById('card-geracao-parcial-data').textContent = '--';
 
             // Salário
             document.getElementById('card-salario-proventos').textContent = '--';
@@ -1034,6 +1177,20 @@
             document.getElementById('card-salario-liquido').textContent = '--';
             renderizarCardsTiposFolha([]);
             limparTabelaSalario();
+
+            // Saúde
+            document.getElementById('card-saude-distancia').textContent = '--';
+            document.getElementById('card-saude-distancia-periodo').textContent = '--';
+            document.getElementById('card-saude-energia').textContent = '--';
+            document.getElementById('card-saude-energia-periodo').textContent = '--';
+            document.getElementById('card-saude-tempo').textContent = '--';
+            document.getElementById('card-saude-tempo-periodo').textContent = '--';
+            document.getElementById('card-saude-treinos').textContent = '--';
+            document.getElementById('card-saude-treinos-periodo').textContent = '--';
+            document.getElementById('card-saude-tempo-pe').textContent = '--';
+            document.getElementById('card-saude-tempo-pe-periodo').textContent = '--';
+            document.getElementById('card-saude-sol').textContent = '--';
+            document.getElementById('card-saude-sol-periodo').textContent = '--';
 
             clearDashboardError();
         }
@@ -1093,19 +1250,15 @@
                 },
                 options: {
                     ...opcoesPadraoComDatalabels('Saldo de Energia - Últimos 12 meses', value => value),
-                    scales: { 
+                    scales: {
                         y: {
                             beginAtZero: false,
                             grid: {
-                                color: (context) => {
-                                    return context.tick.value === 0 ? '#000000' : '#cccccc';
-                                },
-                                lineWidth: (context) => {
-                                    return context.tick.value === 0 ? 2 : 1; // linha do zero mais grossa
-                                }
+                                color: (context) => context.tick.value === 0 ? '#000000' : '#cccccc',
+                                lineWidth: (context) => context.tick.value === 0 ? 2 : 1
                             }
                         }
-                     }
+                    }
                 }
             });
         }
@@ -1145,7 +1298,133 @@
                         fill: false
                     }]
                 },
-                options: opcoesPadraoComDatalabels('Salário Líquido por Mês', value => formatarMoedaBR(value))
+                options: opcoesPadraoComDatalabels('Salário Líquido por Mês', value => Number.isFinite(value) ? formatarMoedaBR(value) : '')
+            });
+        }
+
+        function criarGraficoSaudeDistancia(labels, dados) {
+            const ctx = document.getElementById('saude-distancia');
+            graficoSaudeDistancia = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Distância total',
+                        data: dados,
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false
+                    }]
+                },
+                options: {
+                    ...opcoesPadraoComDatalabels('Distância total por semana', value => formatarNumero(value)),
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function criarGraficoSaudeEnergia(labels, dados) {
+            const ctx = document.getElementById('saude-energia');
+            graficoSaudeEnergia = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Energia ativa',
+                        data: dados,
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false
+                    }]
+                },
+                options: {
+                    ...opcoesPadraoComDatalabels('Energia ativa por semana', value => formatarNumero(value)),
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function criarGraficoSaudeTempo(labels, dados) {
+            const ctx = document.getElementById('saude-tempo');
+            graficoSaudeTempo = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Tempo total de treino',
+                        data: dados,
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false
+                    }]
+                },
+                options: {
+                    ...opcoesPadraoComDatalabels('Tempo total de treino por semana', value => formatarNumero(value)),
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function criarGraficoSaudeTreinos(labels, dados) {
+            const ctx = document.getElementById('saude-treinos');
+            graficoSaudeTreinos = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Treinos por semana',
+                        data: dados,
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false
+                    }]
+                },
+                options: {
+                    ...opcoesPadraoComDatalabels('Treino por semana', value => formatarNumero(value)),
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function criarGraficoSaudeTempoPe(labels, dados) {
+            const ctx = document.getElementById('saude-tempo-pe');
+            graficoSaudeTempoPe = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Tempo de pé',
+                        data: dados,
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false
+                    }]
+                },
+                options: {
+                    ...opcoesPadraoComDatalabels('Tempo de pé', value => formatarNumero(value)),
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function criarGraficoSaudeSol(labels, dados) {
+            const ctx = document.getElementById('saude-sol');
+            graficoSaudeSol = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Exposição ao sol',
+                        data: dados,
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false
+                    }]
+                },
+                options: {
+                    ...opcoesPadraoComDatalabels('Exposição ao sol', value => formatarNumero(value)),
+                    scales: { y: { beginAtZero: true } }
+                }
             });
         }
 
@@ -1195,27 +1474,24 @@
             document.getElementById('card-geracao').textContent = formatarKwh(somarValores(geracao12Meses));
             document.getElementById('card-consumo').textContent = formatarKwh(somarValores(consumo12Meses));
             document.getElementById('card-saldo').textContent = formatarKwh(somarValores(saldo12Meses));
-            document.getElementById('card-geracao-contrato').textContent = formatarKwh(totais.energiaGerada);
-            document.getElementById('card-consumo-contrato').textContent = formatarKwh(totais.energiaConsumidaTotal);
-            document.getElementById('card-saldo-contrato').textContent = formatarKwh(totais.saldoMes);
-            document.getElementById('card-geracao-contrato').textContent = formatarKwh(totais.energiaGerada);
-            document.getElementById('card-consumo-contrato').textContent = formatarKwh(totais.energiaConsumidaTotal);
-            document.getElementById('card-saldo-contrato').textContent = formatarKwh(totais.saldoMes);
+            document.getElementById('card-geracao-contrato').textContent = formatarKwh(totais?.energiaGerada);
+            document.getElementById('card-consumo-contrato').textContent = formatarKwh(totais?.energiaConsumidaTotal);
+            document.getElementById('card-saldo-contrato').textContent = formatarKwh(totais?.saldoMes);
 
             if (geracaoParcial) {
                 document.getElementById('card-geracao-parcial').textContent = formatarKwh(geracaoParcial.gerado);
-                
+
                 if (geracaoParcial.atualizado) {
-                    // Formata a data ISO para o padrão local do Brasil (DD/MM/AAAA HH:MM:SS)
                     const dataFormatada = new Date(geracaoParcial.atualizado).toLocaleDateString('pt-BR');
                     document.getElementById('card-geracao-parcial-data').textContent = `calculado até ${dataFormatada}`;
                 }
             }
 
-            let texto = document.getElementById('data-contrato').textContent;
-            const textoAtualizado = texto + ` calculado até ${formatarData(contaUltimoMes.fim)}`;
-            document.getElementById('data-contrato').textContent = textoAtualizado;
-
+            let texto = 'Desde o início do contrato,';
+            if (contaUltimoMes?.fim) {
+                texto += ` calculado até ${formatarData(contaUltimoMes.fim)}`;
+            }
+            document.getElementById('data-contrato').textContent = texto;
         }
 
         async function carregarSalarioDashboard(ano) {
@@ -1236,13 +1512,11 @@
 
             const folhasPorMes = agruparFolhasPorMes(folhas);
 
-            // cria mapa mês/ano -> valor
             const mapa = {};
             folhasPorMes.forEach(item => {
                 mapa[item.periodo] = item.liquido;
             });
 
-            // garante todos os meses do ano
             const labelsSalario = [];
             const liquidoMes = [];
 
@@ -1251,8 +1525,6 @@
                 const periodo = `${mesStr}/${ano}`;
 
                 labelsSalario.push(formatarPeriodoMesAno(periodo));
-
-                // se não existir mês → NaN
                 liquidoMes.push(mapa[periodo] ?? NaN);
             }
 
@@ -1272,6 +1544,72 @@
             renderizarTabelaSalario(folhasOrdenadas);
         }
 
+        async function carregarSaudeDashboard() {
+            destruirGraficosSaude();
+
+            const [
+                distanciaResposta,
+                energiaAtivaResposta,
+                tempoTotalResposta,
+                treinoResposta,
+                tempoPeResposta,
+                exposicaoSolResposta
+            ] = await Promise.all([
+                apiRequest({ url: SAUDE_DISTANCIA_URL }),
+                apiRequest({ url: SAUDE_ENERGIA_ATIVA_URL }),
+                apiRequest({ url: SAUDE_TEMPO_TOTAL_URL }),
+                apiRequest({ url: SAUDE_TREINOS_URL }),
+                apiRequest({ url: SAUDE_TEMPO_PE_URL }),
+                apiRequest({ url: SAUDE_EXPOSICAO_SOL_URL })
+            ]);
+
+            const distancia = ordenarCrescente(normalizarDadosSaude(distanciaResposta));
+            const energiaAtiva = ordenarCrescente(normalizarDadosSaude(energiaAtivaResposta));
+            const tempoTotal = ordenarCrescente(normalizarDadosSaude(tempoTotalResposta));
+            const treinos = ordenarCrescente(normalizarDadosSaude(treinoResposta));
+            const tempoPe = ordenarCrescente(normalizarDadosSaude(tempoPeResposta));
+            const exposicaoSol = ordenarCrescente(normalizarDadosSaude(exposicaoSolResposta));
+
+            const dadosDistancia = extrairDadosSaude(distancia);
+            const dadosEnergiaAtiva = extrairDadosSaude(energiaAtiva);
+            const dadosTempoTotal = extrairDadosSaude(tempoTotal);
+            const dadosTreinos = extrairDadosSaude(treinos);
+            const dadosTempoPe = extrairDadosSaude(tempoPe);
+            const dadosSol = extrairDadosSaude(exposicaoSol);
+
+            criarGraficoSaudeDistancia(dadosDistancia.labels, dadosDistancia.valores);
+            criarGraficoSaudeEnergia(dadosEnergiaAtiva.labels, dadosEnergiaAtiva.valores);
+            criarGraficoSaudeTempo(dadosTempoTotal.labels, dadosTempoTotal.valores);
+            criarGraficoSaudeTreinos(dadosTreinos.labels, dadosTreinos.valores);
+            criarGraficoSaudeTempoPe(dadosTempoPe.labels, dadosTempoPe.valores);
+            criarGraficoSaudeSol(dadosSol.labels, dadosSol.valores);
+
+            const ultimoDistancia = obterUltimoItem(distancia);
+            const ultimoEnergia = obterUltimoItem(energiaAtiva);
+            const ultimoTempo = obterUltimoItem(tempoTotal);
+            const ultimoTreino = obterUltimoItem(treinos);
+            const ultimoTempoPe = obterUltimoItem(tempoPe);
+            const ultimoSol = obterUltimoItem(exposicaoSol);
+
+            document.getElementById('card-saude-distancia').textContent = ultimoDistancia ? formatarNumero(ultimoDistancia.valor) : '--';
+            document.getElementById('card-saude-distancia-periodo').textContent = ultimoDistancia ? ultimoDistancia.periodo : '--';
+
+            document.getElementById('card-saude-energia').textContent = ultimoEnergia ? formatarNumero(ultimoEnergia.valor) : '--';
+            document.getElementById('card-saude-energia-periodo').textContent = ultimoEnergia ? ultimoEnergia.periodo : '--';
+
+            document.getElementById('card-saude-tempo').textContent = ultimoTempo ? formatarNumero(ultimoTempo.valor) : '--';
+            document.getElementById('card-saude-tempo-periodo').textContent = ultimoTempo ? ultimoTempo.periodo : '--';
+
+            document.getElementById('card-saude-treinos').textContent = ultimoTreino ? formatarNumero(ultimoTreino.valor) : '--';
+            document.getElementById('card-saude-treinos-periodo').textContent = ultimoTreino ? ultimoTreino.periodo : '--';
+
+            document.getElementById('card-saude-tempo-pe').textContent = ultimoTempoPe ? formatarNumero(ultimoTempoPe.valor) : '--';
+            document.getElementById('card-saude-tempo-pe-periodo').textContent = ultimoTempoPe ? ultimoTempoPe.periodo : '--';
+
+            document.getElementById('card-saude-sol').textContent = ultimoSol ? formatarNumero(ultimoSol.valor) : '--';
+            document.getElementById('card-saude-sol-periodo').textContent = ultimoSol ? ultimoSol.periodo : '--';
+        }
+
         async function carregarDashboard() {
             clearDashboardError();
             toggleDashboardLoading(true);
@@ -1280,7 +1618,8 @@
                 const ano = obterAnoSalarioSelecionado();
                 await Promise.all([
                     carregarEnergiaDashboard(),
-                    carregarSalarioDashboard(ano)
+                    carregarSalarioDashboard(ano),
+                    carregarSaudeDashboard()
                 ]);
             } catch (error) {
                 console.error(error);
@@ -1331,12 +1670,6 @@
         function formatarTexto(valor, fallback = '--') {
             if (valor == null || valor === '') return fallback;
             return escapeHtml(String(valor));
-        }
-
-        function badgeTipoItem(tipo) {
-            if (tipo === 'P') return '<span class="badge text-bg-success">Provento</span>';
-            if (tipo === 'D') return '<span class="badge text-bg-danger">Desconto</span>';
-            return '<span class="badge text-bg-secondary">Outro</span>';
         }
 
         function renderizarTabelaItensFolha(itens, tipo) {
@@ -1545,22 +1878,17 @@
         });
 
         function calcularAnosEMeses(dataStr) {
-            // Quebra a string DD/MM/YYYY
             const [dia, mes, ano] = dataStr.split('/').map(Number);
-
-            // Cria a data informada
             const dataInicial = new Date(ano, mes - 1, dia);
             const hoje = new Date();
 
             let anos = hoje.getFullYear() - dataInicial.getFullYear();
             let meses = hoje.getMonth() - dataInicial.getMonth();
 
-            // Ajuste se o dia atual ainda não chegou no mês
             if (hoje.getDate() < dataInicial.getDate()) {
                 meses--;
             }
 
-            // Ajuste se os meses ficaram negativos
             if (meses < 0) {
                 anos--;
                 meses += 12;
@@ -1569,8 +1897,8 @@
             return `${anos} ano${anos !== 1 ? 's' : ''} e ${meses} mes${meses !== 1 ? 'es' : ''}`;
         }
 
-        function formatarData(dataISO) {  
-            const [ano, mes, dia] = dataISO.split('-');  
+        function formatarData(dataISO) {
+            const [ano, mes, dia] = dataISO.split('-');
             return `${dia}/${mes}/${ano}`;
         }
 
@@ -1591,17 +1919,19 @@
         // INICIALIZAÇÃO
         // ============================================
         async function init() {
-
-            // --- Configura tooltip do contrato com cálculo de tempo de contrato ---
             const elemento = document.querySelector('#data-contrato').parentElement;
             elemento.setAttribute('data-bs-title', 'Início do contrato em 11/11/2021 a ' + `${calcularAnosEMeses('11/11/2021')}`);
 
-            // --- Inicia tooltips do Bootstrap ---
-            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
-
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 
             renderizarCardsTiposFolha([]);
+
+            const anoInicial = obterAnoSalario();
+            const selectAno = document.getElementById('salario-ano');
+            if (selectAno) {
+                selectAno.value = anoInicial;
+            }
 
             const accessToken = obterAccessToken();
             const refreshToken = obterRefreshToken();
