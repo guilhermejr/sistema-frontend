@@ -284,6 +284,12 @@
                         <canvas id="saldo"></canvas>
                     </div>
                 </div>
+
+                <div class="card grafico-card">
+                    <div class="card-body">
+                        <canvas id="valor"></canvas>
+                    </div>
+                </div>
             </div>
 
             <!-- ABA SALÁRIO -->
@@ -446,6 +452,7 @@
         let graficoGeracaoDiaria = null;
         let graficoGeracaoConsumo = null;
         let graficoSaldo = null;
+        let graficoValor = null;
 
         let graficoSalarioLiquidoMes = null;
         let graficoSalarioProventosDescontos = null;
@@ -1103,6 +1110,27 @@
             });
         }
 
+        function criarGraficoValor(labels, dados) {
+            const ctx = document.getElementById('valor');
+            graficoValor = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'R$',
+                        data: dados,
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false
+                    }]
+                },
+                options: {
+                    ...opcoesPadraoComDatalabels('Valor - Últimos 12 meses', value => value),
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
         function criarGraficoSalarioLiquidoMes(labels, dados) {
             const ctx = document.getElementById('salario-liquido-mes');
             graficoSalarioLiquidoMes = new Chart(ctx, {
@@ -1134,7 +1162,8 @@
                 saldo12Meses,
                 contaUltimoMes,
                 totais,
-                geracaoParcial
+                geracaoParcial,
+                valor12Meses
             ] = await Promise.all([
                 apiRequest({ url: `${ENERGIA_BASE_URL}geracaoultimos30dias` }),
                 apiRequest({ url: `${ENERGIA_BASE_URL}geracaoultimos12meses` }),
@@ -1142,22 +1171,26 @@
                 apiRequest({ url: `${ENERGIA_BASE_URL}saldoultimos12meses` }),
                 apiRequest({ url: `${ENERGIA_BASE_URL}contaultimomes` }),
                 apiRequest({ url: `${ENERGIA_TOTAL_URL}` }),
-                apiRequest({ url: `${ENERGIA_BASE_URL}geradosesdeultimaleitura` })
+                apiRequest({ url: `${ENERGIA_BASE_URL}geradosdesdeultimaleitura` }),
+                apiRequest({ url: `${ENERGIA_BASE_URL}valorultimos12meses` })
             ]);
 
             const geracao12Ordenado = ordenarCrescente(geracao12Meses);
             const consumo12Ordenado = ordenarCrescente(consumo12Meses);
             const saldo12Ordenado = ordenarCrescente(saldo12Meses);
             const geracao30Ordenado = ordenarCrescente(geracao30Dias);
+            const valor12Ordenado = ordenarCrescente(valor12Meses);
 
             const dadosGeracaoMensal = extrairDadosMensais(geracao12Ordenado);
             const dadosConsumoMensal = extrairDadosMensais(consumo12Ordenado);
             const dadosSaldoMensal = extrairDadosMensais(saldo12Ordenado);
             const dadosGeracaoDiaria = extrairDadosDiarios(geracao30Ordenado);
+            const dadosValor12Meses = extrairDadosMensais(valor12Ordenado);
 
             criarGraficoGeracaoDiaria(dadosGeracaoDiaria.labels, dadosGeracaoDiaria.valores);
             criarGraficoGeracaoConsumo(dadosGeracaoMensal.labels, dadosGeracaoMensal.valores, dadosConsumoMensal.valores);
             criarGraficoSaldo(dadosSaldoMensal.labels, dadosSaldoMensal.valores);
+            criarGraficoValor(dadosValor12Meses.labels, dadosValor12Meses.valores);
 
             document.getElementById('card-geracao').textContent = formatarKwh(somarValores(geracao12Meses));
             document.getElementById('card-consumo').textContent = formatarKwh(somarValores(consumo12Meses));
