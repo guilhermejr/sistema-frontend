@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard de Energia, Salário e Saúde</title>
+    <title>Dashboard de Saúde, Energia e Salário</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
@@ -146,7 +146,7 @@
             <div class="card-body d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
                 <div>
                     <h2 class="mb-1">Dashboard</h2>
-                    <p class="text-muted mb-0">Energia, salário e saúde</p>
+                    <p class="text-muted mb-0">Saúde, energia e salário</p>
                 </div>
 
                 <div class="d-flex align-items-center gap-2">
@@ -222,7 +222,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="row mb-2">
                     <div class="col-12">
                         <h5 class="mb-3">Últimos 12 meses</h5>
@@ -407,10 +407,10 @@
             <div class="tab-pane fade show active" id="tab-saude" role="tabpanel" aria-labelledby="saude-tab">
                 <div class="row mb-2">
                     <div class="col-12">
-                        <h5 class="mb-3">Resumo semanal</h5>
+                        <h5 class="mb-3" id="titulo-treinos">Treinos</h5>
                     </div>
 
-                    <div class="col-12 col-md-6 col-xl-4 mb-3">
+                    <div class="col-12 col-md-6 col-xl-3 mb-3">
                         <div class="card card-resumo text-center">
                             <div class="card-body">
                                 <h6 class="text-muted">Distância total</h6>
@@ -420,7 +420,7 @@
                         </div>
                     </div>
 
-                    <div class="col-12 col-md-6 col-xl-4 mb-3">
+                    <div class="col-12 col-md-6 col-xl-3 mb-3">
                         <div class="card card-resumo text-center">
                             <div class="card-body">
                                 <h6 class="text-muted">Energia ativa</h6>
@@ -430,7 +430,7 @@
                         </div>
                     </div>
 
-                    <div class="col-12 col-md-6 col-xl-4 mb-3">
+                    <div class="col-12 col-md-6 col-xl-3 mb-3">
                         <div class="card card-resumo text-center">
                             <div class="card-body">
                                 <h6 class="text-muted">Tempo total de treino</h6>
@@ -440,7 +440,7 @@
                         </div>
                     </div>
 
-                    <div class="col-12 col-md-6 col-xl-4 mb-3">
+                    <div class="col-12 col-md-6 col-xl-3 mb-3">
                         <div class="card card-resumo text-center">
                             <div class="card-body">
                                 <h6 class="text-muted">Treinos por semana</h6>
@@ -448,6 +448,13 @@
                                 <div id="card-saude-treinos-periodo" class="small-muted mt-1">--</div>
                             </div>
                         </div>
+                    </div>
+
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-12">
+                        <h5 class="mb-3" id="titulo-metricas">Métricas</h5>
                     </div>
 
                     <div class="col-12 col-md-6 col-xl-4 mb-3">
@@ -466,6 +473,46 @@
                                 <h6 class="text-muted">Exposição ao sol</h6>
                                 <div id="card-saude-sol" class="fs-4 fw-bold">--</div>
                                 <div id="card-saude-sol-periodo" class="small-muted mt-1">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Freq. cardíaca em repouso</h6>
+                                <div id="card-saude-fc-repouso" class="fs-4 fw-bold">--</div>
+                                <div id="card-saude-fc-repouso-periodo" class="small-muted mt-1">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Passos médios diários</h6>
+                                <div id="card-saude-passos" class="fs-4 fw-bold">--</div>
+                                <div id="card-saude-passos-periodo" class="small-muted mt-1">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Sono profundo médio</h6>
+                                <div id="card-saude-sono-profundo" class="fs-4 fw-bold">--</div>
+                                <div id="card-saude-sono-profundo-periodo" class="small-muted mt-1">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Sono total médio</h6>
+                                <div id="card-saude-sono-total" class="fs-4 fw-bold">--</div>
+                                <div id="card-saude-sono-total-periodo" class="small-muted mt-1">--</div>
                             </div>
                         </div>
                     </div>
@@ -504,6 +551,30 @@
                 <div class="card grafico-card">
                     <div class="card-body">
                         <canvas id="saude-sol"></canvas>
+                    </div>
+                </div>
+
+                <div class="card grafico-card">
+                    <div class="card-body">
+                        <canvas id="saude-frequencia-cardiaca-repouso"></canvas>
+                    </div>
+                </div>
+
+                <div class="card grafico-card">
+                    <div class="card-body">
+                        <canvas id="saude-passos-medios-diarios"></canvas>
+                    </div>
+                </div>
+
+                <div class="card grafico-card">
+                    <div class="card-body">
+                        <canvas id="saude-sono-profundo-medio"></canvas>
+                    </div>
+                </div>
+
+                <div class="card grafico-card">
+                    <div class="card-body">
+                        <canvas id="saude-sono-total-medio"></canvas>
                     </div>
                 </div>
             </div>
@@ -545,6 +616,7 @@
 
         const ENERGIA_BASE_URL = `${API_BASE}/energia-service/acompanhamentos/`;
         const ENERGIA_TOTAL_URL = `${API_BASE}/energia-service/total`;
+
         const SALARIO_BASE_URL = `${API_BASE}/salario-service/folha/ano/`;
         const SALARIO_DETALHE_URL = `${API_BASE}/salario-service/folha/`;
 
@@ -554,6 +626,12 @@
         const SAUDE_TREINOS_URL = `${API_BASE}/saude-service/treinos/treino_por_semana`;
         const SAUDE_TEMPO_PE_URL = `${API_BASE}/saude-service/metricas/tempo_de_pe`;
         const SAUDE_EXPOSICAO_SOL_URL = `${API_BASE}/saude-service/metricas/exposicao_ao_sol`;
+        const SAUDE_FREQUENCIA_CARDIACA_REPOUSO_URL = `${API_BASE}/saude-service/metricas/frequencia_cardiaca_em_repouso_media_movel_8_dias`;
+        const SAUDE_PASSOS_MEDIOS_DIARIOS_URL = `${API_BASE}/saude-service/metricas/passos_medios_diarios_media_movel_8_dias`;
+        const SAUDE_SONO_PROFUNDO_MEDIO_URL = `${API_BASE}/saude-service/metricas/sono_profundo_medio_media_movel_8_dias`;
+        const SAUDE_SONO_TOTAL_MEDIO_URL = `${API_BASE}/saude-service/metricas/sono_total_medio_media_movel_8_dias`;
+        const SAUDE_TREINOS_MAIS_RECENTES_URL = `${API_BASE}/saude-service/treinos/mais_recente`;
+        const SAUDE_METRICAS_MAIS_RECENTES_URL = `${API_BASE}/saude-service/metricas/mais_recente`;
 
         const TOKEN_BUFFER_SECONDS = 60;
 
@@ -575,6 +653,10 @@
         let graficoSaudeTreinos = null;
         let graficoSaudeTempoPe = null;
         let graficoSaudeSol = null;
+        let graficoSaudeFrequenciaCardiacaRepouso = null;
+        let graficoSaudePassosMediosDiarios = null;
+        let graficoSaudeSonoProfundoMedio = null;
+        let graficoSaudeSonoTotalMedio = null;
 
         // ============================================
         // HELPERS DE UI
@@ -694,7 +776,7 @@
                 .replaceAll('<', '&lt;')
                 .replaceAll('>', '&gt;')
                 .replaceAll('"', '&quot;')
-                .replaceAll("'", '&#039;');
+                .replaceAll("'", '&#39;');
         }
 
         // ============================================
@@ -998,10 +1080,14 @@
             }
 
             return lista
-                .filter(item => item && item.periodo != null && item.valor != null)
+                .filter(item =>
+                    item &&
+                    item.periodo != null &&
+                    (item.valor != null || item.horasSono != null)
+                )
                 .map(item => ({
                     periodo: String(item.periodo),
-                    valor: Number(item.valor)
+                    valor: Number(item.valor ?? item.horasSono)
                 }));
         }
 
@@ -1125,17 +1211,9 @@
         }
 
         function destruirGraficos() {
-            if (graficoGeracaoDiaria) { graficoGeracaoDiaria.destroy(); graficoGeracaoDiaria = null; }
-            if (graficoGeracaoConsumo) { graficoGeracaoConsumo.destroy(); graficoGeracaoConsumo = null; }
-            if (graficoSaldo) { graficoSaldo.destroy(); graficoSaldo = null; }
-            if (graficoValor) { graficoValor.destroy(); graficoValor = null; }
-            if (graficoSalarioLiquidoMes) { graficoSalarioLiquidoMes.destroy(); graficoSalarioLiquidoMes = null; }
-            if (graficoSaudeDistancia) { graficoSaudeDistancia.destroy(); graficoSaudeDistancia = null; }
-            if (graficoSaudeEnergia) { graficoSaudeEnergia.destroy(); graficoSaudeEnergia = null; }
-            if (graficoSaudeTempo) { graficoSaudeTempo.destroy(); graficoSaudeTempo = null; }
-            if (graficoSaudeTreinos) { graficoSaudeTreinos.destroy(); graficoSaudeTreinos = null; }
-            if (graficoSaudeTempoPe) { graficoSaudeTempoPe.destroy(); graficoSaudeTempoPe = null; }
-            if (graficoSaudeSol) { graficoSaudeSol.destroy(); graficoSaudeSol = null; }
+            destruirGraficosEnergia();
+            destruirGraficosSalario();
+            destruirGraficosSaude();
         }
 
         function destruirGraficosEnergia() {
@@ -1156,6 +1234,10 @@
             if (graficoSaudeTreinos) { graficoSaudeTreinos.destroy(); graficoSaudeTreinos = null; }
             if (graficoSaudeTempoPe) { graficoSaudeTempoPe.destroy(); graficoSaudeTempoPe = null; }
             if (graficoSaudeSol) { graficoSaudeSol.destroy(); graficoSaudeSol = null; }
+            if (graficoSaudeFrequenciaCardiacaRepouso) { graficoSaudeFrequenciaCardiacaRepouso.destroy(); graficoSaudeFrequenciaCardiacaRepouso = null; }
+            if (graficoSaudePassosMediosDiarios) { graficoSaudePassosMediosDiarios.destroy(); graficoSaudePassosMediosDiarios = null; }
+            if (graficoSaudeSonoProfundoMedio) { graficoSaudeSonoProfundoMedio.destroy(); graficoSaudeSonoProfundoMedio = null; }
+            if (graficoSaudeSonoTotalMedio) { graficoSaudeSonoTotalMedio.destroy(); graficoSaudeSonoTotalMedio = null; }
         }
 
         function limparDashboard() {
@@ -1309,7 +1391,7 @@
                 data: {
                     labels,
                     datasets: [{
-                        label: 'Distância total',
+                        label: 'Km',
                         data: dados,
                         borderWidth: 2,
                         tension: 0.3,
@@ -1330,7 +1412,7 @@
                 data: {
                     labels,
                     datasets: [{
-                        label: 'Energia ativa',
+                        label: 'Calorias',
                         data: dados,
                         borderWidth: 2,
                         tension: 0.3,
@@ -1351,7 +1433,7 @@
                 data: {
                     labels,
                     datasets: [{
-                        label: 'Tempo total de treino',
+                        label: 'Minutos',
                         data: dados,
                         borderWidth: 2,
                         tension: 0.3,
@@ -1372,7 +1454,7 @@
                 data: {
                     labels,
                     datasets: [{
-                        label: 'Treinos por semana',
+                        label: 'Quantidade',
                         data: dados,
                         borderWidth: 2,
                         tension: 0.3,
@@ -1393,7 +1475,7 @@
                 data: {
                     labels,
                     datasets: [{
-                        label: 'Tempo de pé',
+                        label: 'Minutos',
                         data: dados,
                         borderWidth: 2,
                         tension: 0.3,
@@ -1414,7 +1496,7 @@
                 data: {
                     labels,
                     datasets: [{
-                        label: 'Exposição ao sol',
+                        label: 'Minutos',
                         data: dados,
                         borderWidth: 2,
                         tension: 0.3,
@@ -1423,6 +1505,90 @@
                 },
                 options: {
                     ...opcoesPadraoComDatalabels('Exposição ao sol', value => formatarNumero(value, 0)),
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function criarGraficoSaudeFrequenciaCardiacaRepouso(labels, dados) {
+            const ctx = document.getElementById('saude-frequencia-cardiaca-repouso');
+            graficoSaudeFrequenciaCardiacaRepouso = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'BPM - Batimentos por minuto',
+                        data: dados,
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false
+                    }]
+                },
+                options: {
+                    ...opcoesPadraoComDatalabels('Frequência cardíaca em repouso', value => formatarNumero(value, 1)),
+                    scales: { y: { beginAtZero: false } }
+                }
+            });
+        }
+
+        function criarGraficoSaudePassosMediosDiarios(labels, dados) {
+            const ctx = document.getElementById('saude-passos-medios-diarios');
+            graficoSaudePassosMediosDiarios = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Quantidade',
+                        data: dados,
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false
+                    }]
+                },
+                options: {
+                    ...opcoesPadraoComDatalabels('Passos médios diários', value => formatarNumero(value, 0)),
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function criarGraficoSaudeSonoProfundoMedio(labels, dados) {
+            const ctx = document.getElementById('saude-sono-profundo-medio');
+            graficoSaudeSonoProfundoMedio = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Horas',
+                        data: dados,
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false
+                    }]
+                },
+                options: {
+                    ...opcoesPadraoComDatalabels('Sono profundo médio', value => formatarNumero(value, 1)),
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function criarGraficoSaudeSonoTotalMedio(labels, dados) {
+            const ctx = document.getElementById('saude-sono-total-medio');
+            graficoSaudeSonoTotalMedio = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Horas',
+                        data: dados,
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false
+                    }]
+                },
+                options: {
+                    ...opcoesPadraoComDatalabels('Sono total médio', value => formatarNumero(value, 1)),
                     scales: { y: { beginAtZero: true } }
                 }
             });
@@ -1553,14 +1719,26 @@
                 tempoTotalResposta,
                 treinoResposta,
                 tempoPeResposta,
-                exposicaoSolResposta
+                exposicaoSolResposta,
+                frequenciaCardiacaRepousoResposta,
+                passosMediosDiariosResposta,
+                sonoProfundoMedioResposta,
+                sonoTotalMedioResposta,
+                treinosMaisRecentesResposta,
+                metricasMaisRecentesResposta
             ] = await Promise.all([
                 apiRequest({ url: SAUDE_DISTANCIA_URL }),
                 apiRequest({ url: SAUDE_ENERGIA_ATIVA_URL }),
                 apiRequest({ url: SAUDE_TEMPO_TOTAL_URL }),
                 apiRequest({ url: SAUDE_TREINOS_URL }),
                 apiRequest({ url: SAUDE_TEMPO_PE_URL }),
-                apiRequest({ url: SAUDE_EXPOSICAO_SOL_URL })
+                apiRequest({ url: SAUDE_EXPOSICAO_SOL_URL }),
+                apiRequest({ url: SAUDE_FREQUENCIA_CARDIACA_REPOUSO_URL }),
+                apiRequest({ url: SAUDE_PASSOS_MEDIOS_DIARIOS_URL }),
+                apiRequest({ url: SAUDE_SONO_PROFUNDO_MEDIO_URL }),
+                apiRequest({ url: SAUDE_SONO_TOTAL_MEDIO_URL }),
+                apiRequest({ url: SAUDE_TREINOS_MAIS_RECENTES_URL }),
+                apiRequest({ url: SAUDE_METRICAS_MAIS_RECENTES_URL })
             ]);
 
             const distancia = ordenarCrescente(normalizarDadosSaude(distanciaResposta));
@@ -1569,6 +1747,10 @@
             const treinos = ordenarCrescente(normalizarDadosSaude(treinoResposta));
             const tempoPe = ordenarCrescente(normalizarDadosSaude(tempoPeResposta));
             const exposicaoSol = ordenarCrescente(normalizarDadosSaude(exposicaoSolResposta));
+            const frequenciaCardiacaRepouso = ordenarCrescente(normalizarDadosSaude(frequenciaCardiacaRepousoResposta));
+            const passosMediosDiarios = ordenarCrescente(normalizarDadosSaude(passosMediosDiariosResposta));
+            const sonoProfundoMedio = ordenarCrescente(normalizarDadosSaude(sonoProfundoMedioResposta));
+            const sonoTotalMedio = ordenarCrescente(normalizarDadosSaude(sonoTotalMedioResposta));
 
             const dadosDistancia = extrairDadosSaude(distancia);
             const dadosEnergiaAtiva = extrairDadosSaude(energiaAtiva);
@@ -1576,6 +1758,10 @@
             const dadosTreinos = extrairDadosSaude(treinos);
             const dadosTempoPe = extrairDadosSaude(tempoPe);
             const dadosSol = extrairDadosSaude(exposicaoSol);
+            const dadosFrequenciaCardiacaRepouso = extrairDadosSaude(frequenciaCardiacaRepouso);
+            const dadosPassosMediosDiarios = extrairDadosSaude(passosMediosDiarios);
+            const dadosSonoProfundoMedio = extrairDadosSaude(sonoProfundoMedio);
+            const dadosSonoTotalMedio = extrairDadosSaude(sonoTotalMedio);
 
             criarGraficoSaudeDistancia(dadosDistancia.labels, dadosDistancia.valores);
             criarGraficoSaudeEnergia(dadosEnergiaAtiva.labels, dadosEnergiaAtiva.valores);
@@ -1583,6 +1769,10 @@
             criarGraficoSaudeTreinos(dadosTreinos.labels, dadosTreinos.valores);
             criarGraficoSaudeTempoPe(dadosTempoPe.labels, dadosTempoPe.valores);
             criarGraficoSaudeSol(dadosSol.labels, dadosSol.valores);
+            criarGraficoSaudeFrequenciaCardiacaRepouso(dadosFrequenciaCardiacaRepouso.labels, dadosFrequenciaCardiacaRepouso.valores);
+            criarGraficoSaudePassosMediosDiarios(dadosPassosMediosDiarios.labels, dadosPassosMediosDiarios.valores);
+            criarGraficoSaudeSonoProfundoMedio(dadosSonoProfundoMedio.labels, dadosSonoProfundoMedio.valores);
+            criarGraficoSaudeSonoTotalMedio(dadosSonoTotalMedio.labels, dadosSonoTotalMedio.valores);
 
             const ultimoDistancia = obterUltimoItem(distancia);
             const ultimoEnergia = obterUltimoItem(energiaAtiva);
@@ -1590,6 +1780,13 @@
             const ultimoTreino = obterUltimoItem(treinos);
             const ultimoTempoPe = obterUltimoItem(tempoPe);
             const ultimoSol = obterUltimoItem(exposicaoSol);
+            const ultimoFcRepouso = obterUltimoItem(frequenciaCardiacaRepouso);
+            const ultimoPassos = obterUltimoItem(passosMediosDiarios);
+            const ultimoSonoProfundo = obterUltimoItem(sonoProfundoMedio);
+            const ultimoSonoTotal = obterUltimoItem(sonoTotalMedio);
+
+            document.getElementById('titulo-treinos').textContent = `Treinos atualizados até ${formatarDataUTC(treinosMaisRecentesResposta.criado)}`;
+            document.getElementById('titulo-metricas').textContent = `Métricas atualizadas até ${formatarDataUTC(metricasMaisRecentesResposta.criado)}`;
 
             document.getElementById('card-saude-distancia').textContent = ultimoDistancia ? formatarNumero(ultimoDistancia.valor) : '--';
             document.getElementById('card-saude-distancia-periodo').textContent = ultimoDistancia ? ultimoDistancia.periodo : '--';
@@ -1608,6 +1805,18 @@
 
             document.getElementById('card-saude-sol').textContent = ultimoSol ? formatarNumero(ultimoSol.valor, 0) : '--';
             document.getElementById('card-saude-sol-periodo').textContent = ultimoSol ? ultimoSol.periodo : '--';
+
+            document.getElementById('card-saude-fc-repouso').textContent = ultimoFcRepouso ? formatarNumero(ultimoFcRepouso.valor, 1) : '--';
+            document.getElementById('card-saude-fc-repouso-periodo').textContent = ultimoFcRepouso ? ultimoFcRepouso.periodo : '--';
+
+            document.getElementById('card-saude-passos').textContent = ultimoPassos ? formatarNumero(ultimoPassos.valor, 0) : '--';
+            document.getElementById('card-saude-passos-periodo').textContent = ultimoPassos ? ultimoPassos.periodo : '--';
+
+            document.getElementById('card-saude-sono-profundo').textContent = ultimoSonoProfundo ? `${formatarNumero(ultimoSonoProfundo.valor, 1)} h` : '--';
+            document.getElementById('card-saude-sono-profundo-periodo').textContent = ultimoSonoProfundo ? ultimoSonoProfundo.periodo : '--';
+
+            document.getElementById('card-saude-sono-total').textContent = ultimoSonoTotal ? `${formatarNumero(ultimoSonoTotal.valor, 1)} h` : '--';
+            document.getElementById('card-saude-sono-total-periodo').textContent = ultimoSonoTotal ? ultimoSonoTotal.periodo : '--';
         }
 
         async function carregarDashboard() {
@@ -1838,6 +2047,20 @@
                 console.error(error);
                 renderizarErroModalFolha(error.message || 'Erro ao carregar detalhes da folha.');
             }
+        }
+
+        function formatarDataUTC(dataUTC) {
+            const data = new Date(dataUTC + 'Z');
+
+            return data.toLocaleString('pt-BR', {
+                timeZone: 'America/Sao_Paulo',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            }).replace(',', ' as');
         }
 
         // ============================================
