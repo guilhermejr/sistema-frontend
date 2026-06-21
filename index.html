@@ -415,7 +415,6 @@
                             <div class="card-body">
                                 <h6 class="text-muted">Distância total</h6>
                                 <div id="card-saude-distancia" class="fs-4 fw-bold">--</div>
-                                <div id="card-saude-distancia-periodo" class="small-muted mt-1">--</div>
                             </div>
                         </div>
                     </div>
@@ -425,7 +424,6 @@
                             <div class="card-body">
                                 <h6 class="text-muted">Energia ativa</h6>
                                 <div id="card-saude-energia" class="fs-4 fw-bold">--</div>
-                                <div id="card-saude-energia-periodo" class="small-muted mt-1">--</div>
                             </div>
                         </div>
                     </div>
@@ -435,7 +433,6 @@
                             <div class="card-body">
                                 <h6 class="text-muted">Tempo total de treino</h6>
                                 <div id="card-saude-tempo" class="fs-4 fw-bold">--</div>
-                                <div id="card-saude-tempo-periodo" class="small-muted mt-1">--</div>
                             </div>
                         </div>
                     </div>
@@ -445,7 +442,6 @@
                             <div class="card-body">
                                 <h6 class="text-muted">Treinos por semana</h6>
                                 <div id="card-saude-treinos" class="fs-4 fw-bold">--</div>
-                                <div id="card-saude-treinos-periodo" class="small-muted mt-1">--</div>
                             </div>
                         </div>
                     </div>
@@ -462,7 +458,6 @@
                             <div class="card-body">
                                 <h6 class="text-muted">Tempo de pé</h6>
                                 <div id="card-saude-tempo-pe" class="fs-4 fw-bold">--</div>
-                                <div id="card-saude-tempo-pe-periodo" class="small-muted mt-1">--</div>
                             </div>
                         </div>
                     </div>
@@ -472,7 +467,6 @@
                             <div class="card-body">
                                 <h6 class="text-muted">Exposição ao sol</h6>
                                 <div id="card-saude-sol" class="fs-4 fw-bold">--</div>
-                                <div id="card-saude-sol-periodo" class="small-muted mt-1">--</div>
                             </div>
                         </div>
                     </div>
@@ -482,7 +476,6 @@
                             <div class="card-body">
                                 <h6 class="text-muted">Freq. cardíaca em repouso</h6>
                                 <div id="card-saude-fc-repouso" class="fs-4 fw-bold">--</div>
-                                <div id="card-saude-fc-repouso-periodo" class="small-muted mt-1">--</div>
                             </div>
                         </div>
                     </div>
@@ -492,7 +485,6 @@
                             <div class="card-body">
                                 <h6 class="text-muted">Passos diários</h6>
                                 <div id="card-saude-passos" class="fs-4 fw-bold">--</div>
-                                <div id="card-saude-passos-periodo" class="small-muted mt-1">--</div>
                             </div>
                         </div>
                     </div>
@@ -502,7 +494,6 @@
                             <div class="card-body">
                                 <h6 class="text-muted">Sono profundo</h6>
                                 <div id="card-saude-sono-profundo" class="fs-4 fw-bold">--</div>
-                                <div id="card-saude-sono-profundo-periodo" class="small-muted mt-1">--</div>
                             </div>
                         </div>
                     </div>
@@ -512,7 +503,6 @@
                             <div class="card-body">
                                 <h6 class="text-muted">Sono total</h6>
                                 <div id="card-saude-sono-total" class="fs-4 fw-bold">--</div>
-                                <div id="card-saude-sono-total-periodo" class="small-muted mt-1">--</div>
                             </div>
                         </div>
                     </div>
@@ -624,13 +614,14 @@
         const SAUDE_ENERGIA_ATIVA_URL = `${API_BASE}/saude-service/treinos/energia_ativa_por_semana`;
         const SAUDE_TEMPO_TOTAL_URL = `${API_BASE}/saude-service/treinos/tempo_total_treino_por_semana`;
         const SAUDE_TREINOS_URL = `${API_BASE}/saude-service/treinos/treino_por_semana`;
+        const SAUDE_TREINOS_MAIS_RECENTES_URL = `${API_BASE}/saude-service/treinos/mais_recente`;
+        const SAUDE_RESUMO_TREINOS = `${API_BASE}/saude-service/treinos/resumo_treinos`;
         const SAUDE_TEMPO_PE_URL = `${API_BASE}/saude-service/metricas/tempo_de_pe`;
         const SAUDE_EXPOSICAO_SOL_URL = `${API_BASE}/saude-service/metricas/exposicao_ao_sol`;
         const SAUDE_FREQUENCIA_CARDIACA_REPOUSO_URL = `${API_BASE}/saude-service/metricas/frequencia_cardiaca_em_repouso_media_movel_8_dias`;
         const SAUDE_PASSOS_MEDIOS_DIARIOS_URL = `${API_BASE}/saude-service/metricas/passos_medios_diarios_media_movel_8_dias`;
         const SAUDE_SONO_PROFUNDO_MEDIO_URL = `${API_BASE}/saude-service/metricas/sono_profundo_medio_media_movel_8_dias`;
         const SAUDE_SONO_TOTAL_MEDIO_URL = `${API_BASE}/saude-service/metricas/sono_total_medio_media_movel_8_dias`;
-        const SAUDE_TREINOS_MAIS_RECENTES_URL = `${API_BASE}/saude-service/treinos/mais_recente`;
         const SAUDE_METRICAS_MAIS_RECENTES_URL = `${API_BASE}/saude-service/metricas/mais_recente`;
 
         const TOKEN_BUFFER_SECONDS = 60;
@@ -1725,7 +1716,8 @@
                 sonoProfundoMedioResposta,
                 sonoTotalMedioResposta,
                 treinosMaisRecentesResposta,
-                metricasMaisRecentesResposta
+                metricasMaisRecentesResposta,
+                resumoTreinosResposta
             ] = await Promise.all([
                 apiRequest({ url: SAUDE_DISTANCIA_URL }),
                 apiRequest({ url: SAUDE_ENERGIA_ATIVA_URL }),
@@ -1738,7 +1730,8 @@
                 apiRequest({ url: SAUDE_SONO_PROFUNDO_MEDIO_URL }),
                 apiRequest({ url: SAUDE_SONO_TOTAL_MEDIO_URL }),
                 apiRequest({ url: SAUDE_TREINOS_MAIS_RECENTES_URL }),
-                apiRequest({ url: SAUDE_METRICAS_MAIS_RECENTES_URL })
+                apiRequest({ url: SAUDE_METRICAS_MAIS_RECENTES_URL }),
+                apiRequest({ url: SAUDE_RESUMO_TREINOS })
             ]);
 
             const distancia = ordenarCrescente(normalizarDadosSaude(distanciaResposta));
@@ -1774,10 +1767,6 @@
             criarGraficoSaudeSonoProfundoMedio(dadosSonoProfundoMedio.labels, dadosSonoProfundoMedio.valores);
             criarGraficoSaudeSonoTotalMedio(dadosSonoTotalMedio.labels, dadosSonoTotalMedio.valores);
 
-            const ultimoDistancia = obterUltimoItem(distancia);
-            const ultimoEnergia = obterUltimoItem(energiaAtiva);
-            const ultimoTempo = obterUltimoItem(tempoTotal);
-            const ultimoTreino = obterUltimoItem(treinos);
             const ultimoTempoPe = obterUltimoItem(tempoPe);
             const ultimoSol = obterUltimoItem(exposicaoSol);
             const ultimoFcRepouso = obterUltimoItem(frequenciaCardiacaRepouso);
@@ -1785,38 +1774,28 @@
             const ultimoSonoProfundo = obterUltimoItem(sonoProfundoMedio);
             const ultimoSonoTotal = obterUltimoItem(sonoTotalMedio);
 
-            document.getElementById('titulo-treinos').textContent = `Treinos atualizados até ${formatarDataUTC(treinosMaisRecentesResposta.criado)}`;
-            document.getElementById('titulo-metricas').textContent = `Métricas atualizadas até ${formatarDataUTC(metricasMaisRecentesResposta.criado)}`;
+            document.getElementById('titulo-treinos').textContent = `Treinos atualizados em ${formatarDataUTC(treinosMaisRecentesResposta.criado)}`;
+            document.getElementById('titulo-metricas').textContent = `Métricas atualizadas em ${formatarDataUTC(metricasMaisRecentesResposta.criado)}`;
 
-            document.getElementById('card-saude-distancia').textContent = ultimoDistancia ? formatarNumero(ultimoDistancia.valor) : '--';
-            document.getElementById('card-saude-distancia-periodo').textContent = ultimoDistancia ? ultimoDistancia.periodo : '--';
+            document.getElementById('card-saude-distancia').textContent = resumoTreinosResposta ? resumoTreinosResposta.distancia : '--';
 
-            document.getElementById('card-saude-energia').textContent = ultimoEnergia ? formatarNumero(ultimoEnergia.valor) : '--';
-            document.getElementById('card-saude-energia-periodo').textContent = ultimoEnergia ? ultimoEnergia.periodo : '--';
+            document.getElementById('card-saude-energia').textContent = resumoTreinosResposta ? resumoTreinosResposta.energia_ativa : '--';
 
-            document.getElementById('card-saude-tempo').textContent = ultimoTempo ? formatarNumero(ultimoTempo.valor, 0) : '--';
-            document.getElementById('card-saude-tempo-periodo').textContent = ultimoTempo ? ultimoTempo.periodo : '--';
+            document.getElementById('card-saude-tempo').textContent = resumoTreinosResposta ? resumoTreinosResposta.duracao : '--';
 
-            document.getElementById('card-saude-treinos').textContent = ultimoTreino ? formatarNumero(ultimoTreino.valor, 0) : '--';
-            document.getElementById('card-saude-treinos-periodo').textContent = ultimoTreino ? ultimoTreino.periodo : '--';
+            document.getElementById('card-saude-treinos').textContent = resumoTreinosResposta ? resumoTreinosResposta.quantidade_treinos : '--';
 
             document.getElementById('card-saude-tempo-pe').textContent = ultimoTempoPe ? formatarNumero(ultimoTempoPe.valor, 0) : '--';
-            document.getElementById('card-saude-tempo-pe-periodo').textContent = ultimoTempoPe ? ultimoTempoPe.periodo : '--';
 
             document.getElementById('card-saude-sol').textContent = ultimoSol ? formatarNumero(ultimoSol.valor, 0) : '--';
-            document.getElementById('card-saude-sol-periodo').textContent = ultimoSol ? ultimoSol.periodo : '--';
 
             document.getElementById('card-saude-fc-repouso').textContent = ultimoFcRepouso ? formatarNumero(ultimoFcRepouso.valor, 1) : '--';
-            document.getElementById('card-saude-fc-repouso-periodo').textContent = ultimoFcRepouso ? ultimoFcRepouso.periodo : '--';
 
             document.getElementById('card-saude-passos').textContent = ultimoPassos ? formatarNumero(ultimoPassos.valor, 0) : '--';
-            document.getElementById('card-saude-passos-periodo').textContent = ultimoPassos ? ultimoPassos.periodo : '--';
 
             document.getElementById('card-saude-sono-profundo').textContent = ultimoSonoProfundo ? `${formatarNumero(ultimoSonoProfundo.valor, 1)} h` : '--';
-            document.getElementById('card-saude-sono-profundo-periodo').textContent = ultimoSonoProfundo ? ultimoSonoProfundo.periodo : '--';
 
             document.getElementById('card-saude-sono-total').textContent = ultimoSonoTotal ? `${formatarNumero(ultimoSonoTotal.valor, 1)} h` : '--';
-            document.getElementById('card-saude-sono-total-periodo').textContent = ultimoSonoTotal ? ultimoSonoTotal.periodo : '--';
         }
 
         async function carregarDashboard() {
