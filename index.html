@@ -200,6 +200,7 @@
                             <div class="card-body">
                                 <h6 class="text-muted">Geração</h6>
                                 <div id="card-geracao-contrato" class="fs-4 fw-bold">--</div>
+                                <div id="card-geracao-contrato-unidade" class="small-muted mt-1">kWh</div>
                             </div>
                         </div>
                     </div>
@@ -209,6 +210,7 @@
                             <div class="card-body">
                                 <h6 class="text-muted">Consumo</h6>
                                 <div id="card-consumo-contrato" class="fs-4 fw-bold">--</div>
+                                <div id="card-consumo-contrato-unidade" class="small-muted mt-1">kWh</div>
                             </div>
                         </div>
                     </div>
@@ -218,6 +220,7 @@
                             <div class="card-body">
                                 <h6 class="text-muted">Saldo</h6>
                                 <div id="card-saldo-contrato" class="fs-4 fw-bold">--</div>
+                                <div id="card-saldo-contrato-unidade" class="small-muted mt-1">kWh</div>
                             </div>
                         </div>
                     </div>
@@ -233,6 +236,7 @@
                             <div class="card-body">
                                 <h6 class="text-muted">Geração</h6>
                                 <div id="card-geracao" class="fs-4 fw-bold">--</div>
+                                <div id="card-geracao-unidade" class="small-muted mt-1">kWh</div>
                             </div>
                         </div>
                     </div>
@@ -242,6 +246,7 @@
                             <div class="card-body">
                                 <h6 class="text-muted">Consumo</h6>
                                 <div id="card-consumo" class="fs-4 fw-bold">--</div>
+                                <div id="card-consumo-unidade" class="small-muted mt-1">kWh</div>
                             </div>
                         </div>
                     </div>
@@ -251,6 +256,7 @@
                             <div class="card-body">
                                 <h6 class="text-muted">Saldo</h6>
                                 <div id="card-saldo" class="fs-4 fw-bold">--</div>
+                                <div id="card-saldo-unidade" class="small-muted mt-1">kWh</div>
                             </div>
                         </div>
                     </div>
@@ -258,7 +264,7 @@
 
                 <div class="row mb-4">
                     <div class="col-12">
-                        <h5 class="mb-3">Geração desde a última leitura, <span id="card-geracao-parcial-data">--</span></h5>
+                        <h5 class="mb-3">Geração <span id="card-geracao-parcial-data">--</span></h5>
                     </div>
 
                     <div class="col-12 col-lg-4 mb-3">
@@ -266,6 +272,7 @@
                             <div class="card-body">
                                 <h6 class="text-muted">Geração Parcial</h6>
                                 <div id="card-geracao-parcial" class="fs-4 fw-bold">--</div>
+                                <div id="card-geracao-parcial-unidade" class="small-muted mt-1">kWh</div>
                             </div>
                         </div>
                     </div>
@@ -1005,7 +1012,7 @@
             return `${Number(valor || 0).toLocaleString('pt-BR', {
                 minimumFractionDigits: 1,
                 maximumFractionDigits: 1
-            })} kWh`;
+            })}`;
         }
 
         function formatarMoedaBR(valor) {
@@ -1324,7 +1331,7 @@
                 data: {
                     labels,
                     datasets: [{
-                        label: 'Saldo (kWh)',
+                        label: 'kWh',
                         data: dados,
                         borderWidth: 2,
                         tension: 0.3,
@@ -1650,7 +1657,8 @@
 
                 if (geracaoParcial.atualizado) {
                     const dataFormatada = new Date(geracaoParcial.atualizado).toLocaleDateString('pt-BR');
-                    document.getElementById('card-geracao-parcial-data').textContent = `calculado até ${dataFormatada}`;
+                    const primeiroDiaDaLeituraAtual = proximoDia(formatarData(contaUltimoMes.fim));
+                    document.getElementById('card-geracao-parcial-data').textContent = `de ${primeiroDiaDaLeituraAtual} a ${dataFormatada} (${diferencaEmDiasInclusivo(primeiroDiaDaLeituraAtual, dataFormatada)} dias)`;
                 }
             }
 
@@ -2064,6 +2072,39 @@
                 minute: '2-digit',
                 second: '2-digit'
             }).replace(',', ' as');
+        }
+
+        function proximoDia(dataStr) {
+            const [dia, mes, ano] = dataStr.split('/').map(Number);
+
+            // Cria a data (mês começa em 0 no JS)
+            const data = new Date(ano, mes - 1, dia);
+
+            // Soma 1 dia
+            data.setDate(data.getDate() + 1);
+
+            // Formata de volta para DD/MM/YYYY
+            const diaNovo = String(data.getDate()).padStart(2, '0');
+            const mesNovo = String(data.getMonth() + 1).padStart(2, '0');
+            const anoNovo = data.getFullYear();
+
+            return `${diaNovo}/${mesNovo}/${anoNovo}`;
+        }
+
+        function parseData(dataStr) {
+            const [dia, mes, ano] = dataStr.split('/').map(Number);
+            return new Date(ano, mes - 1, dia);
+        }
+
+        function diferencaEmDiasInclusivo(data1, data2) {
+
+            const d1 = parseData(data1);
+            const d2 = parseData(data2);
+
+            const diffMs = Math.abs(d2 - d1);
+            const diffDias = diffMs / (1000 * 60 * 60 * 24);
+
+            return diffDias + 1; // inclui ambos os dias
         }
 
         // ============================================
