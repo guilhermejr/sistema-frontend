@@ -1796,8 +1796,8 @@
             const ultimoSonoProfundo = obterUltimoItem(sonoProfundoMedio);
             const ultimoSonoTotal = obterUltimoItem(sonoTotalMedio);
 
-            document.getElementById('titulo-treinos').textContent = `Treinos atualizados as ${formatarDataUTC(treinosMaisRecentesResposta.criado)}`;
-            document.getElementById('titulo-metricas').textContent = `Métricas atualizadas as ${formatarDataUTC(metricasMaisRecentesResposta.criado)}`;
+            document.getElementById('titulo-treinos').textContent = `Treinos dos últimos 7 dias atualizados em ${formatarDataUTC(treinosMaisRecentesResposta.criado)}`;
+            document.getElementById('titulo-metricas').textContent = `Métricas atualizadas em ${formatarDataUTC(metricasMaisRecentesResposta.criado)}`;
 
             document.getElementById('card-saude-distancia').textContent = resumoTreinosResposta ? resumoTreinosResposta.distancia : '--';
             document.getElementById('card-saude-distancia-periodo').textContent = resumoTreinosResposta ? 'Km' : '--';
