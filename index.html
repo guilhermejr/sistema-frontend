@@ -1076,6 +1076,27 @@
             };
         }
 
+        function normalizarDadosSaudeSono(resposta) {
+            let lista = [];
+
+            if (Array.isArray(resposta)) {
+                lista = resposta;
+            }
+
+            return lista
+                .filter(item =>
+                    item &&
+                    item.periodo != null &&
+                    item.tempo != null && 
+                    item.horasSono != null
+                )
+                .map(item => ({
+                    periodo: String(item.periodo),
+                    valor: Number(item.valor ?? item.horasSono),
+                    texto: item.tempo
+                }));
+        }
+
         function normalizarDadosSaude(resposta) {
             let lista = [];
 
@@ -1103,6 +1124,14 @@
             return {
                 labels: lista.map(item => item.periodo),
                 valores: lista.map(item => Number(item.valor))
+            };
+        }
+
+        function extrairDadosSaudeSono(lista) {
+            return {
+                labels: lista.map(item => item.periodo),
+                valores: lista.map(item => Number(item.valor)),
+                textos: lista.map(item => item.texto || '')
             };
         }
 
@@ -1560,12 +1589,13 @@
             });
         }
 
-        function criarGraficoSaudeSonoProfundoMedio(labels, dados) {
+        function criarGraficoSaudeSonoProfundoMedio(labels, dados, textos) {
             const ctx = document.getElementById('saude-sono-profundo-medio');
             graficoSaudeSonoProfundoMedio = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels,
+                    texto: textos,
                     datasets: [{
                         label: 'Horas',
                         data: dados,
@@ -1575,18 +1605,23 @@
                     }]
                 },
                 options: {
-                    ...opcoesPadraoComDatalabels('Sono profundo médio', value => formatarNumero(value, 1)),
+                    ...opcoesPadraoComDatalabels('Sono profundo médio', (value, context) => {
+                        const index = context.dataIndex;
+                        const texto = context.chart.data.texto[index];
+                        return `${texto}`;
+                    }),
                     scales: { y: { beginAtZero: true } }
                 }
             });
         }
 
-        function criarGraficoSaudeSonoTotalMedio(labels, dados) {
+        function criarGraficoSaudeSonoTotalMedio(labels, dados, textos) {
             const ctx = document.getElementById('saude-sono-total-medio');
             graficoSaudeSonoTotalMedio = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels,
+                    texto: textos,
                     datasets: [{
                         label: 'Horas',
                         data: dados,
@@ -1596,7 +1631,11 @@
                     }]
                 },
                 options: {
-                    ...opcoesPadraoComDatalabels('Sono total médio', value => formatarNumero(value, 1)),
+                    ...opcoesPadraoComDatalabels('Sono total médio', (value, context) => {
+                        const index = context.dataIndex;
+                        const texto = context.chart.data.texto[index];
+                        return `${texto}`;
+                    }),
                     scales: { y: { beginAtZero: true } }
                 }
             });
@@ -1760,8 +1799,8 @@
             const exposicaoSol = ordenarCrescente(normalizarDadosSaude(exposicaoSolResposta));
             const frequenciaCardiacaRepouso = ordenarCrescente(normalizarDadosSaude(frequenciaCardiacaRepousoResposta));
             const passosMediosDiarios = ordenarCrescente(normalizarDadosSaude(passosMediosDiariosResposta));
-            const sonoProfundoMedio = ordenarCrescente(normalizarDadosSaude(sonoProfundoMedioResposta));
-            const sonoTotalMedio = ordenarCrescente(normalizarDadosSaude(sonoTotalMedioResposta));
+            const sonoProfundoMedio = ordenarCrescente(normalizarDadosSaudeSono(sonoProfundoMedioResposta));
+            const sonoTotalMedio = ordenarCrescente(normalizarDadosSaudeSono(sonoTotalMedioResposta));
 
             const dadosDistancia = extrairDadosSaude(distancia);
             const dadosEnergiaAtiva = extrairDadosSaude(energiaAtiva);
@@ -1771,8 +1810,8 @@
             const dadosSol = extrairDadosSaude(exposicaoSol);
             const dadosFrequenciaCardiacaRepouso = extrairDadosSaude(frequenciaCardiacaRepouso);
             const dadosPassosMediosDiarios = extrairDadosSaude(passosMediosDiarios);
-            const dadosSonoProfundoMedio = extrairDadosSaude(sonoProfundoMedio);
-            const dadosSonoTotalMedio = extrairDadosSaude(sonoTotalMedio);
+            const dadosSonoProfundoMedio = extrairDadosSaudeSono(sonoProfundoMedio);
+            const dadosSonoTotalMedio = extrairDadosSaudeSono(sonoTotalMedio);
 
             criarGraficoSaudeDistancia(dadosDistancia.labels, dadosDistancia.valores);
             criarGraficoSaudeEnergia(dadosEnergiaAtiva.labels, dadosEnergiaAtiva.valores);
@@ -1782,13 +1821,9 @@
             criarGraficoSaudeSol(dadosSol.labels, dadosSol.valores);
             criarGraficoSaudeFrequenciaCardiacaRepouso(dadosFrequenciaCardiacaRepouso.labels, dadosFrequenciaCardiacaRepouso.valores);
             criarGraficoSaudePassosMediosDiarios(dadosPassosMediosDiarios.labels, dadosPassosMediosDiarios.valores);
-            criarGraficoSaudeSonoProfundoMedio(dadosSonoProfundoMedio.labels, dadosSonoProfundoMedio.valores);
-            criarGraficoSaudeSonoTotalMedio(dadosSonoTotalMedio.labels, dadosSonoTotalMedio.valores);
+            criarGraficoSaudeSonoProfundoMedio(dadosSonoProfundoMedio.labels, dadosSonoProfundoMedio.valores, dadosSonoProfundoMedio.textos);
+            criarGraficoSaudeSonoTotalMedio(dadosSonoTotalMedio.labels, dadosSonoTotalMedio.valores, dadosSonoTotalMedio.textos);
 
-            const ultimoDistancia = obterUltimoItem(distancia);
-            const ultimoEnergia = obterUltimoItem(energiaAtiva);
-            const ultimoTempo = obterUltimoItem(tempoTotal);
-            const ultimoTreino = obterUltimoItem(treinos);
             const ultimoTempoPe = obterUltimoItem(tempoPe);
             const ultimoSol = obterUltimoItem(exposicaoSol);
             const ultimoFcRepouso = obterUltimoItem(frequenciaCardiacaRepouso);
