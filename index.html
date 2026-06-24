@@ -1858,10 +1858,10 @@
             document.getElementById('card-saude-passos').textContent = ultimoPassos ? formatarNumero(ultimoPassos.valor, 0) : '--';
             document.getElementById('card-saude-passos-periodo').textContent = ultimoPassos ? 'Quantidade' : '--';
 
-            document.getElementById('card-saude-sono-profundo').textContent = ultimoSonoProfundo ? `${formatarNumero(ultimoSonoProfundo.valor, 1)} h` : '--';
+            document.getElementById('card-saude-sono-profundo').textContent = ultimoSonoProfundo ? `${ultimoSonoProfundo.texto}` : '--';
             document.getElementById('card-saude-sono-profundo-periodo').textContent = ultimoSonoProfundo ? 'Horas' : '--';
 
-            document.getElementById('card-saude-sono-total').textContent = ultimoSonoTotal ? `${formatarNumero(ultimoSonoTotal.valor, 1)} h` : '--';
+            document.getElementById('card-saude-sono-total').textContent = ultimoSonoTotal ? `${ultimoSonoTotal.texto}` : '--';
             document.getElementById('card-saude-sono-total-periodo').textContent = ultimoSonoTotal ? 'Horas' : '--';
         }
 
