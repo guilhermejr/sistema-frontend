@@ -1923,7 +1923,7 @@
         }
 
         function formatarTexto(valor, fallback = '--') {
-            if (valor == null || valor === '') return fallback;
+            if (valor == null || valor === '' || valor == '0,00') return fallback;
             return escapeHtml(String(valor));
         }
 
@@ -1958,7 +1958,7 @@
                                             : ''
                                         }
                                     </td>
-                                    <td class="text-end">${formatarTexto(item.unidade, '--')}</td>
+                                    <td class="text-end">${formatarTexto(item.unidade, '')}</td>
                                     <td class="text-end">${formatarMoedaBR(parseMoedaBR(item.valor))}</td>
                                 </tr>
                             `).join('')}
