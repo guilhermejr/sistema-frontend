@@ -1330,7 +1330,20 @@
                 },
                 options: {
                     ...opcoesPadraoComDatalabels('Geração Diária - Últimos 30 dias', value => value),
-                    scales: { y: { beginAtZero: true } }
+                    scales: {
+                        x: {
+                            ticks: {
+                                padding: 10
+                            }
+                        },
+                        y: { 
+                            beginAtZero: true,
+                            ticks: {
+                                padding: 20
+                            },
+                            grace: '10%'
+                        } 
+                    }
                 }
             });
         }
@@ -1370,13 +1383,22 @@
                 options: {
                     ...opcoesPadraoComDatalabels('Saldo de Energia - Últimos 12 meses', value => value),
                     scales: {
-                        y: {
+                        x: {
+                            ticks: {
+                                padding: 10
+                            }
+                        },
+                        y: { 
                             beginAtZero: false,
                             grid: {
                                 color: (context) => context.tick.value === 0 ? '#000000' : '#cccccc',
                                 lineWidth: (context) => context.tick.value === 0 ? 2 : 1
-                            }
-                        }
+                            },
+                            ticks: {
+                                padding: 20
+                            },
+                            grace: '10%'
+                        } 
                     }
                 }
             });
@@ -1398,7 +1420,20 @@
                 },
                 options: {
                     ...opcoesPadraoComDatalabels('Valor - Últimos 12 meses', value => value),
-                    scales: { y: { beginAtZero: true } }
+                    scales: {
+                        x: {
+                            ticks: {
+                                padding: 10
+                            }
+                        },
+                        y: { 
+                            beginAtZero: true,
+                            ticks: {
+                                padding: 20
+                            },
+                            grace: '10%'
+                        } 
+                    }
                 }
             });
         }
@@ -1417,7 +1452,23 @@
                         fill: false
                     }]
                 },
-                options: opcoesPadraoComDatalabels('Salário Líquido por Mês', value => Number.isFinite(value) ? formatarMoedaBR(value) : '')
+                options: {
+                    ...opcoesPadraoComDatalabels('Salário Líquido por Mês', value => Number.isFinite(value) ? formatarMoedaBR(value) : ''),
+                    scales: {
+                        x: {
+                            ticks: {
+                                padding: 10
+                            }
+                        },
+                        y: { 
+                            beginAtZero: true,
+                            ticks: {
+                                padding: 20
+                            },
+                            grace: '10%'
+                        } 
+                    }
+                }
             });
         }
 
@@ -1437,7 +1488,20 @@
                 },
                 options: {
                     ...opcoesPadraoComDatalabels('Distância total por semana', value => formatarNumero(value)),
-                    scales: { y: { beginAtZero: true } }
+                    scales: {
+                        x: {
+                            ticks: {
+                                padding: 10
+                            }
+                        },
+                        y: { 
+                            beginAtZero: true,
+                            ticks: {
+                                padding: 20
+                            },
+                            grace: '10%'
+                        } 
+                    }
                 }
             });
         }
@@ -1458,7 +1522,20 @@
                 },
                 options: {
                     ...opcoesPadraoComDatalabels('Energia ativa por semana', value => formatarNumero(value)),
-                    scales: { y: { beginAtZero: true } }
+                    scales: {
+                        x: {
+                            ticks: {
+                                padding: 10
+                            }
+                        },
+                        y: { 
+                            beginAtZero: true,
+                            ticks: {
+                                padding: 20
+                            },
+                            grace: '10%'
+                        } 
+                    }
                 }
             });
         }
@@ -1479,7 +1556,20 @@
                 },
                 options: {
                     ...opcoesPadraoComDatalabels('Tempo total de treino por semana', value => formatarNumero(value, 0)),
-                    scales: { y: { beginAtZero: true } }
+                    scales: {
+                        x: {
+                            ticks: {
+                                padding: 10
+                            }
+                        },
+                        y: { 
+                            beginAtZero: true,
+                            ticks: {
+                                padding: 20
+                            },
+                            grace: '10%'
+                        } 
+                    }
                 }
             });
         }
@@ -1500,7 +1590,20 @@
                 },
                 options: {
                     ...opcoesPadraoComDatalabels('Treino por semana', value => formatarNumero(value, 0)),
-                    scales: { y: { beginAtZero: true } }
+                    scales: {
+                        x: {
+                            ticks: {
+                                padding: 10
+                            }
+                        },
+                        y: { 
+                            beginAtZero: true,
+                            ticks: {
+                                padding: 20
+                            },
+                            grace: '10%'
+                        } 
+                    }
                 }
             });
         }
@@ -1521,7 +1624,20 @@
                 },
                 options: {
                     ...opcoesPadraoComDatalabels('Tempo de pé', value => formatarNumero(value, 0)),
-                    scales: { y: { beginAtZero: true } }
+                    scales: {
+                        x: {
+                            ticks: {
+                                padding: 10
+                            }
+                        },
+                        y: { 
+                            beginAtZero: true,
+                            ticks: {
+                                padding: 20
+                            },
+                            grace: '10%'
+                        } 
+                    }
                 }
             });
         }
@@ -1542,7 +1658,20 @@
                 },
                 options: {
                     ...opcoesPadraoComDatalabels('Exposição ao sol', value => formatarNumero(value, 0)),
-                    scales: { y: { beginAtZero: true } }
+                    scales: {
+                        x: {
+                            ticks: {
+                                padding: 10
+                            }
+                        },
+                        y: { 
+                            beginAtZero: true,
+                            ticks: {
+                                padding: 20
+                            },
+                            grace: '10%'
+                        } 
+                    }
                 }
             });
         }
@@ -1563,7 +1692,20 @@
                 },
                 options: {
                     ...opcoesPadraoComDatalabels('Frequência cardíaca em repouso', value => formatarNumero(value, 1)),
-                    scales: { y: { beginAtZero: false } }
+                    scales: {
+                        x: {
+                            ticks: {
+                                padding: 10
+                            }
+                        },
+                        y: { 
+                            beginAtZero: true,
+                            ticks: {
+                                padding: 20
+                            },
+                            grace: '10%'
+                        } 
+                    }
                 }
             });
         }
@@ -1584,7 +1726,20 @@
                 },
                 options: {
                     ...opcoesPadraoComDatalabels('Passos médios diários', value => formatarNumero(value, 0)),
-                    scales: { y: { beginAtZero: true } }
+                    scales: {
+                        x: {
+                            ticks: {
+                                padding: 10
+                            }
+                        },
+                        y: { 
+                            beginAtZero: true,
+                            ticks: {
+                                padding: 20
+                            },
+                            grace: '10%'
+                        } 
+                    }
                 }
             });
         }
@@ -1610,7 +1765,20 @@
                         const texto = context.chart.data.texto[index];
                         return `${texto}`;
                     }),
-                    scales: { y: { beginAtZero: true } }
+                    scales: {
+                        x: {
+                            ticks: {
+                                padding: 10
+                            }
+                        },
+                        y: { 
+                            beginAtZero: true,
+                            ticks: {
+                                padding: 20
+                            },
+                            grace: '10%'
+                        } 
+                    }
                 }
             });
         }
@@ -1636,7 +1804,20 @@
                         const texto = context.chart.data.texto[index];
                         return `${texto}`;
                     }),
-                    scales: { y: { beginAtZero: true } }
+                    scales: {
+                        x: {
+                            ticks: {
+                                padding: 10
+                            }
+                        },
+                        y: { 
+                            beginAtZero: true,
+                            ticks: {
+                                padding: 20
+                            },
+                            grace: '10%'
+                        } 
+                    }
                 }
             });
         }
