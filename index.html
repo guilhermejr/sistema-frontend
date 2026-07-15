@@ -1070,6 +1070,29 @@
         }
 
         // ============================================
+        // MOBILE
+        // ============================================
+
+        function isMobile() {
+            return window.innerWidth <= 768;
+        }
+
+        function reduzirListaParaMobile(lista) {
+            if (!Array.isArray(lista)) {
+                return lista;
+            }
+
+            if (!isMobile()) {
+                return lista;
+            }
+
+            // mantém apenas metade dos registros
+            const metade = Math.ceil(lista.length / 2);
+            return lista.slice(metade)
+
+        }
+
+        // ============================================
         // DADOS
         // ============================================
         function ordenarCrescente(lista) {
@@ -1077,24 +1100,35 @@
         }
 
         function extrairDadosMensais(lista) {
+
+            const dados = reduzirListaParaMobile(lista);
+
             return {
-                labels: lista.map(item => formatarPeriodoMesAno(item.periodo)),
-                valores: lista.map(item => Number(item.valor))
+                labels: dados.map(item => formatarPeriodoMesAno(item.periodo)),
+                valores: dados.map(item => Number(item.valor))
             };
         }
 
         function extrairDadosMensaisAnteriores(lista) {
+
+            const dados = reduzirListaParaMobile(lista);
+
             return {
-                labels: lista.map(item => formatarPeriodoMesAno(item.periodo)),
-                valores: lista.map(item => Number(item.valor)),
-                valoresAnteriores: lista.map(item => Number(item.valor2))
+                labels: dados.map(item => formatarPeriodoMesAno(item.periodo)),
+                valores: dados.map(item => Number(item.valor)),
+                valoresAnteriores: dados.map(item => Number(item.valor2))
             };
         }
 
         function extrairDadosDiarios(lista) {
+
+            const dados = reduzirListaParaMobile(lista);
+
             return {
-                labels: lista.map(item => item.periodo || item.data || item.dia || item.label),
-                valores: lista.map(item => Number(item.valor))
+                labels: dados.map(item =>
+                    item.periodo || item.data || item.dia || item.label
+                ),
+                valores: dados.map(item => Number(item.valor))
             };
         }
 
@@ -1143,17 +1177,23 @@
         }
 
         function extrairDadosSaude(lista) {
+
+            const dados = reduzirListaParaMobile(lista);
+
             return {
-                labels: lista.map(item => item.periodo),
-                valores: lista.map(item => Number(item.valor))
+                labels: dados.map(item => item.periodo),
+                valores: dados.map(item => Number(item.valor))
             };
         }
 
         function extrairDadosSaudeSono(lista) {
+
+            const dados = reduzirListaParaMobile(lista);
+
             return {
-                labels: lista.map(item => item.periodo),
-                valores: lista.map(item => Number(item.valor)),
-                textos: lista.map(item => item.texto || '')
+                labels: dados.map(item => item.periodo),
+                valores: dados.map(item => Number(item.valor)),
+                textos: dados.map(item => item.texto || '')
             };
         }
 
@@ -1259,6 +1299,7 @@
                         font: { size: 18 }
                     },
                     datalabels: {
+                        display: !isMobile(),
                         anchor: 'end',
                         align: 'top',
                         color: '#333',
@@ -1353,7 +1394,7 @@
                     }]
                 },
                 options: {
-                    ...opcoesPadraoComDatalabels('Geração Diária - Últimos 30 dias', value => value),
+                    ...opcoesPadraoComDatalabels('Geração Diária', value => value),
                     scales: {
                         x: {
                             ticks: {
@@ -1384,7 +1425,7 @@
                     ]
                 },
                 options: {
-                    ...opcoesPadraoComDatalabels('Energia Gerada / Energia Consumida - Últimos 12 meses', value => value),
+                    ...opcoesPadraoComDatalabels('Energia Gerada / Energia Consumida', value => value),
                     scales: { 
                         y: { 
                             beginAtZero: true, 
@@ -1465,7 +1506,7 @@
                     }]
                 },
                 options: {
-                    ...opcoesPadraoComDatalabels('Saldo de Energia - Últimos 12 meses', value => value),
+                    ...opcoesPadraoComDatalabels('Saldo de Energia', value => value),
                     scales: {
                         x: {
                             ticks: {
@@ -1503,7 +1544,7 @@
                     }]
                 },
                 options: {
-                    ...opcoesPadraoComDatalabels('Valor - Últimos 12 meses', value => value),
+                    ...opcoesPadraoComDatalabels('Valor', value => value),
                     scales: {
                         x: {
                             ticks: {
