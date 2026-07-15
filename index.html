@@ -292,6 +292,18 @@
 
                 <div class="card grafico-card">
                     <div class="card-body">
+                        <canvas id="geracao-anteriores"></canvas>
+                    </div>
+                </div>
+
+                <div class="card grafico-card">
+                    <div class="card-body">
+                        <canvas id="consumo-anteriores"></canvas>
+                    </div>
+                </div>
+
+                <div class="card grafico-card">
+                    <div class="card-body">
                         <canvas id="saldo"></canvas>
                     </div>
                 </div>
@@ -648,6 +660,8 @@
         // ============================================
         let graficoGeracaoDiaria = null;
         let graficoGeracaoConsumo = null;
+        let graficoGeracaoAnteriores = null;
+        let graficoConsumoAnteriores = null;
         let graficoSaldo = null;
         let graficoValor = null;
 
@@ -1069,6 +1083,14 @@
             };
         }
 
+        function extrairDadosMensaisAnteriores(lista) {
+            return {
+                labels: lista.map(item => formatarPeriodoMesAno(item.periodo)),
+                valores: lista.map(item => Number(item.valor)),
+                valoresAnteriores: lista.map(item => Number(item.valor2))
+            };
+        }
+
         function extrairDadosDiarios(lista) {
             return {
                 labels: lista.map(item => item.periodo || item.data || item.dia || item.label),
@@ -1256,6 +1278,8 @@
         function destruirGraficosEnergia() {
             if (graficoGeracaoDiaria) { graficoGeracaoDiaria.destroy(); graficoGeracaoDiaria = null; }
             if (graficoGeracaoConsumo) { graficoGeracaoConsumo.destroy(); graficoGeracaoConsumo = null; }
+            if (graficoGeracaoAnteriores) { graficoGeracaoAnteriores.destroy(); graficoGeracaoAnteriores = null; }
+            if (graficoConsumoAnteriores) { graficoConsumoAnteriores.destroy(); graficoConsumoAnteriores = null; }
             if (graficoSaldo) { graficoSaldo.destroy(); graficoSaldo = null; }
             if (graficoValor) { graficoValor.destroy(); graficoValor = null; }
         }
@@ -1361,7 +1385,67 @@
                 },
                 options: {
                     ...opcoesPadraoComDatalabels('Energia Gerada / Energia Consumida - Últimos 12 meses', value => value),
-                    scales: { y: { beginAtZero: true } }
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: {
+                                padding: 20
+                            },
+                            grace: '10%' 
+                        } 
+                    }
+                }
+            });
+        }
+
+        function criarGraficoGeracaoAnteriores(dados) {
+            const ctx = document.getElementById('geracao-anteriores');
+            graficoGeracaoAnteriores = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dados.labels,
+                    datasets: [
+                        { label: 'Média histórica', data: dados.valoresAnteriores, borderWidth: 1 },
+                        { label: 'Mês', data: dados.valores, borderWidth: 1 }
+                    ]
+                },
+                options: {
+                    ...opcoesPadraoComDatalabels('Energia Gerada / Energia Gerada', value => value),
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: {
+                                padding: 20
+                            },
+                            grace: '20%' 
+                        } 
+                    }
+                }
+            });
+        }
+
+        function criarGraficoConsumoAnteriores(dados) {
+            const ctx = document.getElementById('consumo-anteriores');
+            graficoConsumoAnteriores = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dados.labels,
+                    datasets: [
+                        { label: 'Média histórica', data: dados.valoresAnteriores, borderWidth: 1 },
+                        { label: 'Mês', data: dados.valores, borderWidth: 1 }
+                    ]
+                },
+                options: {
+                    ...opcoesPadraoComDatalabels('Energia Consumida / Energia Consumida', value => value),
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: {
+                                padding: 20
+                            },
+                            grace: '10%' 
+                        } 
+                    }
                 }
             });
         }
@@ -1836,7 +1920,9 @@
                 contaUltimoMes,
                 totais,
                 geracaoParcial,
-                valor12Meses
+                valor12Meses,
+                geracao12MesesAnteriores,
+                consumo12MesesAnteriores
             ] = await Promise.all([
                 apiRequest({ url: `${ENERGIA_BASE_URL}geracaoultimos30dias` }),
                 apiRequest({ url: `${ENERGIA_BASE_URL}geracaoultimos12meses` }),
@@ -1845,7 +1931,9 @@
                 apiRequest({ url: `${ENERGIA_BASE_URL}contaultimomes` }),
                 apiRequest({ url: `${ENERGIA_TOTAL_URL}` }),
                 apiRequest({ url: `${ENERGIA_BASE_URL}geradosdesdeultimaleitura` }),
-                apiRequest({ url: `${ENERGIA_BASE_URL}valorultimos12meses` })
+                apiRequest({ url: `${ENERGIA_BASE_URL}valorultimos12meses` }),
+                apiRequest({ url: `${ENERGIA_BASE_URL}geracao12mesesanteriores` }),
+                apiRequest({ url: `${ENERGIA_BASE_URL}consumo12mesesanteriores` })
             ]);
 
             const geracao12Ordenado = ordenarCrescente(geracao12Meses);
@@ -1853,15 +1941,23 @@
             const saldo12Ordenado = ordenarCrescente(saldo12Meses);
             const geracao30Ordenado = ordenarCrescente(geracao30Dias);
             const valor12Ordenado = ordenarCrescente(valor12Meses);
+            const geracao12AnterioresOrdenado = geracao12MesesAnteriores;
+            const consumo12AnterioresOrdenado = consumo12MesesAnteriores;
 
             const dadosGeracaoMensal = extrairDadosMensais(geracao12Ordenado);
             const dadosConsumoMensal = extrairDadosMensais(consumo12Ordenado);
             const dadosSaldoMensal = extrairDadosMensais(saldo12Ordenado);
             const dadosGeracaoDiaria = extrairDadosDiarios(geracao30Ordenado);
             const dadosValor12Meses = extrairDadosMensais(valor12Ordenado);
+            const dadosGeracao12Anteriores = extrairDadosMensaisAnteriores(geracao12AnterioresOrdenado);
+            const dadosConsumo12Anteriores = extrairDadosMensaisAnteriores(consumo12AnterioresOrdenado);
+
+            //console.log('dadosGeracaoDiaria' + JSON.stringify(dadosGeracao12Anteriores));
 
             criarGraficoGeracaoDiaria(dadosGeracaoDiaria.labels, dadosGeracaoDiaria.valores);
             criarGraficoGeracaoConsumo(dadosGeracaoMensal.labels, dadosGeracaoMensal.valores, dadosConsumoMensal.valores);
+            criarGraficoGeracaoAnteriores(dadosGeracao12Anteriores);
+            criarGraficoConsumoAnteriores(dadosConsumo12Anteriores);
             criarGraficoSaldo(dadosSaldoMensal.labels, dadosSaldoMensal.valores);
             criarGraficoValor(dadosValor12Meses.labels, dadosValor12Meses.valores);
 
