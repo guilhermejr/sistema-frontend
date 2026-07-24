@@ -378,10 +378,19 @@
 
                 <div class="row mb-4">
                     <div class="col-12">
-                        <h5 class="mb-3">Totais por tipo de folha</h5>
+                        <h5 class="mb-3">Totais por tipo de folha - Proventos</h5>
                     </div>
-                    <div id="cards-salario-tipos" class="col-12">
-                        <div class="row" id="cards-salario-tipos-row"></div>
+                    <div id="cards-salario-tipos-proventos" class="col-12">
+                        <div class="row" id="cards-salario-tipos-proventos-row"></div>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="mb-3">Totais por tipo de folha - Líquido</h5>
+                    </div>
+                    <div id="cards-salario-tipos-liquido" class="col-12">
+                        <div class="row" id="cards-salario-tipos-liquido-row"></div>
                     </div>
                 </div>
 
@@ -747,8 +756,8 @@
             document.getElementById('salario-total-registros').textContent = '0 registros';
         }
 
-        function renderizarCardsTiposFolha(itens) {
-            const row = document.getElementById('cards-salario-tipos-row');
+        function renderizarCardsTiposFolhaLiquido(itens) {
+            const row = document.getElementById('cards-salario-tipos-liquido-row');
 
             if (!itens.length) {
                 row.innerHTML = `
@@ -765,6 +774,31 @@
                         <div class="card-body d-flex flex-column justify-content-center">
                             <h6 class="text-muted mb-2">${escapeHtml(item.tipo)}</h6>
                             <div class="fs-5 fw-bold mb-2">${formatarMoedaBR(item.totalLiquido)}</div>
+                            <div class="small-muted">${item.quantidade} registro(s)</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderizarCardsTiposFolhaProventos(itens) {
+            const row = document.getElementById('cards-salario-tipos-proventos-row');
+
+            if (!itens.length) {
+                row.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-light border text-muted mb-0">Nenhum tipo de folha encontrado para o ano selecionado.</div>
+                    </div>
+                `;
+                return;
+            }
+
+            row.innerHTML = itens.map(item => `
+                <div class="col-12 col-md-6 col-xl-3 mb-3">
+                    <div class="card card-resumo type-card text-center border-info">
+                        <div class="card-body d-flex flex-column justify-content-center">
+                            <h6 class="text-muted mb-2">${escapeHtml(item.tipo)}</h6>
+                            <div class="fs-5 fw-bold mb-2">${formatarMoedaBR(item.totalProventos)}</div>
                             <div class="small-muted">${item.quantidade} registro(s)</div>
                         </div>
                     </div>
@@ -1359,7 +1393,8 @@
             document.getElementById('card-salario-proventos').textContent = '--';
             document.getElementById('card-salario-descontos').textContent = '--';
             document.getElementById('card-salario-liquido').textContent = '--';
-            renderizarCardsTiposFolha([]);
+            renderizarCardsTiposFolhaLiquido([]);
+            renderizarCardsTiposFolhaProventos([]);
             limparTabelaSalario();
 
             // Saúde
@@ -2028,7 +2063,8 @@
 
         async function carregarSalarioDashboard(ano) {
             destruirGraficosSalario();
-            renderizarCardsTiposFolha([]);
+            renderizarCardsTiposFolhaLiquido([]);
+            renderizarCardsTiposFolhaProventos([]);
             limparTabelaSalario();
 
             const folhasSalario = await apiRequest({ url: `${SALARIO_BASE_URL}${ano}` });
@@ -2063,7 +2099,8 @@
             criarGraficoSalarioLiquidoMes(labelsSalario, liquidoMes);
 
             const tipoFolhaAgrupado = agruparFolhasPorTipo(folhas);
-            renderizarCardsTiposFolha(tipoFolhaAgrupado.lista);
+            renderizarCardsTiposFolhaLiquido(tipoFolhaAgrupado.lista);
+            renderizarCardsTiposFolhaProventos(tipoFolhaAgrupado.lista);
 
             const folhasOrdenadas = [...folhas].sort((a, b) => {
                 const [diaA, mesA, anoA] = String(a.dataPagamento || '').split('/').map(Number);
@@ -2545,7 +2582,8 @@
             const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
             [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 
-            renderizarCardsTiposFolha([]);
+            renderizarCardsTiposFolhaLiquido([]);
+            renderizarCardsTiposFolhaProventos([]);
 
             const anoInicial = obterAnoSalario();
             const selectAno = document.getElementById('salario-ano');
