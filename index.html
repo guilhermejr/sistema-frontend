@@ -396,6 +396,12 @@
 
                 <div class="card grafico-card">
                     <div class="card-body">
+                        <canvas id="salario-provento-mes"></canvas>
+                    </div>
+                </div>
+
+                <div class="card grafico-card">
+                    <div class="card-body">
                         <canvas id="salario-liquido-mes"></canvas>
                     </div>
                 </div>
@@ -675,6 +681,7 @@
         let graficoValor = null;
 
         let graficoSalarioLiquidoMes = null;
+        let graficoSalarioproventoMes = null;
         let graficoSalarioProventosDescontos = null;
         let graficoSalarioTipoFolha = null;
 
@@ -1361,6 +1368,7 @@
 
         function destruirGraficosSalario() {
             if (graficoSalarioLiquidoMes) { graficoSalarioLiquidoMes.destroy(); graficoSalarioLiquidoMes = null; }
+            if (graficoSalarioproventoMes) { graficoSalarioproventoMes.destroy(); graficoSalarioproventoMes = null; }
         }
 
         function destruirGraficosSaude() {
@@ -1614,6 +1622,40 @@
                 },
                 options: {
                     ...opcoesPadraoComDatalabels('Salário Líquido por Mês', value => Number.isFinite(value) ? formatarMoedaBR(value) : ''),
+                    scales: {
+                        x: {
+                            ticks: {
+                                padding: 10
+                            }
+                        },
+                        y: { 
+                            beginAtZero: true,
+                            ticks: {
+                                padding: 20
+                            },
+                            grace: '10%'
+                        } 
+                    }
+                }
+            });
+        }
+
+        function criarGraficoSalarioProventoMes(labels, dados) {
+            const ctx = document.getElementById('salario-provento-mes');
+            graficoSalarioProventoMes = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Provento',
+                        data: dados,
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false
+                    }]
+                },
+                options: {
+                    ...opcoesPadraoComDatalabels('Salário Provento por Mês', value => Number.isFinite(value) ? formatarMoedaBR(value) : ''),
                     scales: {
                         x: {
                             ticks: {
@@ -2080,23 +2122,31 @@
 
             const folhasPorMes = agruparFolhasPorMes(folhas);
 
-            const mapa = {};
+            const mapaLiquido = {};
             folhasPorMes.forEach(item => {
-                mapa[item.periodo] = item.liquido;
+                mapaLiquido[item.periodo] = item.liquido;
+            });
+
+            const mapaProvento = {};
+            folhasPorMes.forEach(item => {
+                mapaProvento[item.periodo] = item.proventos;
             });
 
             const labelsSalario = [];
             const liquidoMes = [];
+            const proventoMes = [];
 
             for (let mes = 1; mes <= 12; mes++) {
                 const mesStr = String(mes).padStart(2, '0');
                 const periodo = `${mesStr}/${ano}`;
 
                 labelsSalario.push(formatarPeriodoMesAno(periodo));
-                liquidoMes.push(mapa[periodo] ?? NaN);
+                liquidoMes.push(mapaLiquido[periodo] ?? NaN);
+                proventoMes.push(mapaProvento[periodo] ?? NaN);
             }
 
             criarGraficoSalarioLiquidoMes(labelsSalario, liquidoMes);
+            criarGraficoSalarioProventoMes(labelsSalario, proventoMes);
 
             const tipoFolhaAgrupado = agruparFolhasPorTipo(folhas);
             renderizarCardsTiposFolhaLiquido(tipoFolhaAgrupado.lista);
