@@ -681,7 +681,7 @@
         let graficoValor = null;
 
         let graficoSalarioLiquidoMes = null;
-        let graficoSalarioproventoMes = null;
+        let graficoSalarioProventoMes = null;
         let graficoSalarioProventosDescontos = null;
         let graficoSalarioTipoFolha = null;
 
@@ -1368,7 +1368,7 @@
 
         function destruirGraficosSalario() {
             if (graficoSalarioLiquidoMes) { graficoSalarioLiquidoMes.destroy(); graficoSalarioLiquidoMes = null; }
-            if (graficoSalarioproventoMes) { graficoSalarioproventoMes.destroy(); graficoSalarioproventoMes = null; }
+            if (graficoSalarioProventoMes) { graficoSalarioProventoMes.destroy(); graficoSalarioProventoMes = null; }
         }
 
         function destruirGraficosSaude() {
@@ -1655,7 +1655,7 @@
                     }]
                 },
                 options: {
-                    ...opcoesPadraoComDatalabels('Salário Provento por Mês', value => Number.isFinite(value) ? formatarMoedaBR(value) : ''),
+                    ...opcoesPadraoComDatalabels('Provento por Mês', value => Number.isFinite(value) ? formatarMoedaBR(value) : ''),
                     scales: {
                         x: {
                             ticks: {
