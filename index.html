@@ -242,6 +242,16 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="col-12 col-lg-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Total Economizado</h6>
+                                <div id="card-total-diferenca" class="fs-4 fw-bold">--</div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
                 <div class="row mb-2">
@@ -1416,6 +1426,7 @@
             document.getElementById('card-geracao-parcial-data').textContent = '--';
             document.getElementById('card-total-pago').textContent = '--';
             document.getElementById('card-total-real').textContent = '--';
+            document.getElementById('card-total-diferenca').textContent = '--';
 
 
             // Salário
@@ -2109,6 +2120,7 @@
 
             document.getElementById('card-total-pago').textContent = formatarMoedaBR(totais?.valorTotal);
             document.getElementById('card-total-real').textContent = formatarMoedaBR(totais?.valorTotalReal);
+            document.getElementById('card-total-diferenca').textContent = formatarMoedaBR(totais?.valorTotalReal - totais?.valorTotal);
 
             if (geracaoParcial) {
                 document.getElementById('card-geracao-parcial').textContent = formatarKwh(geracaoParcial.gerado);
