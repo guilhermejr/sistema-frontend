@@ -224,6 +224,24 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="col-12 col-lg-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Total Pago</h6>
+                                <div id="card-total-pago" class="fs-4 fw-bold">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Total Real</h6>
+                                <div id="card-total-real" class="fs-4 fw-bold">--</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="row mb-2">
@@ -1396,6 +1414,9 @@
             document.getElementById('card-saldo-contrato').textContent = '--';
             document.getElementById('card-geracao-parcial').textContent = '--';
             document.getElementById('card-geracao-parcial-data').textContent = '--';
+            document.getElementById('card-total-pago').textContent = '--';
+            document.getElementById('card-total-real').textContent = '--';
+
 
             // Salário
             document.getElementById('card-salario-proventos').textContent = '--';
@@ -2085,6 +2106,9 @@
             document.getElementById('card-geracao-contrato').textContent = formatarKwh(totais?.energiaGerada);
             document.getElementById('card-consumo-contrato').textContent = formatarKwh(totais?.energiaConsumidaTotal);
             document.getElementById('card-saldo-contrato').textContent = formatarKwh(totais?.saldoMes);
+
+            document.getElementById('card-total-pago').textContent = formatarMoedaBR(totais?.valorTotal);
+            document.getElementById('card-total-real').textContent = formatarMoedaBR(totais?.valorTotalReal);
 
             if (geracaoParcial) {
                 document.getElementById('card-geracao-parcial').textContent = formatarKwh(geracaoParcial.gerado);
