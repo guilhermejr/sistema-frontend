@@ -133,6 +133,35 @@
             vertical-align: middle;
         }
 
+        .chip-sintoma {
+            border-radius: 999px;
+        }
+
+        .remedio-card {
+            border-radius: 14px;
+            border: 1px solid #e6e8eb;
+            box-shadow: none;
+            height: 100%;
+        }
+
+        .remedio-card .remedio-texto {
+            font-size: 0.9rem;
+            color: #495057;
+            white-space: pre-line;
+        }
+
+        .remedio-card dt {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: .03em;
+            color: #6c757d;
+            margin-top: 10px;
+        }
+
+        .alerta-card .table {
+            margin-bottom: 0;
+        }
+
         .item-dica {
             font-size: 0.85rem;
             color: #6c757d;
@@ -218,6 +247,11 @@
           <li class="nav-item" role="presentation">
             <button class="nav-link" id="supermercado-tab" data-bs-toggle="tab" data-bs-target="#tab-supermercado" type="button" role="tab">
                 Supermercado
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="remedios-tab" data-bs-toggle="tab" data-bs-target="#tab-remedios" type="button" role="tab">
+                Remédios
             </button>
           </li>
         </ul>
@@ -541,6 +575,58 @@
                 </div>
             </div>
 
+            <!-- ABA REMÉDIOS -->
+            <div class="tab-pane fade" id="tab-remedios" role="tabpanel" aria-labelledby="remedios-tab">
+
+                <div id="remedios-alerta" class="alert hidden" role="alert"></div>
+
+                <div class="row mb-2">
+                    <div class="col-12 col-lg-6 mb-3">
+                        <div class="card table-card alerta-card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="mb-0">Vencendo</h5>
+                                    <span id="remedios-vencendo-contador" class="badge text-bg-secondary">0</span>
+                                </div>
+                                <div class="item-dica mb-2">Validade nos próximos 30 dias.</div>
+                                <div id="remedios-vencendo-body"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-6 mb-3">
+                        <div class="card table-card alerta-card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="mb-0">Estoque baixo</h5>
+                                    <span id="remedios-estoque-baixo-contador" class="badge text-bg-secondary">0</span>
+                                </div>
+                                <div class="item-dica mb-2">Quantidade no limite definido para cada remédio.</div>
+                                <div id="remedios-estoque-baixo-body"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card filtro-card">
+                    <div class="card-body">
+                        <h5 class="mb-1">Sintomas</h5>
+                        <div class="item-dica mb-3">Escolha um sintoma para ver o que você pode tomar.</div>
+                        <div id="sintomas-lista" class="d-flex flex-wrap gap-2">
+                            <span class="text-muted">Nenhum dado carregado.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card table-card">
+                    <div class="card-body">
+                        <h5 class="mb-1" id="titulo-remedios-sintoma">Remédios</h5>
+                        <div class="item-dica mb-3" id="subtitulo-remedios-sintoma">Selecione um sintoma acima.</div>
+                        <div id="remedios-do-sintoma" class="row g-3"></div>
+                    </div>
+                </div>
+            </div>
+
             <!-- ABA SAÚDE -->
             <div class="tab-pane fade show active" id="tab-saude" role="tabpanel" aria-labelledby="saude-tab">
                 <div class="row mb-2">
@@ -785,6 +871,12 @@
         const SUPERMERCADO_COMPRAS_URL = `${API_BASE}/supermercado-service/compras`;
         const SUPERMERCADO_COMPRA_DETALHE_URL = `${API_BASE}/supermercado-service/compras/`;
         const COMPRAS_POR_PAGINA = 20;
+
+        const REMEDIOS_URL = `${API_BASE}/remedios-service/remedios`;
+        const REMEDIOS_VENCENDO_URL = `${API_BASE}/remedios-service/remedios/vencendo`;
+        const REMEDIOS_ESTOQUE_BAIXO_URL = `${API_BASE}/remedios-service/remedios/estoque-baixo`;
+        const REMEDIOS_CONSUMIR_URL = `${API_BASE}/remedios-service/remedios/consumir/`;
+        const SINTOMAS_URL = `${API_BASE}/remedios-service/sintomas`;
 
         const SAUDE_DISTANCIA_URL = `${API_BASE}/saude-service/treinos/distancia_total_por_semana`;
         const SAUDE_ENERGIA_ATIVA_URL = `${API_BASE}/saude-service/treinos/energia_ativa_por_semana`;
@@ -1180,7 +1272,7 @@
             }
 
             if (!response.ok) {
-                throw new Error(`Erro HTTP: ${response.status}`);
+                throw new Error(await extrairMensagemErro(response));
             }
 
             const contentType = response.headers.get('content-type') || '';
@@ -1190,6 +1282,25 @@
 
             const text = await response.text();
             return text || null;
+        }
+
+        // Os serviços respondem erro de regra de negócio como [{ "mensagem": "..." }]
+        // (ver ErrorHandler/ErrorDefaultDTO). Sem isso, um estoque insuficiente
+        // apareceria na tela como "Erro HTTP: 404".
+        async function extrairMensagemErro(response) {
+            const padrao = `Erro HTTP: ${response.status}`;
+
+            try {
+                const corpo = await response.json();
+                const lista = Array.isArray(corpo) ? corpo : [corpo];
+                const mensagens = lista
+                    .map(item => item?.mensagem || item?.message || item?.campo && `${item.campo}: ${item.mensagem}`)
+                    .filter(Boolean);
+
+                return mensagens.length ? mensagens.join(' ') : padrao;
+            } catch {
+                return padrao;
+            }
         }
 
         // ============================================
@@ -1574,6 +1685,9 @@
 
             // Supermercado
             limparTabelaSupermercado();
+
+            // Remédios
+            limparAbaRemedios();
 
             // Saúde
             document.getElementById('card-saude-distancia').textContent = '--';
@@ -2454,7 +2568,8 @@
                     carregarEnergiaDashboard(),
                     carregarSalarioDashboard(ano),
                     carregarSaudeDashboard(),
-                    carregarSupermercadoDashboard(0)
+                    carregarSupermercadoDashboard(0),
+                    carregarRemediosDashboard()
                 ]);
             } catch (error) {
                 console.error(error);
@@ -3002,6 +3117,295 @@
             return horaFormatada ? `${dia}/${mes}/${ano} as ${horaFormatada}` : `${dia}/${mes}/${ano}`;
         }
 
+        // ============================================
+        // REMÉDIOS
+        // ============================================
+        // Estado da aba: a lista completa de remédios chega numa requisição só e é
+        // agrupada por sintoma aqui, porque /sintomas devolve os remédios apenas de
+        // forma resumida, sem dose, posologia nem contraindicação.
+        let remediosCarregados = [];
+        let sintomasCarregados = [];
+        let sintomaSelecionadoId = null;
+
+        function limparAbaRemedios() {
+            remediosCarregados = [];
+            sintomasCarregados = [];
+            sintomaSelecionadoId = null;
+
+            document.getElementById('sintomas-lista').innerHTML =
+                '<span class="text-muted">Nenhum dado carregado.</span>';
+            document.getElementById('remedios-do-sintoma').innerHTML = '';
+            document.getElementById('titulo-remedios-sintoma').textContent = 'Remédios';
+            document.getElementById('subtitulo-remedios-sintoma').textContent = 'Selecione um sintoma acima.';
+            document.getElementById('remedios-vencendo-body').innerHTML = '';
+            document.getElementById('remedios-estoque-baixo-body').innerHTML = '';
+            document.getElementById('remedios-vencendo-contador').textContent = '0';
+            document.getElementById('remedios-estoque-baixo-contador').textContent = '0';
+            esconderAlertaRemedios();
+        }
+
+        function mostrarAlertaRemedios(mensagem, tipo = 'success') {
+            const alerta = document.getElementById('remedios-alerta');
+            alerta.className = `alert alert-${tipo}`;
+            alerta.textContent = mensagem;
+            show('remedios-alerta');
+        }
+
+        function esconderAlertaRemedios() {
+            const alerta = document.getElementById('remedios-alerta');
+            alerta.textContent = '';
+            hide('remedios-alerta');
+        }
+
+        async function carregarRemediosDashboard() {
+            const [sintomas, remedios, vencendo, estoqueBaixo] = await Promise.all([
+                apiRequest({ url: SINTOMAS_URL }),
+                apiRequest({ url: REMEDIOS_URL }),
+                apiRequest({ url: REMEDIOS_VENCENDO_URL }),
+                apiRequest({ url: REMEDIOS_ESTOQUE_BAIXO_URL })
+            ]);
+
+            sintomasCarregados = Array.isArray(sintomas) ? sintomas : [];
+            remediosCarregados = Array.isArray(remedios) ? remedios : [];
+
+            renderizarListaSintomas();
+            renderizarAlertaVencendo(Array.isArray(vencendo) ? vencendo : []);
+            renderizarAlertaEstoqueBaixo(Array.isArray(estoqueBaixo) ? estoqueBaixo : []);
+
+            // Mantém o sintoma escolhido depois de um consumo; senão espera a escolha.
+            if (sintomaSelecionadoId !== null) {
+                selecionarSintoma(sintomaSelecionadoId);
+            }
+        }
+
+        function renderizarListaSintomas() {
+            const container = document.getElementById('sintomas-lista');
+
+            if (!sintomasCarregados.length) {
+                container.innerHTML = '<span class="text-muted">Nenhum sintoma cadastrado.</span>';
+                return;
+            }
+
+            container.innerHTML = sintomasCarregados.map(sintoma => {
+                const quantos = remediosParaSintoma(sintoma.id).length;
+                const ativo = String(sintoma.id) === String(sintomaSelecionadoId);
+
+                return `
+                    <button type="button"
+                            class="btn btn-sm chip-sintoma ${ativo ? 'btn-primary' : 'btn-outline-primary'}"
+                            data-sintoma-id="${escapeHtml(String(sintoma.id ?? ''))}">
+                        ${formatarTexto(sintoma.descricao, 'Sem descrição')}
+                        <span class="badge ${ativo ? 'text-bg-light' : 'text-bg-secondary'} ms-1">${quantos}</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function remediosParaSintoma(idSintoma) {
+            return remediosCarregados.filter(remedio =>
+                (Array.isArray(remedio?.sintomas) ? remedio.sintomas : [])
+                    .some(sintoma => String(sintoma?.id) === String(idSintoma))
+            );
+        }
+
+        function selecionarSintoma(idSintoma) {
+            sintomaSelecionadoId = idSintoma;
+
+            const sintoma = sintomasCarregados.find(s => String(s.id) === String(idSintoma));
+            const remedios = remediosParaSintoma(idSintoma);
+            const descricao = sintoma?.descricao || 'Sintoma';
+
+            document.getElementById('titulo-remedios-sintoma').textContent = `Remédios para ${descricao}`;
+            document.getElementById('subtitulo-remedios-sintoma').textContent = remedios.length
+                ? `${remedios.length} remédio(s) cadastrado(s) para este sintoma.`
+                : 'Nenhum remédio cadastrado para este sintoma.';
+
+            renderizarListaSintomas();
+            renderizarRemediosDoSintoma(remedios);
+        }
+
+        // Consumir tira uma dose do estoque. O backend recusa quando a quantidade nao
+        // cobre a dose, entao o botao ja sai desabilitado nesse caso.
+        function podeConsumir(remedio) {
+            const quantidade = Number(remedio?.quantidade ?? 0);
+            const dose = Number(remedio?.dose ?? 0);
+            return dose > 0 && quantidade >= dose;
+        }
+
+        function renderizarRemediosDoSintoma(remedios) {
+            const container = document.getElementById('remedios-do-sintoma');
+
+            if (!remedios.length) {
+                container.innerHTML =
+                    '<div class="col-12"><div class="text-muted">Nenhum remédio cadastrado para este sintoma.</div></div>';
+                return;
+            }
+
+            container.innerHTML = remedios.map(remedio => {
+                const liberado = podeConsumir(remedio);
+                const outrosSintomas = (Array.isArray(remedio.sintomas) ? remedio.sintomas : [])
+                    .map(s => s?.descricao)
+                    .filter(Boolean);
+
+                return `
+                    <div class="col-12 col-xl-6">
+                        <div class="card remedio-card">
+                            <div class="card-body">
+                                <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                                    <h6 class="mb-0 fw-bold">${formatarTexto(remedio.nome)}</h6>
+                                    ${badgeValidade(remedio)}
+                                </div>
+
+                                <div class="d-flex flex-wrap gap-2 mb-2">
+                                    <span class="badge ${remedio.quantidade <= remedio.estoqueBaixo ? 'text-bg-warning' : 'text-bg-light'}">
+                                        Estoque: ${formatarNumero(remedio.quantidade, 0)}
+                                    </span>
+                                    <span class="badge text-bg-light">Dose: ${formatarNumero(remedio.dose, 0)}</span>
+                                    <span class="badge text-bg-light">Alerta em: ${formatarNumero(remedio.estoqueBaixo, 0)}</span>
+                                </div>
+
+                                <dl class="mb-3">
+                                    <dt>Descrição</dt>
+                                    <dd class="remedio-texto mb-0">${formatarTexto(remedio.descricao)}</dd>
+                                    <dt>Posologia</dt>
+                                    <dd class="remedio-texto mb-0">${formatarTexto(remedio.posologia)}</dd>
+                                    <dt>Contraindicação</dt>
+                                    <dd class="remedio-texto mb-0">${formatarTexto(remedio.contraIndicacao)}</dd>
+                                    ${outrosSintomas.length > 1 ? `
+                                        <dt>Também serve para</dt>
+                                        <dd class="remedio-texto mb-0">${escapeHtml(outrosSintomas.join(', '))}</dd>
+                                    ` : ''}
+                                </dl>
+
+                                <button type="button"
+                                        class="btn btn-sm ${liberado ? 'btn-success' : 'btn-outline-secondary'}"
+                                        data-consumir-id="${escapeHtml(String(remedio.id ?? ''))}"
+                                        ${liberado ? '' : 'disabled'}>
+                                    ${liberado
+                                        ? `Consumir ${formatarNumero(remedio.dose, 0)}`
+                                        : 'Estoque insuficiente'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function badgeValidade(remedio) {
+            const dias = Number(remedio?.diasParaValidade);
+
+            if (!Number.isFinite(dias)) {
+                return '<span class="badge text-bg-light">Validade --</span>';
+            }
+
+            let cor = 'text-bg-light';
+            let texto = `Vence em ${formatarNumero(dias, 0)} dia(s)`;
+
+            if (dias < 0) {
+                cor = 'text-bg-danger';
+                texto = `Vencido há ${formatarNumero(Math.abs(dias), 0)} dia(s)`;
+            } else if (dias <= 30) {
+                cor = 'text-bg-warning';
+            }
+
+            return `<span class="badge ${cor}" title="Validade em ${formatarDataISO(remedio.validade)}">${texto}</span>`;
+        }
+
+        function renderizarAlertaVencendo(remedios) {
+            document.getElementById('remedios-vencendo-contador').textContent = String(remedios.length);
+            document.getElementById('remedios-vencendo-body').innerHTML = remedios.length
+                ? tabelaAlertaRemedios(remedios, [
+                    ['Validade', r => formatarDataISO(r.validade)],
+                    ['Dias', r => formatarNumero(r.diasParaValidade, 0)],
+                    ['Estoque', r => formatarNumero(r.quantidade, 0)]
+                  ])
+                : '<div class="text-muted">Nenhum remédio vencendo nos próximos 30 dias.</div>';
+        }
+
+        function renderizarAlertaEstoqueBaixo(remedios) {
+            document.getElementById('remedios-estoque-baixo-contador').textContent = String(remedios.length);
+            document.getElementById('remedios-estoque-baixo-body').innerHTML = remedios.length
+                ? tabelaAlertaRemedios(remedios, [
+                    ['Estoque', r => formatarNumero(r.quantidade, 0)],
+                    ['Alerta em', r => formatarNumero(r.estoqueBaixo, 0)],
+                    ['Dose', r => formatarNumero(r.dose, 0)]
+                  ])
+                : '<div class="text-muted">Nenhum remédio com estoque baixo.</div>';
+        }
+
+        function tabelaAlertaRemedios(remedios, colunas) {
+            return `
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Remédio</th>
+                                ${colunas.map(([titulo]) => `<th class="text-end">${escapeHtml(titulo)}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${remedios.map(remedio => `
+                                <tr>
+                                    <td>${formatarTexto(remedio.nome)}</td>
+                                    ${colunas.map(([, valor]) => `<td class="text-end">${valor(remedio)}</td>`).join('')}
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        async function consumirRemedio(idRemedio) {
+            const remedio = remediosCarregados.find(r => String(r.id) === String(idRemedio));
+            const nome = remedio?.nome || 'remédio';
+
+            esconderAlertaRemedios();
+            toggleDashboardLoading(true);
+
+            try {
+                const atualizado = await apiRequest({
+                    url: `${REMEDIOS_CONSUMIR_URL}${idRemedio}`,
+                    method: 'PUT'
+                });
+
+                mostrarAlertaRemedios(
+                    `${nome} consumido. Estoque agora: ${formatarNumero(atualizado?.quantidade, 0)}.`,
+                    'success'
+                );
+
+                // Recarrega tudo: o consumo muda o estoque e pode entrar no alerta.
+                await carregarRemediosDashboard();
+            } catch (error) {
+                console.error(error);
+
+                if (
+                    String(error.message || '').includes('Sessão expirada') ||
+                    String(error.message || '').includes('autenticado')
+                ) {
+                    limparSessaoCompleta();
+                    mostrarLogin();
+                    setLoginError('Sua sessão expirou. Faça login novamente.');
+                    return;
+                }
+
+                mostrarAlertaRemedios(error.message || `Não foi possível consumir ${nome}.`, 'danger');
+            } finally {
+                toggleDashboardLoading(false);
+            }
+        }
+
+        // Datas de validade chegam como "yyyy-MM-dd", sem hora e sem fuso.
+        function formatarDataISO(data) {
+            if (!data) return '--';
+
+            const [ano, mes, dia] = String(data).split('-');
+            if (!ano || !mes || !dia) return escapeHtml(String(data));
+
+            return `${dia}/${mes}/${ano}`;
+        }
+
         function formatarDataUTC(dataUTC) {
             const data = new Date(dataUTC + 'Z');
 
@@ -3142,6 +3546,21 @@
             if (!botao || botao.disabled) return;
 
             await carregarSomenteSupermercado(Number(botao.getAttribute('data-pagina-compras')));
+        });
+
+        document.getElementById('sintomas-lista').addEventListener('click', function(event) {
+            const botao = event.target.closest('button[data-sintoma-id]');
+            if (!botao) return;
+
+            esconderAlertaRemedios();
+            selecionarSintoma(botao.getAttribute('data-sintoma-id'));
+        });
+
+        document.getElementById('remedios-do-sintoma').addEventListener('click', async function(event) {
+            const botao = event.target.closest('button[data-consumir-id]');
+            if (!botao || botao.disabled) return;
+
+            await consumirRemedio(botao.getAttribute('data-consumir-id'));
         });
 
         // ============================================
