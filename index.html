@@ -115,17 +115,21 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .linha-folha {
+        .linha-folha,
+        .linha-compra {
             cursor: pointer;
             transition: background-color .15s ease-in-out;
         }
 
-        .linha-folha:hover {
+        .linha-folha:hover,
+        .linha-compra:hover {
             background-color: #eef6ff !important;
         }
 
         .modal-detalhe-folha .table td,
-        .modal-detalhe-folha .table th {
+        .modal-detalhe-folha .table th,
+        .modal-detalhe-compra .table td,
+        .modal-detalhe-compra .table th {
             vertical-align: middle;
         }
 
@@ -209,6 +213,11 @@
           <li class="nav-item" role="presentation">
             <button class="nav-link" id="salario-tab" data-bs-toggle="tab" data-bs-target="#tab-salario" type="button" role="tab">
                 Salário
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="supermercado-tab" data-bs-toggle="tab" data-bs-target="#tab-supermercado" type="button" role="tab">
+                Supermercado
             </button>
           </li>
         </ul>
@@ -494,6 +503,44 @@
                 </div>
             </div>
 
+            <!-- ABA SUPERMERCADO -->
+            <div class="tab-pane fade" id="tab-supermercado" role="tabpanel" aria-labelledby="supermercado-tab">
+                <div class="card table-card">
+                    <div class="card-body">
+                        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2 mb-3">
+                            <div>
+                                <h5 class="mb-1">Últimas notas fiscais</h5>
+                                <div class="item-dica">Da emissão mais recente para a mais antiga. Clique numa linha para ver todos os detalhes.</div>
+                            </div>
+                            <div class="small-muted" id="supermercado-total-registros">0 registros</div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-striped align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Data de emissão</th>
+                                        <th>Supermercado</th>
+                                        <th class="text-end">Itens</th>
+                                        <th class="text-end">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-supermercado-body">
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">Nenhum dado carregado.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <nav class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mt-3" aria-label="Paginação das notas fiscais">
+                            <div class="small-muted" id="supermercado-pagina-info">--</div>
+                            <ul class="pagination mb-0" id="supermercado-paginacao"></ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+
             <!-- ABA SAÚDE -->
             <div class="tab-pane fade show active" id="tab-saude" role="tabpanel" aria-labelledby="saude-tab">
                 <div class="row mb-2">
@@ -690,6 +737,24 @@
         </div>
     </div>
 
+    <!-- MODAL DETALHE DA NOTA FISCAL -->
+    <div class="modal fade" id="modal-detalhe-compra" tabindex="-1" aria-labelledby="modal-detalhe-compra-label" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content modal-detalhe-compra">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-detalhe-compra-label">Detalhes da nota fiscal</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body" id="modal-detalhe-compra-body">
+                    <div class="text-center py-4 text-muted">Selecione uma nota fiscal para visualizar os detalhes.</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         Chart.register(ChartDataLabels);
 
@@ -716,6 +781,10 @@
 
         const SALARIO_BASE_URL = `${API_BASE}/salario-service/folha/ano/`;
         const SALARIO_DETALHE_URL = `${API_BASE}/salario-service/folha/`;
+
+        const SUPERMERCADO_COMPRAS_URL = `${API_BASE}/supermercado-service/compras`;
+        const SUPERMERCADO_COMPRA_DETALHE_URL = `${API_BASE}/supermercado-service/compras/`;
+        const COMPRAS_POR_PAGINA = 20;
 
         const SAUDE_DISTANCIA_URL = `${API_BASE}/saude-service/treinos/distancia_total_por_semana`;
         const SAUDE_ENERGIA_ATIVA_URL = `${API_BASE}/saude-service/treinos/energia_ativa_por_semana`;
@@ -1502,6 +1571,9 @@
             renderizarCardsTiposFolhaLiquido([]);
             renderizarCardsTiposFolhaProventos([]);
             limparTabelaSalario();
+
+            // Supermercado
+            limparTabelaSupermercado();
 
             // Saúde
             document.getElementById('card-saude-distancia').textContent = '--';
@@ -2381,7 +2453,8 @@
                 await Promise.all([
                     carregarEnergiaDashboard(),
                     carregarSalarioDashboard(ano),
-                    carregarSaudeDashboard()
+                    carregarSaudeDashboard(),
+                    carregarSupermercadoDashboard(0)
                 ]);
             } catch (error) {
                 console.error(error);
@@ -2397,6 +2470,31 @@
                 }
 
                 setDashboardError(error.message || 'Erro ao carregar dashboard.');
+            } finally {
+                toggleDashboardLoading(false);
+            }
+        }
+
+        async function carregarSomenteSupermercado(pagina = 0) {
+            clearDashboardError();
+            toggleDashboardLoading(true);
+
+            try {
+                await carregarSupermercadoDashboard(pagina);
+            } catch (error) {
+                console.error(error);
+
+                if (
+                    String(error.message || '').includes('Sessão expirada') ||
+                    String(error.message || '').includes('autenticado')
+                ) {
+                    limparSessaoCompleta();
+                    mostrarLogin();
+                    setLoginError('Sua sessão expirou. Faça login novamente.');
+                    return;
+                }
+
+                setDashboardError(error.message || 'Erro ao carregar as notas fiscais.');
             } finally {
                 toggleDashboardLoading(false);
             }
@@ -2602,6 +2700,308 @@
             }
         }
 
+        // ============================================
+        // SUPERMERCADO
+        // ============================================
+        function limparTabelaSupermercado() {
+            const tbody = document.getElementById('tabela-supermercado-body');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center text-muted">Nenhum dado carregado.</td>
+                </tr>
+            `;
+            document.getElementById('supermercado-total-registros').textContent = '0 registros';
+            document.getElementById('supermercado-paginacao').innerHTML = '';
+            document.getElementById('supermercado-pagina-info').textContent = '--';
+        }
+
+        // A página pode chegar no formato clássico do PageImpl (metadados na raiz) ou
+        // no do PagedModel (metadados sob "page"). Aceita os dois.
+        function normalizarPaginaCompras(resposta) {
+            const conteudo = Array.isArray(resposta?.content) ? resposta.content : [];
+            const meta = resposta?.page ?? resposta ?? {};
+
+            const tamanho = Number(meta.size) || COMPRAS_POR_PAGINA;
+            const totalElementos = Number(meta.totalElements ?? conteudo.length) || 0;
+
+            return {
+                conteudo,
+                pagina: Number(meta.number) || 0,
+                tamanho,
+                totalElementos,
+                totalPaginas: Number(meta.totalPages) || Math.ceil(totalElementos / tamanho)
+            };
+        }
+
+        async function carregarSupermercadoDashboard(pagina = 0) {
+            const parametros = new URLSearchParams({
+                page: Math.max(0, pagina),
+                size: COMPRAS_POR_PAGINA,
+                sort: 'data,desc'
+            });
+
+            const resposta = await apiRequest({ url: `${SUPERMERCADO_COMPRAS_URL}?${parametros}` });
+            const paginaCompras = normalizarPaginaCompras(resposta);
+
+            renderizarTabelaSupermercado(paginaCompras);
+            renderizarPaginacaoSupermercado(paginaCompras);
+        }
+
+        function renderizarTabelaSupermercado(paginaCompras) {
+            const tbody = document.getElementById('tabela-supermercado-body');
+            const compras = paginaCompras.conteudo;
+
+            document.getElementById('supermercado-total-registros').textContent =
+                `${paginaCompras.totalElementos} nota(s) fiscal(is)`;
+
+            if (!compras.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">Nenhuma nota fiscal cadastrada.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = compras.map(compra => `
+                <tr class="linha-compra" data-compra-id="${escapeHtml(compra.id ?? '')}" title="Clique para ver os detalhes da nota fiscal">
+                    <td>${formatarDataHoraLocal(compra.data)}</td>
+                    <td>${formatarTexto(compra?.supermercado?.nome, 'Não identificado')}</td>
+                    <td class="text-end">${formatarNumero(compra.quantidadeItens, 0)}</td>
+                    <td class="text-end">${formatarMoedaBR(compra.total)}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderizarPaginacaoSupermercado(paginaCompras) {
+            const lista = document.getElementById('supermercado-paginacao');
+            const info = document.getElementById('supermercado-pagina-info');
+
+            if (!paginaCompras.totalElementos) {
+                lista.innerHTML = '';
+                info.textContent = 'Nenhuma nota fiscal cadastrada.';
+                return;
+            }
+
+            const primeiro = paginaCompras.pagina * paginaCompras.tamanho + 1;
+            const ultimo = primeiro + paginaCompras.conteudo.length - 1;
+            info.textContent = `Exibindo ${primeiro} a ${ultimo} de ${paginaCompras.totalElementos} - página ${paginaCompras.pagina + 1} de ${paginaCompras.totalPaginas}`;
+
+            if (paginaCompras.totalPaginas <= 1) {
+                lista.innerHTML = '';
+                return;
+            }
+
+            const itens = [
+                itemPaginacaoSupermercado('Anterior', paginaCompras.pagina - 1, paginaCompras.pagina === 0)
+            ];
+
+            paginasVisiveis(paginaCompras.pagina, paginaCompras.totalPaginas).forEach(numero => {
+                if (numero === null) {
+                    itens.push('<li class="page-item disabled"><span class="page-link">&hellip;</span></li>');
+                    return;
+                }
+                itens.push(itemPaginacaoSupermercado(String(numero + 1), numero, false, numero === paginaCompras.pagina));
+            });
+
+            itens.push(itemPaginacaoSupermercado('Próxima', paginaCompras.pagina + 1, paginaCompras.pagina + 1 >= paginaCompras.totalPaginas));
+
+            lista.innerHTML = itens.join('');
+        }
+
+        function itemPaginacaoSupermercado(rotulo, destino, desabilitado, ativo = false) {
+            const classes = ['page-item'];
+            if (desabilitado) classes.push('disabled');
+            if (ativo) classes.push('active');
+
+            return `
+                <li class="${classes.join(' ')}">
+                    <button class="page-link" type="button" data-pagina-compras="${destino}"
+                            ${desabilitado || ativo ? 'disabled' : ''}${ativo ? ' aria-current="page"' : ''}>${escapeHtml(rotulo)}</button>
+                </li>
+            `;
+        }
+
+        // Janela de páginas em volta da atual, sempre com a primeira e a última,
+        // e null onde entra a elipse.
+        function paginasVisiveis(atual, total, janela = 5) {
+            if (total <= janela + 2) {
+                return Array.from({ length: total }, (_, indice) => indice);
+            }
+
+            const numeros = new Set([0, total - 1, atual]);
+            const metade = Math.floor(janela / 2);
+            for (let i = atual - metade; i <= atual + metade; i++) {
+                if (i > 0 && i < total - 1) numeros.add(i);
+            }
+
+            const ordenados = [...numeros].filter(numero => numero >= 0 && numero < total).sort((a, b) => a - b);
+
+            return ordenados.flatMap((numero, indice) =>
+                indice > 0 && numero - ordenados[indice - 1] > 1 ? [null, numero] : [numero]
+            );
+        }
+
+        function renderizarLoadingModalCompra() {
+            document.getElementById('modal-detalhe-compra-body').innerHTML = `
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary mb-3" role="status"></div>
+                    <div class="text-muted">Carregando detalhes da nota fiscal...</div>
+                </div>
+            `;
+        }
+
+        function renderizarErroModalCompra(mensagem) {
+            document.getElementById('modal-detalhe-compra-body').innerHTML = `
+                <div class="alert alert-danger mb-0">
+                    ${escapeHtml(mensagem || 'Não foi possível carregar os dados da nota fiscal.')}
+                </div>
+            `;
+        }
+
+        function cardResumoCompra(titulo, valor) {
+            return `
+                <div class="col-12 col-md-3">
+                    <div class="card card-resumo h-100 text-center">
+                        <div class="card-body">
+                            <h6 class="text-muted">${escapeHtml(titulo)}</h6>
+                            <div class="fs-6 fw-bold">${valor}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function linkNotaFiscal(url) {
+            const endereco = String(url || '');
+
+            if (!/^https?:\/\//i.test(endereco)) {
+                return endereco ? escapeHtml(endereco) : '--';
+            }
+
+            return `<a href="${escapeHtml(endereco)}" target="_blank" rel="noopener noreferrer">Abrir no site da SEFAZ-BA</a>`;
+        }
+
+        function renderizarTabelaItensCompra(itens) {
+            if (!itens.length) {
+                return '<div class="text-center text-muted py-3">Esta nota fiscal não possui itens.</div>';
+            }
+
+            return `
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Produto</th>
+                                <th>EAN</th>
+                                <th>Unidade</th>
+                                <th class="text-end">Qtd</th>
+                                <th class="text-end">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itens.map(item => `
+                                <tr>
+                                    <td>${formatarTexto(item?.produto?.nome)}</td>
+                                    <td>${formatarTexto(item?.produto?.ean)}</td>
+                                    <td>${formatarTexto(item?.produto?.unidade?.descricao)}</td>
+                                    <td class="text-end">${formatarNumero(item?.qtd, 3)}</td>
+                                    <td class="text-end">${formatarMoedaBR(item?.valor)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderizarDetalheCompraModal(compra) {
+            const body = document.getElementById('modal-detalhe-compra-body');
+            const itens = Array.isArray(compra?.items) ? compra.items : [];
+
+            body.innerHTML = `
+                <div class="container-fluid px-0">
+                    <div class="row g-3 mb-4">
+                        ${cardResumoCompra('Data de emissão', formatarDataHoraLocal(compra?.data))}
+                        ${cardResumoCompra('Supermercado', formatarTexto(compra?.supermercado?.nome, 'Não identificado'))}
+                        ${cardResumoCompra('Itens', formatarNumero(itens.length, 0))}
+                        ${cardResumoCompra('Total da compra', formatarMoedaBR(compra?.total))}
+                    </div>
+
+                    <h5 class="mb-3">Dados da nota</h5>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-sm mb-0">
+                            <tbody>
+                                <tr>
+                                    <th class="w-25">Chave de acesso</th>
+                                    <td>${formatarTexto(compra?.chaveDeAcesso)}</td>
+                                </tr>
+                                <tr>
+                                    <th>CNPJ</th>
+                                    <td>${formatarTexto(compra?.supermercado?.cnpj)}</td>
+                                </tr>
+                                <tr>
+                                    <th>Inscrição estadual</th>
+                                    <td>${formatarTexto(compra?.supermercado?.inscricaoEstadual)}</td>
+                                </tr>
+                                <tr>
+                                    <th>Informações complementares</th>
+                                    <td>${formatarTexto(compra?.supermercado?.informacoesComplementares)}</td>
+                                </tr>
+                                <tr>
+                                    <th>Cadastrada em</th>
+                                    <td>${compra?.criado ? escapeHtml(formatarDataUTC(compra.criado)) : '--'}</td>
+                                </tr>
+                                <tr>
+                                    <th>Consulta na SEFAZ</th>
+                                    <td>${linkNotaFiscal(compra?.url)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h5 class="mb-3">Itens (${formatarNumero(itens.length, 0)})</h5>
+                    ${renderizarTabelaItensCompra(itens)}
+                </div>
+            `;
+        }
+
+        async function abrirDetalheCompra(idCompra) {
+            if (!idCompra) return;
+
+            const modalElement = document.getElementById('modal-detalhe-compra');
+            const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+            const titulo = document.getElementById('modal-detalhe-compra-label');
+
+            titulo.textContent = 'Detalhes da nota fiscal';
+            renderizarLoadingModalCompra();
+            modal.show();
+
+            try {
+                const compra = await apiRequest({ url: `${SUPERMERCADO_COMPRA_DETALHE_URL}${idCompra}` });
+                const nome = compra?.supermercado?.nome;
+                titulo.textContent = nome ? `Nota fiscal - ${nome}` : 'Detalhes da nota fiscal';
+                renderizarDetalheCompraModal(compra);
+            } catch (error) {
+                console.error(error);
+                renderizarErroModalCompra(error.message || 'Erro ao carregar detalhes da nota fiscal.');
+            }
+        }
+
+        // A data de emissão vem do site da SEFAZ já no horário local e é gravada sem
+        // fuso — diferente de "criado", que é UTC. Formata sem converter.
+        function formatarDataHoraLocal(dataHora) {
+            if (!dataHora) return '--';
+
+            const [data, hora = ''] = String(dataHora).split('T');
+            const [ano, mes, dia] = data.split('-');
+
+            if (!ano || !mes || !dia) return escapeHtml(String(dataHora));
+
+            const horaFormatada = hora.slice(0, 8);
+            return horaFormatada ? `${dia}/${mes}/${ano} as ${horaFormatada}` : `${dia}/${mes}/${ano}`;
+        }
+
         function formatarDataUTC(dataUTC) {
             const data = new Date(dataUTC + 'Z');
 
@@ -2722,6 +3122,26 @@
             }
 
             await abrirDetalheFolha(idFolha);
+        });
+
+        document.getElementById('tabela-supermercado-body').addEventListener('click', async function(event) {
+            const linha = event.target.closest('tr[data-compra-id]');
+            if (!linha) return;
+
+            const idCompra = linha.getAttribute('data-compra-id');
+            if (!idCompra) {
+                setDashboardError('A nota fiscal selecionada não possui identificador para consulta de detalhes.');
+                return;
+            }
+
+            await abrirDetalheCompra(idCompra);
+        });
+
+        document.getElementById('supermercado-paginacao').addEventListener('click', async function(event) {
+            const botao = event.target.closest('button[data-pagina-compras]');
+            if (!botao || botao.disabled) return;
+
+            await carregarSomenteSupermercado(Number(botao.getAttribute('data-pagina-compras')));
         });
 
         // ============================================
