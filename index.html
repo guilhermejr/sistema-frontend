@@ -1436,13 +1436,30 @@
             return window.innerWidth <= 768;
         }
 
-        function reduzirListaParaMobile(lista) {
+        // A aba Energia pede uma janela fixa no celular em vez da proporção:
+        // a série diária nos últimos 15 dias e as mensais nos últimos 6 meses.
+        const ENERGIA_DIAS_MOBILE = 15;
+        const ENERGIA_MESES_MOBILE = 6;
+
+        function ultimosRegistros(lista, quantidade) {
+            if (!Array.isArray(lista) || !(quantidade > 0)) {
+                return lista;
+            }
+
+            return lista.length > quantidade ? lista.slice(lista.length - quantidade) : lista;
+        }
+
+        function reduzirListaParaMobile(lista, limiteMobile) {
             if (!Array.isArray(lista)) {
                 return lista;
             }
 
             if (!isMobile()) {
                 return lista;
+            }
+
+            if (Number.isFinite(limiteMobile)) {
+                return ultimosRegistros(lista, limiteMobile);
             }
 
             // Descarta os registros mais antigos; a proporção depende da largura.
@@ -1458,9 +1475,9 @@
             return Array.isArray(lista) ? [...lista].reverse() : [];
         }
 
-        function extrairDadosMensais(lista) {
+        function extrairDadosMensais(lista, limiteMobile) {
 
-            const dados = reduzirListaParaMobile(lista);
+            const dados = reduzirListaParaMobile(lista, limiteMobile);
 
             return {
                 labels: dados.map(item => formatarPeriodoMesAno(item.periodo)),
@@ -1468,9 +1485,9 @@
             };
         }
 
-        function extrairDadosMensaisAnteriores(lista) {
+        function extrairDadosMensaisAnteriores(lista, limiteMobile) {
 
-            const dados = reduzirListaParaMobile(lista);
+            const dados = reduzirListaParaMobile(lista, limiteMobile);
 
             return {
                 labels: dados.map(item => formatarPeriodoMesAno(item.periodo)),
@@ -1479,9 +1496,9 @@
             };
         }
 
-        function extrairDadosDiarios(lista) {
+        function extrairDadosDiarios(lista, limiteMobile) {
 
-            const dados = reduzirListaParaMobile(lista);
+            const dados = reduzirListaParaMobile(lista, limiteMobile);
 
             return {
                 labels: dados.map(item =>
@@ -2421,13 +2438,13 @@
             const geracao12AnterioresOrdenado = geracao12MesesAnteriores;
             const consumo12AnterioresOrdenado = consumo12MesesAnteriores;
 
-            const dadosGeracaoMensal = extrairDadosMensais(geracao12Ordenado);
-            const dadosConsumoMensal = extrairDadosMensais(consumo12Ordenado);
-            const dadosSaldoMensal = extrairDadosMensais(saldo12Ordenado);
-            const dadosGeracaoDiaria = extrairDadosDiarios(geracao30Ordenado);
-            const dadosValor12Meses = extrairDadosMensais(valor12Ordenado);
-            const dadosGeracao12Anteriores = extrairDadosMensaisAnteriores(geracao12AnterioresOrdenado);
-            const dadosConsumo12Anteriores = extrairDadosMensaisAnteriores(consumo12AnterioresOrdenado);
+            const dadosGeracaoMensal = extrairDadosMensais(geracao12Ordenado, ENERGIA_MESES_MOBILE);
+            const dadosConsumoMensal = extrairDadosMensais(consumo12Ordenado, ENERGIA_MESES_MOBILE);
+            const dadosSaldoMensal = extrairDadosMensais(saldo12Ordenado, ENERGIA_MESES_MOBILE);
+            const dadosGeracaoDiaria = extrairDadosDiarios(geracao30Ordenado, ENERGIA_DIAS_MOBILE);
+            const dadosValor12Meses = extrairDadosMensais(valor12Ordenado, ENERGIA_MESES_MOBILE);
+            const dadosGeracao12Anteriores = extrairDadosMensaisAnteriores(geracao12AnterioresOrdenado, ENERGIA_MESES_MOBILE);
+            const dadosConsumo12Anteriores = extrairDadosMensaisAnteriores(consumo12AnterioresOrdenado, ENERGIA_MESES_MOBILE);
 
             //console.log('dadosGeracaoDiaria' + JSON.stringify(dadosGeracao12Anteriores));
 
