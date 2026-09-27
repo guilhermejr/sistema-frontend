@@ -1664,6 +1664,10 @@
         // ============================================
         // GRÁFICOS
         // ============================================
+        function ehGraficoDeBarra(ctx) {
+            return (ctx?.dataset?.type || ctx?.chart?.config?.type) === 'bar';
+        }
+
         function opcoesPadraoComDatalabels(titleText, formatter = value => value) {
             const mobile = isMobile();
 
@@ -1703,10 +1707,20 @@
                         }
                     },
                     datalabels: {
-                        // 'auto' = mostra os rótulos que couberem sem sobrepor (inclusive no celular)
-                        display: mobile ? 'auto' : true,
-                        anchor: 'end',
-                        align: 'top',
+                        // 'auto' = mostra os rótulos que couberem sem sobrepor (inclusive no celular).
+                        // Nas barras do celular ele não serve: a medida da colisão ignora a
+                        // rotação, então ele descartava um dos dois valores de cada mês —
+                        // girado o rótulo é estreito e cabe dentro da barra sempre.
+                        display: ctx => {
+                            if (!mobile) return true;
+                            return ehGraficoDeBarra(ctx) ? true : 'auto';
+                        },
+                        // No celular o rótulo de barra vai para dentro da barra, no
+                        // meio e girado 90°: em pé ele cabe onde deitado não cabia.
+                        // Linha (e todo o desktop) segue com o valor acima do ponto.
+                        anchor: ctx => (mobile && ehGraficoDeBarra(ctx) ? 'center' : 'end'),
+                        align: ctx => (mobile && ehGraficoDeBarra(ctx) ? 'center' : 'top'),
+                        rotation: ctx => (mobile && ehGraficoDeBarra(ctx) ? -90 : 0),
                         clamp: true,
                         clip: false,
                         color: '#333',
