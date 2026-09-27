@@ -20,10 +20,12 @@
             background-color: #f8f9fa;
             padding-left: env(safe-area-inset-left);
             padding-right: env(safe-area-inset-right);
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
         .login-wrapper {
             min-height: 100vh;
+            min-height: 100dvh;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -72,6 +74,14 @@
             }
         }
 
+        @media (max-height: 500px) and (orientation: landscape) {
+            /* No landscape do celular a altura util fica menor que o card;
+               sem isso o grafico nasce mais alto que a tela. */
+            .grafico-card .card-body {
+                height: 300px;
+            }
+        }
+
         @media (max-width: 576px) {
             .grafico-card .card-body {
                 height: 320px;
@@ -91,6 +101,45 @@
         .nav-tabs .nav-link {
             border-radius: 12px 12px 0 0;
             font-weight: 600;
+        }
+
+        /* Cinco abas somam mais que a largura de um celular. Em vez de quebrar
+           em duas fileiras, a barra rola na horizontal; a borda inferior do
+           <ul> sai porque o overflow cortaria o encaixe da aba ativa nela. */
+        @media (max-width: 992px) {
+            #dashboardTabs {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                overflow-y: hidden;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                border-bottom: 0;
+            }
+
+            #dashboardTabs::-webkit-scrollbar {
+                display: none;
+            }
+
+            #dashboardTabs .nav-item {
+                flex: 0 0 auto;
+            }
+
+            #dashboardTabs .nav-link {
+                white-space: nowrap;
+            }
+        }
+
+        /* Alvos de toque: os 31px de um .btn-sm ficam abaixo dos 44px que a
+           Apple recomenda, e o Consumir e a unica acao que escreve. */
+        @media (pointer: coarse) {
+            .chip-sintoma,
+            .remedio-card .btn,
+            #supermercado-paginacao .page-link {
+                min-height: 44px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
         }
 
         .type-card {
@@ -121,9 +170,11 @@
             transition: background-color .15s ease-in-out;
         }
 
-        .linha-folha:hover,
-        .linha-compra:hover {
-            background-color: #eef6ff !important;
+        @media (hover: hover) {
+            .linha-folha:hover,
+            .linha-compra:hover {
+                background-color: #eef6ff !important;
+            }
         }
 
         .modal-detalhe-folha .table td,
@@ -1377,6 +1428,10 @@
         // MOBILE
         // ============================================
 
+        // Acima disso ainda é celular, mas com largura de sobra (um Pro Max tem
+        // ~440px de CSS) — não precisa jogar fora metade da série.
+        const LARGURA_TELA_ESTREITA = 430;
+
         function isMobile() {
             return window.innerWidth <= 768;
         }
@@ -1390,10 +1445,10 @@
                 return lista;
             }
 
-            // mantém apenas metade dos registros
-            const metade = Math.ceil(lista.length / 2);
-            return lista.slice(metade)
-
+            // Descarta os registros mais antigos; a proporção depende da largura.
+            const proporcao = window.innerWidth <= LARGURA_TELA_ESTREITA ? 0.5 : 0.75;
+            const manter = Math.ceil(lista.length * proporcao);
+            return lista.slice(lista.length - manter);
         }
 
         // ============================================
@@ -3609,6 +3664,28 @@
 
             esconderAlertaRemedios();
             selecionarSintoma(botao.getAttribute('data-sintoma-id'));
+        });
+
+        // isMobile() é lido na hora de montar cada gráfico, então girar o aparelho
+        // deixaria fontes e séries no modo anterior. Só recarrega quando a
+        // travessia do breakpoint realmente troca o modo — não a cada resize.
+        let modoMobileAtual = isMobile();
+        let timerRedimensionamento = null;
+
+        window.addEventListener('resize', function() {
+            clearTimeout(timerRedimensionamento);
+
+            timerRedimensionamento = setTimeout(function() {
+                const modo = isMobile();
+                if (modo === modoMobileAtual) return;
+
+                modoMobileAtual = modo;
+
+                // Na tela de login não há gráfico montado para refazer.
+                if (document.getElementById('dashboard-section').classList.contains('hidden')) return;
+
+                carregarDashboard();
+            }, 250);
         });
 
         document.getElementById('remedios-do-sintoma').addEventListener('click', async function(event) {
