@@ -841,6 +841,26 @@
         </div>
     </div>
 
+    <!-- MODAL CONFIRMAR CONSUMO DE REMEDIO -->
+    <div class="modal fade" id="modal-confirmar-consumo" tabindex="-1" aria-labelledby="modal-confirmar-consumo-label" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-confirmar-consumo-label">Confirmar consumo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-1" id="modal-confirmar-consumo-texto"></p>
+                    <p class="mb-0 text-muted small" id="modal-confirmar-consumo-estoque"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" id="modal-confirmar-consumo-ok">Consumir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         Chart.register(ChartDataLabels);
 
@@ -3357,6 +3377,41 @@
             `;
         }
 
+        // Consumir grava no estoque e nao tem desfazer, entao pede confirmacao
+        // antes de enviar o PUT.
+        function confirmarConsumo(remedio) {
+            const dose = Number(remedio?.dose ?? 0);
+            const quantidade = Number(remedio?.quantidade ?? 0);
+
+            document.getElementById('modal-confirmar-consumo-texto').innerHTML =
+                `Consumir <strong>${formatarNumero(dose, 0)}</strong> de <strong>${formatarTexto(remedio?.nome, 'remédio')}</strong>?`;
+            document.getElementById('modal-confirmar-consumo-estoque').textContent =
+                `Estoque atual: ${formatarNumero(quantidade, 0)}. Depois do consumo: ${formatarNumero(quantidade - dose, 0)}.`;
+
+            const modalElement = document.getElementById('modal-confirmar-consumo');
+            const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+            const botaoConfirmar = document.getElementById('modal-confirmar-consumo-ok');
+
+            return new Promise(resolve => {
+                let confirmado = false;
+
+                function aoConfirmar() {
+                    confirmado = true;
+                    modal.hide();
+                }
+
+                function aoFechar() {
+                    botaoConfirmar.removeEventListener('click', aoConfirmar);
+                    modalElement.removeEventListener('hidden.bs.modal', aoFechar);
+                    resolve(confirmado);
+                }
+
+                botaoConfirmar.addEventListener('click', aoConfirmar);
+                modalElement.addEventListener('hidden.bs.modal', aoFechar);
+                modal.show();
+            });
+        }
+
         async function consumirRemedio(idRemedio) {
             const remedio = remediosCarregados.find(r => String(r.id) === String(idRemedio));
             const nome = remedio?.nome || 'remédio';
@@ -3560,7 +3615,13 @@
             const botao = event.target.closest('button[data-consumir-id]');
             if (!botao || botao.disabled) return;
 
-            await consumirRemedio(botao.getAttribute('data-consumir-id'));
+            const idRemedio = botao.getAttribute('data-consumir-id');
+            const remedio = remediosCarregados.find(r => String(r.id) === String(idRemedio));
+
+            const confirmado = await confirmarConsumo(remedio);
+            if (!confirmado) return;
+
+            await consumirRemedio(idRemedio);
         });
 
         // ============================================
