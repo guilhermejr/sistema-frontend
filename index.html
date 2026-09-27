@@ -94,6 +94,37 @@
             }
         }
 
+        /* Título, nome e Sair numa linha só. Quem cede espaço é o nome, que
+           ganha reticências; título e botão não encolhem. */
+        .dashboard-header h2 {
+            white-space: nowrap;
+        }
+
+        .cabecalho-usuario {
+            min-width: 0;
+        }
+
+        .cabecalho-usuario .btn {
+            flex-shrink: 0;
+        }
+
+        #usuario-logado {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 576px) {
+            .dashboard-header .card-body {
+                padding: 0.75rem;
+            }
+
+            .dashboard-header h2 {
+                font-size: 1.25rem;
+            }
+        }
+
         .hidden {
             display: none !important;
         }
@@ -256,13 +287,12 @@
     <div id="dashboard-section" class="container py-4 hidden">
         <!-- Cabeçalho -->
         <div class="card dashboard-header mb-4">
-            <div class="card-body d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+            <div class="card-body d-flex flex-row justify-content-between align-items-center gap-2 gap-lg-3">
                 <div>
-                    <h2 class="mb-1">Dashboard</h2>
-                    <p class="text-muted mb-0">Saúde, energia e salário</p>
+                    <h2 class="mb-0">Dashboard</h2>
                 </div>
 
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2 cabecalho-usuario">
                     <span id="usuario-logado" class="badge text-bg-secondary p-2">Usuário</span>
                     <button class="btn btn-outline-danger" onclick="logout()">Sair</button>
                 </div>
@@ -1045,7 +1075,7 @@
         function mostrarDashboard() {
             hide('login-section');
             show('dashboard-section');
-            document.getElementById('usuario-logado').textContent = obterUsuario() || 'Usuário';
+            document.getElementById('usuario-logado').textContent = obterNomeUsuario();
         }
 
         function limparTabelaSalario() {
@@ -1166,6 +1196,16 @@
             return localStorage.getItem('usuarioLogado');
         }
 
+        // O nome vem da claim "nome" do access token (autenticacao-service o grava
+        // em JwtProvider). Lido do token a cada exibição, vale também para a sessão
+        // que já estava aberta com o e-mail guardado.
+        function obterNomeUsuario() {
+            const token = obterAccessToken();
+            const nome = token ? parseJwt(token)?.nome : null;
+
+            return nome || obterUsuario() || 'Usuário';
+        }
+
         function salvarAnoSalario(ano) {
             localStorage.setItem('anoSalarioSelecionado', String(ano));
         }
@@ -1189,11 +1229,14 @@
                 const payloadBase64 = token.split('.')[1];
                 if (!payloadBase64) return null;
 
-                const payloadJson = atob(
-                    payloadBase64.replace(/-/g, '+').replace(/_/g, '/')
+                // atob devolve um byte por caractere; sem passar pelo TextDecoder
+                // um nome acentuado vira mojibake ("Júnior" -> "JÃºnior").
+                const bytes = Uint8Array.from(
+                    atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/')),
+                    caractere => caractere.charCodeAt(0)
                 );
 
-                return JSON.parse(payloadJson);
+                return JSON.parse(new TextDecoder('utf-8').decode(bytes));
             } catch (error) {
                 console.error('Erro ao decodificar JWT:', error);
                 return null;
