@@ -1672,7 +1672,7 @@
                 maintainAspectRatio: false,
                 layout: {
                     // espaço no topo para os rótulos que ficam acima do ponto mais alto
-                    padding: { top: mobile ? 18 : 8, right: 8, left: 2 }
+                    padding: { top: mobile ? 22 : 8, right: 8, left: 2 }
                 },
                 interaction: { mode: 'index', intersect: false },
                 plugins: {
@@ -1710,7 +1710,9 @@
                         clamp: true,
                         clip: false,
                         color: '#333',
-                        font: { weight: 'bold', size: mobile ? 9 : 11 },
+                        // Mesmo corpo no celular e no desktop: com 9px os valores
+                        // ficavam pequenos demais na tela do telefone.
+                        font: { weight: 'bold', size: 11 },
                         formatter
                     }
                 }
