@@ -132,7 +132,14 @@
         /* O espaço da mensagem de erro fica sempre reservado. Se ela só aparecesse
            no erro, o blur do campo ao clicar em Salvar empurraria o botão para
            baixo entre o mousedown e o mouseup, e o clique se perderia. */
-        #form-novo-acompanhamento .invalid-feedback {
+        @media (max-width: 767.98px) {
+            .folha-item {
+                border-bottom: 1px solid var(--bs-border-color);
+                margin-bottom: 0.5rem;
+            }
+        }
+
+        .form-validado .invalid-feedback {
             display: block;
             min-height: 1.3rem;
             margin-top: 0.15rem;
@@ -140,6 +147,12 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+
+        /* O select de item nunca mostra erro no blur (só no Salvar ou ao trocar a
+           opção), então não arrisca mover o botão e dispensa a linha reservada. */
+        .folha-item .form-select + .invalid-feedback {
+            min-height: 0;
         }
 
         .nav-tabs .nav-link {
@@ -519,18 +532,16 @@
 
             <!-- ABA SALÁRIO -->
             <div class="tab-pane fade" id="tab-salario" role="tabpanel" aria-labelledby="salario-tab">
+                <div id="salario-alerta" class="alert hidden" role="alert"></div>
+
                 <div class="card filtro-card">
                     <div class="card-body">
                         <div class="row g-3 align-items-end">
                             <div class="col-12 col-md-4 col-lg-3">
                                 <label for="salario-ano" class="form-label">Ano da folha</label>
+                                <!-- Opções montadas por carregarAnosSalario() a partir do GET /ano -->
                                 <select id="salario-ano" class="form-select">
                                     <option value="" disabled>Selecione o ano</option>
-                                    <option value="2026">2026</option>
-                                    <option value="2025">2025</option>
-                                    <option value="2024">2024</option>
-                                    <option value="2023">2023</option>
-                                    <option value="2022">2022</option>
                                 </select>
                             </div>
                             <div class="col-12 col-md-4 col-lg-3">
@@ -538,8 +549,10 @@
                                     Atualizar salário
                                 </button>
                             </div>
-                            <div class="col-12 col-md-4 col-lg-6">
-                                <div class="small-muted"></div>
+                            <div class="col-12 col-md-4 col-lg-3">
+                                <button id="btn-nova-folha" class="btn btn-outline-primary w-100" type="button">
+                                    Nova folha
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -963,10 +976,82 @@
         </div>
     </div>
 
+    <!-- MODAL NOVA FOLHA DE SALARIO -->
+    <div class="modal fade" id="modal-nova-folha" tabindex="-1" aria-labelledby="modal-nova-folha-label" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <form class="modal-content form-validado" id="form-nova-folha" novalidate>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-nova-folha-label">Nova folha</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="folha-alerta" class="alert alert-danger hidden" role="alert"></div>
+
+                    <div class="row g-3 mb-2">
+                        <div class="col-6 col-md-3">
+                            <label for="folha-dataPagamento" class="form-label">Data de pagamento</label>
+                            <input type="text" class="form-control" id="folha-dataPagamento" data-tipo="data" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <label for="folha-tipoFolha" class="form-label">Tipo de folha</label>
+                            <select class="form-select" id="folha-tipoFolha" data-tipo="obrigatorio"></select>
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-12 col-md-5 d-flex align-items-center">
+                            <div id="folha-itens-origem" class="small-muted"></div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-2 mb-2">
+                        <h6 class="text-muted mb-0">Proventos</h6>
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-adicionar-item="P">+ Adicionar</button>
+                    </div>
+                    <div class="row g-2 d-none d-md-flex small text-muted">
+                        <div class="col-md-6">Item</div>
+                        <div class="col-md-2">Unidade</div>
+                        <div class="col-md-3">Valor (R$)</div>
+                    </div>
+                    <div id="folha-itens-P" class="mb-3"></div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-2 mb-2">
+                        <h6 class="text-muted mb-0">Descontos</h6>
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-adicionar-item="D">+ Adicionar</button>
+                    </div>
+                    <div class="row g-2 d-none d-md-flex small text-muted">
+                        <div class="col-md-6">Item</div>
+                        <div class="col-md-2">Unidade</div>
+                        <div class="col-md-3">Valor (R$)</div>
+                    </div>
+                    <div id="folha-itens-D" class="mb-3"></div>
+
+                    <div class="row text-center border-top pt-3">
+                        <div class="col-4">
+                            <div class="small-muted">Proventos</div>
+                            <div id="folha-total-proventos" class="fw-bold text-success">R$ 0,00</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="small-muted">Descontos</div>
+                            <div id="folha-total-descontos" class="fw-bold text-danger">R$ 0,00</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="small-muted">Líquido</div>
+                            <div id="folha-total-liquido" class="fw-bold">R$ 0,00</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="folha-salvar">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- MODAL NOVO ACOMPANHAMENTO DE ENERGIA -->
     <div class="modal fade" id="modal-novo-acompanhamento" tabindex="-1" aria-labelledby="modal-novo-acompanhamento-label" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <form class="modal-content" id="form-novo-acompanhamento" novalidate>
+            <form class="modal-content form-validado" id="form-novo-acompanhamento" novalidate>
                 <div class="modal-header">
                     <h5 class="modal-title" id="modal-novo-acompanhamento-label">Novo acompanhamento</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
@@ -1077,6 +1162,11 @@
 
         const SALARIO_BASE_URL = `${API_BASE}/salario-service/folha/ano/`;
         const SALARIO_DETALHE_URL = `${API_BASE}/salario-service/folha/`;
+        // Sem a barra final, como no POST de acompanhamentos.
+        const SALARIO_FOLHA_URL = `${API_BASE}/salario-service/folha`;
+        const SALARIO_ANOS_URL = `${API_BASE}/salario-service/ano`;
+        const SALARIO_TIPO_FOLHA_URL = `${API_BASE}/salario-service/tipo-folha`;
+        const SALARIO_TIPO_ITEM_URL = `${API_BASE}/salario-service/tipo-item/`;
 
         const SUPERMERCADO_COMPRAS_URL = `${API_BASE}/supermercado-service/compras`;
         const SUPERMERCADO_COMPRA_DETALHE_URL = `${API_BASE}/supermercado-service/compras/`;
@@ -1811,6 +1901,27 @@
 
         function obterAnoSalarioSelecionado() {
             return document.getElementById('salario-ano').value;
+        }
+
+        // Os anos vêm do salario-service, que cria o registro do ano ao gravar a
+        // primeira folha dele. Fica selecionado o ano salvo, se ainda existir, ou o
+        // mais recente.
+        async function carregarAnosSalario() {
+            const registros = await apiRequest({ url: SALARIO_ANOS_URL }) || [];
+            const anos = [...new Set(registros.map(registro => String(registro.ano)))].sort((a, b) => b - a);
+
+            if (!anos.length) {
+                anos.push(String(new Date().getFullYear()));
+            }
+
+            const anoSalvo = obterAnoSalario();
+            const ano = anos.includes(anoSalvo) ? anoSalvo : anos[0];
+
+            const select = document.getElementById('salario-ano');
+            select.innerHTML = '<option value="" disabled>Selecione o ano</option>' +
+                anos.map(valor => `<option value="${valor}">${valor}</option>`).join('');
+            select.value = ano;
+            salvarAnoSalario(ano);
         }
 
         // ============================================
@@ -2825,10 +2936,9 @@
             toggleDashboardLoading(true);
 
             try {
-                const ano = obterAnoSalarioSelecionado();
                 await Promise.all([
                     carregarEnergiaDashboard(),
-                    carregarSalarioDashboard(ano),
+                    carregarAnosSalario().then(() => carregarSalarioDashboard(obterAnoSalarioSelecionado())),
                     carregarSaudeDashboard(),
                     carregarSupermercadoDashboard(0),
                     carregarRemediosDashboard()
@@ -2882,9 +2992,8 @@
             toggleDashboardLoading(true);
 
             try {
-                const ano = obterAnoSalarioSelecionado();
-                salvarAnoSalario(ano);
-                await carregarSalarioDashboard(ano);
+                await carregarAnosSalario();
+                await carregarSalarioDashboard(obterAnoSalarioSelecionado());
             } catch (error) {
                 console.error(error);
 
@@ -3009,9 +3118,10 @@
             return `${inteiro},${centavos.slice(-2)}`;
         }
 
+        // Usada pelos formulários de acompanhamento e de folha, conforme o data-tipo do campo.
         // Mensagens curtas de propósito: precisam caber em uma linha no celular,
         // senão a quebra muda a altura do formulário (ver CSS do .invalid-feedback).
-        function validarCampoAcompanhamento(input) {
+        function validarCampo(input) {
             const valor = input.value.trim();
 
             switch (input.dataset.tipo) {
@@ -3029,6 +3139,14 @@
                 case 'moeda':
                     if (!valor) return 'Informe o valor.';
                     if (!REGEX_VALOR_MONETARIO.test(valor)) return 'Valor inválido.';
+                    return null;
+
+                case 'moeda-opcional':
+                    if (valor && !REGEX_VALOR_MONETARIO.test(valor)) return 'Valor inválido.';
+                    return null;
+
+                case 'obrigatorio':
+                    if (!valor) return 'Escolha uma opção.';
                     return null;
 
                 default:
@@ -3049,7 +3167,7 @@
             return null;
         }
 
-        function marcarCampoAcompanhamento(input, mensagem) {
+        function marcarCampo(input, mensagem) {
             input.classList.toggle('is-invalid', Boolean(mensagem));
             input.nextElementSibling.textContent = mensagem || '';
         }
@@ -3059,15 +3177,15 @@
             let primeiroInvalido = null;
 
             form.querySelectorAll('input[data-tipo]').forEach(input => {
-                const mensagem = validarCampoAcompanhamento(input);
-                marcarCampoAcompanhamento(input, mensagem);
+                const mensagem = validarCampo(input);
+                marcarCampo(input, mensagem);
                 if (mensagem && !primeiroInvalido) primeiroInvalido = input;
             });
 
             const inputFim = document.getElementById('acompanhamento-fim');
             const erroPeriodo = validarPeriodoAcompanhamento();
             if (erroPeriodo) {
-                marcarCampoAcompanhamento(inputFim, erroPeriodo);
+                marcarCampo(inputFim, erroPeriodo);
                 if (!primeiroInvalido) primeiroInvalido = inputFim;
             }
 
@@ -3078,7 +3196,7 @@
         function abrirNovoAcompanhamento() {
             const form = document.getElementById('form-novo-acompanhamento');
             form.reset();
-            form.querySelectorAll('input[data-tipo]').forEach(input => marcarCampoAcompanhamento(input, null));
+            form.querySelectorAll('input[data-tipo]').forEach(input => marcarCampo(input, null));
 
             // Desconto, multa e juros quase sempre são zero na conta.
             ['desconto', 'multa', 'juros'].forEach(campo => {
@@ -3139,6 +3257,317 @@
                 }
 
                 mostrarAlertaAcompanhamento(error.message || 'Não foi possível salvar o acompanhamento.');
+            } finally {
+                botaoSalvar.disabled = false;
+                botaoSalvar.textContent = 'Salvar';
+            }
+        }
+
+        // ============================================
+        // NOVA FOLHA DE SALÁRIO
+        // ============================================
+
+        // Espelha o FolhaRequest do salario-service: dataPagamento (@DataBrasil),
+        // tipoFolhaId e itens com tipoItemId, valor (@ValorMonetario) e unidade
+        // opcional. O backend não valida os itens em cascata (a lista não tem @Valid),
+        // então um valor fora do formato só é barrado aqui.
+
+        // Tipos de folha e de item quase nunca mudam: busca uma vez por carga da página.
+        let tiposSalario = null;
+
+        async function carregarTiposSalario() {
+            if (tiposSalario) return tiposSalario;
+
+            const [tiposFolha, proventos, descontos] = await Promise.all([
+                apiRequest({ url: SALARIO_TIPO_FOLHA_URL }),
+                apiRequest({ url: `${SALARIO_TIPO_ITEM_URL}P` }),
+                apiRequest({ url: `${SALARIO_TIPO_ITEM_URL}D` })
+            ]);
+
+            const ativosEmOrdem = lista => (lista || [])
+                .filter(tipo => tipo.ativo !== false)
+                .sort((a, b) => String(a.descricao).localeCompare(String(b.descricao), 'pt-BR'));
+
+            tiposSalario = { folha: ativosEmOrdem(tiposFolha), P: ativosEmOrdem(proventos), D: ativosEmOrdem(descontos) };
+            return tiposSalario;
+        }
+
+        function sessaoExpirou(error) {
+            const mensagem = String(error?.message || '');
+            if (!mensagem.includes('Sessão expirada') && !mensagem.includes('autenticado')) return false;
+
+            limparSessaoCompleta();
+            mostrarLogin();
+            setLoginError('Sua sessão expirou. Faça login novamente.');
+            return true;
+        }
+
+        function mostrarAlertaSalario(mensagem, tipo = 'success') {
+            const alerta = document.getElementById('salario-alerta');
+            alerta.className = `alert alert-${tipo}`;
+            alerta.textContent = mensagem;
+            show('salario-alerta');
+        }
+
+        function esconderAlertaSalario() {
+            document.getElementById('salario-alerta').textContent = '';
+            hide('salario-alerta');
+        }
+
+        function mostrarAlertaFolha(mensagem) {
+            const alerta = document.getElementById('folha-alerta');
+            alerta.textContent = mensagem;
+            show('folha-alerta');
+            alerta.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function esconderAlertaFolha() {
+            document.getElementById('folha-alerta').textContent = '';
+            hide('folha-alerta');
+        }
+
+        // tipo é 'P' (provento) ou 'D' (desconto), como no TipoItem do backend.
+        function adicionarItemFolha(tipo, tipoItemId = '') {
+            const opcoes = tiposSalario[tipo]
+                .map(item => `<option value="${item.id}" title="${escapeHtml(item.dica || '')}">${escapeHtml(item.descricao)}</option>`)
+                .join('');
+
+            const linha = document.createElement('div');
+            linha.className = 'row g-2 folha-item';
+            linha.innerHTML = `
+                <div class="col-12 col-md-6">
+                    <select class="form-select" data-tipo="obrigatorio" data-campo="tipoItemId" aria-label="Item">
+                        <option value="">Selecione o item</option>
+                        ${opcoes}
+                    </select>
+                    <div class="invalid-feedback"></div>
+                </div>
+                <div class="col-5 col-md-2">
+                    <input type="text" class="form-control" data-tipo="moeda-opcional" data-campo="unidade" placeholder="Unidade" inputmode="numeric" autocomplete="off" aria-label="Unidade">
+                    <div class="invalid-feedback"></div>
+                </div>
+                <div class="col-5 col-md-3">
+                    <input type="text" class="form-control" data-tipo="moeda" data-campo="valor" placeholder="Valor" inputmode="numeric" autocomplete="off" aria-label="Valor">
+                    <div class="invalid-feedback"></div>
+                </div>
+                <div class="col-2 col-md-1">
+                    <button type="button" class="btn btn-outline-danger w-100" data-remover-item aria-label="Remover item">&times;</button>
+                </div>
+            `;
+
+            // Um tipo que foi desativado não está na lista; o select fica vazio para escolher outro.
+            linha.querySelector('[data-campo="tipoItemId"]').value = String(tipoItemId);
+
+            document.getElementById(`folha-itens-${tipo}`).appendChild(linha);
+            return linha;
+        }
+
+        function campoDaLinha(linha, campo) {
+            return linha.querySelector(`[data-campo="${campo}"]`);
+        }
+
+        // Linha sem nada preenchido é ignorada: não valida e não vai no POST.
+        function linhaFolhaVazia(linha) {
+            return [...linha.querySelectorAll('[data-campo]')].every(campo => !campo.value.trim());
+        }
+
+        function linhasFolhaPreenchidas(tipo) {
+            return [...document.querySelectorAll(`#folha-itens-${tipo} .folha-item`)].filter(linha => !linhaFolhaVazia(linha));
+        }
+
+        // Soma em centavos para não acumular erro de ponto flutuante.
+        function atualizarTotaisFolha() {
+            const somaCentavos = tipo => [...document.querySelectorAll(`#folha-itens-${tipo} [data-campo="valor"]`)]
+                .map(input => input.value.trim())
+                .filter(valor => valor && REGEX_VALOR_MONETARIO.test(valor))
+                .reduce((total, valor) => total + Math.round(parseMoedaBR(valor) * 100), 0);
+
+            const proventos = somaCentavos('P');
+            const descontos = somaCentavos('D');
+
+            document.getElementById('folha-total-proventos').textContent = formatarMoedaBR(proventos / 100);
+            document.getElementById('folha-total-descontos').textContent = formatarMoedaBR(descontos / 100);
+            document.getElementById('folha-total-liquido').textContent = formatarMoedaBR((proventos - descontos) / 100);
+        }
+
+        // Última folha do mesmo tipo neste ano ou no anterior (13º e PLR são anuais).
+        async function buscarUltimaFolhaDoTipo(tipoFolhaId) {
+            const anoAtual = new Date().getFullYear();
+
+            for (const ano of [anoAtual, anoAtual - 1]) {
+                const folhas = await apiRequest({ url: `${SALARIO_BASE_URL}${ano}` }) || [];
+                const doTipo = folhas
+                    .filter(folha => String(folha.tipoFolha?.id) === String(tipoFolhaId))
+                    .sort((a, b) => parseDataBR(b.dataPagamento) - parseDataBR(a.dataPagamento) || b.id - a.id);
+
+                if (doTipo.length) {
+                    return apiRequest({ url: `${SALARIO_DETALHE_URL}${doTipo[0].id}` });
+                }
+            }
+
+            return null;
+        }
+
+        // Ao escolher o tipo de folha, repete os itens da última folha desse tipo,
+        // sem unidade nem valor, para não precisar escolher item por item. Só faz
+        // isso enquanto nenhum valor foi digitado, para não apagar o que já foi feito.
+        async function preencherItensDaUltimaFolha() {
+            const select = document.getElementById('folha-tipoFolha');
+            const tipoFolhaId = select.value;
+            const origem = document.getElementById('folha-itens-origem');
+
+            const algoDigitado = [...document.querySelectorAll('#form-nova-folha .folha-item input')]
+                .some(input => input.value.trim());
+            if (!tipoFolhaId || algoDigitado) return;
+
+            origem.textContent = 'Buscando os itens da última folha deste tipo...';
+
+            let folha = null;
+            try {
+                folha = await buscarUltimaFolhaDoTipo(tipoFolhaId);
+            } catch (error) {
+                console.error(error);
+                if (sessaoExpirou(error)) return;
+            }
+
+            // O usuário pode ter trocado o tipo enquanto a busca acontecia.
+            if (select.value !== tipoFolhaId) return;
+
+            const itens = folha?.items || [];
+            ['P', 'D'].forEach(tipo => {
+                document.getElementById(`folha-itens-${tipo}`).innerHTML = '';
+            });
+
+            if (itens.length) {
+                itens.forEach(item => adicionarItemFolha(item.tipoItem?.tipo === 'D' ? 'D' : 'P', item.tipoItem?.id));
+                origem.textContent = `Itens da folha de ${folha.dataPagamento}. Preencha os valores e remova o que não se aplica.`;
+            } else {
+                adicionarItemFolha('P');
+                adicionarItemFolha('D');
+                origem.textContent = folha === null ? 'Nenhuma folha anterior deste tipo.' : '';
+            }
+
+            atualizarTotaisFolha();
+        }
+
+        async function abrirNovaFolha() {
+            esconderAlertaSalario();
+            clearDashboardError();
+            toggleDashboardLoading(true);
+
+            try {
+                await carregarTiposSalario();
+            } catch (error) {
+                console.error(error);
+                if (!sessaoExpirou(error)) {
+                    setDashboardError(error.message || 'Não foi possível carregar os tipos de folha.');
+                }
+                return;
+            } finally {
+                toggleDashboardLoading(false);
+            }
+
+            const form = document.getElementById('form-nova-folha');
+            form.reset();
+            form.querySelectorAll('[data-tipo]').forEach(campo => marcarCampo(campo, null));
+
+            document.getElementById('folha-tipoFolha').innerHTML =
+                '<option value="">Selecione o tipo</option>' +
+                tiposSalario.folha.map(tipo => `<option value="${tipo.id}">${escapeHtml(tipo.descricao)}</option>`).join('');
+
+            ['P', 'D'].forEach(tipo => {
+                document.getElementById(`folha-itens-${tipo}`).innerHTML = '';
+                adicionarItemFolha(tipo);
+            });
+
+            document.getElementById('folha-itens-origem').textContent = '';
+            esconderAlertaFolha();
+            atualizarTotaisFolha();
+
+            const modalElement = document.getElementById('modal-nova-folha');
+            modalElement.addEventListener('shown.bs.modal', () => document.getElementById('folha-dataPagamento').focus(), { once: true });
+            bootstrap.Modal.getOrCreateInstance(modalElement).show();
+        }
+
+        function validarFormularioFolha() {
+            let primeiroInvalido = null;
+
+            function marcar(campo, mensagem) {
+                marcarCampo(campo, mensagem);
+                if (mensagem && !primeiroInvalido) primeiroInvalido = campo;
+            }
+
+            ['folha-dataPagamento', 'folha-tipoFolha'].forEach(id => {
+                const campo = document.getElementById(id);
+                marcar(campo, validarCampo(campo));
+            });
+
+            document.querySelectorAll('#form-nova-folha .folha-item').forEach(linha => {
+                const vazia = linhaFolhaVazia(linha);
+                linha.querySelectorAll('[data-campo]').forEach(campo => marcar(campo, vazia ? null : validarCampo(campo)));
+            });
+
+            if (primeiroInvalido) {
+                primeiroInvalido.focus();
+                return false;
+            }
+
+            if (!linhasFolhaPreenchidas('P').length) {
+                mostrarAlertaFolha('Informe ao menos um provento.');
+                return false;
+            }
+
+            return true;
+        }
+
+        async function salvarFolha() {
+            esconderAlertaFolha();
+            if (!validarFormularioFolha()) return;
+
+            const selectTipo = document.getElementById('folha-tipoFolha');
+            const dataPagamento = document.getElementById('folha-dataPagamento').value.trim();
+            const tipoFolha = selectTipo.options[selectTipo.selectedIndex].text;
+
+            const itens = ['P', 'D'].flatMap(tipo => linhasFolhaPreenchidas(tipo).map(linha => ({
+                tipoItemId: Number(campoDaLinha(linha, 'tipoItemId').value),
+                valor: campoDaLinha(linha, 'valor').value.trim(),
+                // As folhas já gravadas usam "0,00" quando o item não tem unidade.
+                unidade: campoDaLinha(linha, 'unidade').value.trim() || '0,00'
+            })));
+
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-nova-folha'));
+            const botaoSalvar = document.getElementById('folha-salvar');
+            botaoSalvar.disabled = true;
+            botaoSalvar.textContent = 'Salvando...';
+
+            try {
+                const folha = await apiRequest({
+                    url: SALARIO_FOLHA_URL,
+                    method: 'POST',
+                    body: { dataPagamento, tipoFolhaId: Number(selectTipo.value), itens }
+                });
+
+                modal.hide();
+
+                // Mostra o ano da folha nova, que pode não ser o selecionado; se for um
+                // ano novo, o backend já criou o registro e ele vem no GET /ano.
+                salvarAnoSalario(dataPagamento.slice(6));
+
+                const liquido = folha?.totalLiquido != null
+                    ? formatarMoedaBR(parseMoedaBR(folha.totalLiquido))
+                    : document.getElementById('folha-total-liquido').textContent;
+                mostrarAlertaSalario(`Folha de ${dataPagamento} (${tipoFolha}) cadastrada. Líquido: ${liquido}.`);
+
+                await carregarSomenteSalario();
+            } catch (error) {
+                console.error(error);
+
+                if (sessaoExpirou(error)) {
+                    modal.hide();
+                    return;
+                }
+
+                mostrarAlertaFolha(error.message || 'Não foi possível salvar a folha.');
             } finally {
                 botaoSalvar.disabled = false;
                 botaoSalvar.textContent = 'Salvar';
@@ -4035,30 +4464,60 @@
             await salvarAcompanhamento();
         });
 
-        document.getElementById('form-novo-acompanhamento').addEventListener('input', function(event) {
-            const input = event.target;
+        // Máscaras e validação campo a campo valem para os dois formulários de cadastro.
+        ['form-novo-acompanhamento', 'form-nova-folha'].forEach(idFormulario => {
+            const form = document.getElementById(idFormulario);
 
-            if (input.dataset.tipo === 'data') {
-                input.value = mascararDataBR(input.value);
-            } else if (input.dataset.tipo === 'moeda') {
-                input.value = mascararMoedaBR(input.value);
-            }
+            form.addEventListener('input', function(event) {
+                const input = event.target;
 
-            // Depois do primeiro erro, revalida a cada tecla para o aviso sumir assim que corrigir.
-            if (input.classList.contains('is-invalid')) {
-                marcarCampoAcompanhamento(input, validarCampoAcompanhamento(input));
-            }
+                if (input.dataset.tipo === 'data') {
+                    input.value = mascararDataBR(input.value);
+                } else if (input.dataset.tipo?.startsWith('moeda')) {
+                    input.value = mascararMoedaBR(input.value);
+                }
+
+                // Depois do primeiro erro, revalida a cada tecla para o aviso sumir assim que corrigir.
+                if (input.classList.contains('is-invalid')) {
+                    marcarCampo(input, validarCampo(input));
+                }
+            });
+
+            form.addEventListener('focusout', function(event) {
+                const input = event.target;
+                if (!input.dataset?.tipo || !input.value.trim()) return;
+
+                let mensagem = validarCampo(input);
+                if (!mensagem && input.id === 'acompanhamento-fim') {
+                    mensagem = validarPeriodoAcompanhamento();
+                }
+                marcarCampo(input, mensagem);
+            });
         });
 
-        document.getElementById('form-novo-acompanhamento').addEventListener('focusout', function(event) {
-            const input = event.target;
-            if (!input.dataset?.tipo || !input.value.trim()) return;
+        document.getElementById('btn-nova-folha').addEventListener('click', abrirNovaFolha);
 
-            let mensagem = validarCampoAcompanhamento(input);
-            if (!mensagem && input.id === 'acompanhamento-fim') {
-                mensagem = validarPeriodoAcompanhamento();
+        document.getElementById('form-nova-folha').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            await salvarFolha();
+        });
+
+        document.getElementById('form-nova-folha').addEventListener('input', atualizarTotaisFolha);
+
+        document.getElementById('folha-tipoFolha').addEventListener('change', preencherItensDaUltimaFolha);
+
+        document.getElementById('form-nova-folha').addEventListener('click', function(event) {
+            const remover = event.target.closest('[data-remover-item]');
+            if (remover) {
+                remover.closest('.folha-item').remove();
+                atualizarTotaisFolha();
+                return;
             }
-            marcarCampoAcompanhamento(input, mensagem);
+
+            const adicionar = event.target.closest('[data-adicionar-item]');
+            if (adicionar) {
+                adicionarItemFolha(adicionar.dataset.adicionarItem).querySelector('select').focus();
+            }
         });
 
         function calcularAnosEMeses(dataStr) {
@@ -4174,12 +4633,6 @@
 
             renderizarCardsTiposFolhaLiquido([]);
             renderizarCardsTiposFolhaProventos([]);
-
-            const anoInicial = obterAnoSalario();
-            const selectAno = document.getElementById('salario-ano');
-            if (selectAno) {
-                selectAno.value = anoInicial;
-            }
 
             const accessToken = obterAccessToken();
             const refreshToken = obterRefreshToken();
