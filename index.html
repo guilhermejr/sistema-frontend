@@ -129,6 +129,19 @@
             display: none !important;
         }
 
+        /* O espaço da mensagem de erro fica sempre reservado. Se ela só aparecesse
+           no erro, o blur do campo ao clicar em Salvar empurraria o botão para
+           baixo entre o mousedown e o mouseup, e o clique se perderia. */
+        #form-novo-acompanhamento .invalid-feedback {
+            display: block;
+            min-height: 1.3rem;
+            margin-top: 0.15rem;
+            /* Uma linha sempre: em tela muito estreita corta com reticências em vez de crescer. */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         .nav-tabs .nav-link {
             border-radius: 12px 12px 0 0;
             font-weight: 600;
@@ -340,6 +353,14 @@
         <div class="tab-content">
             <!-- ABA ENERGIA -->
             <div class="tab-pane fade" id="tab-energia" role="tabpanel" aria-labelledby="energia-tab">
+
+                <div id="energia-alerta" class="alert hidden" role="alert"></div>
+
+                <div class="d-flex justify-content-end mb-3">
+                    <button id="btn-novo-acompanhamento" class="btn btn-primary" type="button">
+                        Novo acompanhamento
+                    </button>
+                </div>
 
                 <div class="row mb-4">
                     <div class="col-12">
@@ -942,6 +963,92 @@
         </div>
     </div>
 
+    <!-- MODAL NOVO ACOMPANHAMENTO DE ENERGIA -->
+    <div class="modal fade" id="modal-novo-acompanhamento" tabindex="-1" aria-labelledby="modal-novo-acompanhamento-label" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <form class="modal-content" id="form-novo-acompanhamento" novalidate>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-novo-acompanhamento-label">Novo acompanhamento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="acompanhamento-alerta" class="alert alert-danger hidden" role="alert"></div>
+
+                    <h6 class="text-muted">Período da conta</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <label for="acompanhamento-inicio" class="form-label">Início</label>
+                            <input type="text" class="form-control" id="acompanhamento-inicio" name="inicio" data-tipo="data" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-6">
+                            <label for="acompanhamento-fim" class="form-label">Fim</label>
+                            <input type="text" class="form-control" id="acompanhamento-fim" name="fim" data-tipo="data" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                    </div>
+
+                    <h6 class="text-muted">Energia (kWh)</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <label for="acompanhamento-energiaInjetada" class="form-label">Injetada</label>
+                            <input type="text" class="form-control" id="acompanhamento-energiaInjetada" name="energiaInjetada" data-tipo="kwh" data-minimo="0" inputmode="numeric" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-6">
+                            <label for="acompanhamento-energiaConsumidaConcessionaria" class="form-label">Consumida da concessionária</label>
+                            <input type="text" class="form-control" id="acompanhamento-energiaConsumidaConcessionaria" name="energiaConsumidaConcessionaria" data-tipo="kwh" data-minimo="1" inputmode="numeric" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                    </div>
+
+                    <h6 class="text-muted">Valores (R$)</h6>
+                    <div class="row g-3">
+                        <div class="col-6 col-md-3">
+                            <label for="acompanhamento-tusd" class="form-label">TUSD</label>
+                            <input type="text" class="form-control" id="acompanhamento-tusd" name="tusd" data-tipo="moeda" placeholder="0,00" inputmode="numeric" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label for="acompanhamento-te" class="form-label">TE</label>
+                            <input type="text" class="form-control" id="acompanhamento-te" name="te" data-tipo="moeda" placeholder="0,00" inputmode="numeric" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label for="acompanhamento-bandeira" class="form-label">Bandeira</label>
+                            <input type="text" class="form-control" id="acompanhamento-bandeira" name="bandeira" data-tipo="moeda" placeholder="0,00" inputmode="numeric" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label for="acompanhamento-iluminacaoPublica" class="form-label">Iluminação pública</label>
+                            <input type="text" class="form-control" id="acompanhamento-iluminacaoPublica" name="iluminacaoPublica" data-tipo="moeda" placeholder="0,00" inputmode="numeric" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <label for="acompanhamento-desconto" class="form-label">Desconto</label>
+                            <input type="text" class="form-control" id="acompanhamento-desconto" name="desconto" data-tipo="moeda" placeholder="0,00" inputmode="numeric" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <label for="acompanhamento-multa" class="form-label">Multa</label>
+                            <input type="text" class="form-control" id="acompanhamento-multa" name="multa" data-tipo="moeda" placeholder="0,00" inputmode="numeric" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <label for="acompanhamento-juros" class="form-label">Juros</label>
+                            <input type="text" class="form-control" id="acompanhamento-juros" name="juros" data-tipo="moeda" placeholder="0,00" inputmode="numeric" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="acompanhamento-salvar">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         Chart.register(ChartDataLabels);
 
@@ -965,6 +1072,8 @@
 
         const ENERGIA_BASE_URL = `${API_BASE}/energia-service/acompanhamentos/`;
         const ENERGIA_TOTAL_URL = `${API_BASE}/energia-service/total`;
+        // Sem a barra final: o Spring Boot 4 não casa "/acompanhamentos/" com o @PostMapping.
+        const ENERGIA_ACOMPANHAMENTOS_URL = `${API_BASE}/energia-service/acompanhamentos`;
 
         const SALARIO_BASE_URL = `${API_BASE}/salario-service/folha/ano/`;
         const SALARIO_DETALHE_URL = `${API_BASE}/salario-service/folha/`;
@@ -2535,6 +2644,8 @@
                 }
             }
 
+            ultimoFimAcompanhamento = contaUltimoMes?.fim || null;
+
             let texto = 'Desde o início do contrato,';
             if (contaUltimoMes?.fim) {
                 texto += ` calculado até ${formatarData(contaUltimoMes.fim)}`;
@@ -2790,6 +2901,247 @@
                 setDashboardError(error.message || 'Erro ao carregar salário.');
             } finally {
                 toggleDashboardLoading(false);
+            }
+        }
+
+        async function carregarSomenteEnergia() {
+            clearDashboardError();
+            toggleDashboardLoading(true);
+
+            try {
+                await carregarEnergiaDashboard();
+            } catch (error) {
+                console.error(error);
+
+                if (
+                    String(error.message || '').includes('Sessão expirada') ||
+                    String(error.message || '').includes('autenticado')
+                ) {
+                    limparSessaoCompleta();
+                    mostrarLogin();
+                    setLoginError('Sua sessão expirou. Faça login novamente.');
+                    return;
+                }
+
+                setDashboardError(error.message || 'Erro ao carregar energia.');
+            } finally {
+                toggleDashboardLoading(false);
+            }
+        }
+
+        // ============================================
+        // NOVO ACOMPANHAMENTO DE ENERGIA
+        // ============================================
+
+        // As regras abaixo espelham o AcompanhamentoRequest do energia-service
+        // (@DataBrasil, @ValorMonetario, @PositiveOrZero/@Positive), para o erro
+        // aparecer no campo antes do envio. As que dependem do banco (data do
+        // último processamento da geração) continuam só no backend.
+
+        // Mesmo regex do ValorMonetarioValidation: "1.234,56", "1234,56", "0", ",5".
+        // "yyyy-MM-dd" do último acompanhamento (contaultimomes), guardado a cada
+        // carga da aba Energia; a próxima conta começa no dia seguinte.
+        let ultimoFimAcompanhamento = null;
+
+        const REGEX_VALOR_MONETARIO = /^([1-9]\d{0,2}(\.\d{3})*(,\d{0,2})?|[1-9]\d*(,\d{0,2})?|0(,\d{0,2})?|(,\d{1,2})?)$/;
+
+        function mostrarAlertaEnergia(mensagem, tipo = 'success') {
+            const alerta = document.getElementById('energia-alerta');
+            alerta.className = `alert alert-${tipo}`;
+            alerta.textContent = mensagem;
+            show('energia-alerta');
+        }
+
+        function esconderAlertaEnergia() {
+            const alerta = document.getElementById('energia-alerta');
+            alerta.textContent = '';
+            hide('energia-alerta');
+        }
+
+        function mostrarAlertaAcompanhamento(mensagem) {
+            const alerta = document.getElementById('acompanhamento-alerta');
+            alerta.textContent = mensagem;
+            show('acompanhamento-alerta');
+
+            // O alerta fica no topo do modal; no celular o usuário está lá embaixo, no Salvar.
+            alerta.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function esconderAlertaAcompanhamento() {
+            document.getElementById('acompanhamento-alerta').textContent = '';
+            hide('acompanhamento-alerta');
+        }
+
+        // Equivale ao "dd/MM/uuuu" com ResolverStyle.STRICT do DataBrasilValidation:
+        // 31/02 e 29/02 de ano não bissexto são recusados.
+        function parseDataBR(valor) {
+            const partes = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(valor);
+            if (!partes) return null;
+
+            const [, dia, mes, ano] = partes.map(Number);
+            const data = new Date(ano, mes - 1, dia);
+
+            if (data.getFullYear() !== ano || data.getMonth() !== mes - 1 || data.getDate() !== dia) {
+                return null;
+            }
+
+            return data;
+        }
+
+        // Coloca as barras enquanto digita: "20082026" vira "20/08/2026".
+        function mascararDataBR(valor) {
+            return valor
+                .replace(/\D/g, '')
+                .slice(0, 8)
+                .replace(/^(\d{2})(\d)/, '$1/$2')
+                .replace(/^(\d{2}\/\d{2})(\d)/, '$1/$2');
+        }
+
+        // Máscara de centavos: os dígitos entram pela direita, então "4198" vira
+        // "41,98" e "123456" vira "1.234,56" — sempre no formato do @ValorMonetario.
+        function mascararMoedaBR(valor) {
+            const digitos = valor.replace(/\D/g, '');
+            if (!digitos) return '';
+
+            const centavos = digitos.replace(/^0+/, '').slice(0, 13).padStart(3, '0');
+            const inteiro = centavos.slice(0, -2).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+            return `${inteiro},${centavos.slice(-2)}`;
+        }
+
+        // Mensagens curtas de propósito: precisam caber em uma linha no celular,
+        // senão a quebra muda a altura do formulário (ver CSS do .invalid-feedback).
+        function validarCampoAcompanhamento(input) {
+            const valor = input.value.trim();
+
+            switch (input.dataset.tipo) {
+                case 'data':
+                    if (!valor) return 'Informe a data.';
+                    if (!parseDataBR(valor)) return 'Data inválida.';
+                    return null;
+
+                case 'kwh':
+                    if (!valor) return 'Informe a energia.';
+                    if (!/^\d+$/.test(valor)) return 'Só números inteiros.';
+                    if (Number(valor) < Number(input.dataset.minimo)) return 'Maior que zero.';
+                    return null;
+
+                case 'moeda':
+                    if (!valor) return 'Informe o valor.';
+                    if (!REGEX_VALOR_MONETARIO.test(valor)) return 'Valor inválido.';
+                    return null;
+
+                default:
+                    return null;
+            }
+        }
+
+        // Regras entre campos, só avaliadas quando as duas datas já são válidas.
+        function validarPeriodoAcompanhamento() {
+            const inicio = parseDataBR(document.getElementById('acompanhamento-inicio').value.trim());
+            const fim = parseDataBR(document.getElementById('acompanhamento-fim').value.trim());
+
+            if (!inicio || !fim) return null;
+
+            // O backend recusa só início depois do fim; o mesmo dia é aceito.
+            if (inicio > fim) return 'Anterior ao início.';
+            if (fim > new Date()) return 'Não pode ser futura.';
+            return null;
+        }
+
+        function marcarCampoAcompanhamento(input, mensagem) {
+            input.classList.toggle('is-invalid', Boolean(mensagem));
+            input.nextElementSibling.textContent = mensagem || '';
+        }
+
+        function validarFormularioAcompanhamento() {
+            const form = document.getElementById('form-novo-acompanhamento');
+            let primeiroInvalido = null;
+
+            form.querySelectorAll('input[data-tipo]').forEach(input => {
+                const mensagem = validarCampoAcompanhamento(input);
+                marcarCampoAcompanhamento(input, mensagem);
+                if (mensagem && !primeiroInvalido) primeiroInvalido = input;
+            });
+
+            const inputFim = document.getElementById('acompanhamento-fim');
+            const erroPeriodo = validarPeriodoAcompanhamento();
+            if (erroPeriodo) {
+                marcarCampoAcompanhamento(inputFim, erroPeriodo);
+                if (!primeiroInvalido) primeiroInvalido = inputFim;
+            }
+
+            primeiroInvalido?.focus();
+            return !primeiroInvalido;
+        }
+
+        function abrirNovoAcompanhamento() {
+            const form = document.getElementById('form-novo-acompanhamento');
+            form.reset();
+            form.querySelectorAll('input[data-tipo]').forEach(input => marcarCampoAcompanhamento(input, null));
+
+            // Desconto, multa e juros quase sempre são zero na conta.
+            ['desconto', 'multa', 'juros'].forEach(campo => {
+                document.getElementById(`acompanhamento-${campo}`).value = '0,00';
+            });
+
+            // Com o início preenchido, o cursor já começa no fim.
+            let campoInicial = document.getElementById('acompanhamento-inicio');
+            if (ultimoFimAcompanhamento) {
+                campoInicial.value = proximoDia(formatarData(ultimoFimAcompanhamento));
+                campoInicial = document.getElementById('acompanhamento-fim');
+            }
+
+            esconderAlertaAcompanhamento();
+            esconderAlertaEnergia();
+
+            const modalElement = document.getElementById('modal-novo-acompanhamento');
+            modalElement.addEventListener('shown.bs.modal', () => campoInicial.focus(), { once: true });
+            bootstrap.Modal.getOrCreateInstance(modalElement).show();
+        }
+
+        async function salvarAcompanhamento() {
+            esconderAlertaAcompanhamento();
+            if (!validarFormularioAcompanhamento()) return;
+
+            const form = document.getElementById('form-novo-acompanhamento');
+            const dados = Object.fromEntries(
+                [...new FormData(form)].map(([campo, valor]) => [campo, String(valor).trim()])
+            );
+            dados.energiaInjetada = Number(dados.energiaInjetada);
+            dados.energiaConsumidaConcessionaria = Number(dados.energiaConsumidaConcessionaria);
+
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-novo-acompanhamento'));
+            const botaoSalvar = document.getElementById('acompanhamento-salvar');
+            botaoSalvar.disabled = true;
+            botaoSalvar.textContent = 'Salvando...';
+
+            try {
+                await apiRequest({ url: ENERGIA_ACOMPANHAMENTOS_URL, method: 'POST', body: dados });
+
+                modal.hide();
+                mostrarAlertaEnergia(`Acompanhamento de ${dados.inicio} a ${dados.fim} cadastrado.`, 'success');
+
+                // Os cards e gráficos de Energia dependem do novo acompanhamento.
+                await carregarSomenteEnergia();
+            } catch (error) {
+                console.error(error);
+
+                if (
+                    String(error.message || '').includes('Sessão expirada') ||
+                    String(error.message || '').includes('autenticado')
+                ) {
+                    modal.hide();
+                    limparSessaoCompleta();
+                    mostrarLogin();
+                    setLoginError('Sua sessão expirou. Faça login novamente.');
+                    return;
+                }
+
+                mostrarAlertaAcompanhamento(error.message || 'Não foi possível salvar o acompanhamento.');
+            } finally {
+                botaoSalvar.disabled = false;
+                botaoSalvar.textContent = 'Salvar';
             }
         }
 
@@ -3674,6 +4026,39 @@
         document.getElementById('salario-ano').addEventListener('change', async function() {
             salvarAnoSalario(this.value);
             await carregarSomenteSalario();
+        });
+
+        document.getElementById('btn-novo-acompanhamento').addEventListener('click', abrirNovoAcompanhamento);
+
+        document.getElementById('form-novo-acompanhamento').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            await salvarAcompanhamento();
+        });
+
+        document.getElementById('form-novo-acompanhamento').addEventListener('input', function(event) {
+            const input = event.target;
+
+            if (input.dataset.tipo === 'data') {
+                input.value = mascararDataBR(input.value);
+            } else if (input.dataset.tipo === 'moeda') {
+                input.value = mascararMoedaBR(input.value);
+            }
+
+            // Depois do primeiro erro, revalida a cada tecla para o aviso sumir assim que corrigir.
+            if (input.classList.contains('is-invalid')) {
+                marcarCampoAcompanhamento(input, validarCampoAcompanhamento(input));
+            }
+        });
+
+        document.getElementById('form-novo-acompanhamento').addEventListener('focusout', function(event) {
+            const input = event.target;
+            if (!input.dataset?.tipo || !input.value.trim()) return;
+
+            let mensagem = validarCampoAcompanhamento(input);
+            if (!mensagem && input.id === 'acompanhamento-fim') {
+                mensagem = validarPeriodoAcompanhamento();
+            }
+            marcarCampoAcompanhamento(input, mensagem);
         });
 
         function calcularAnosEMeses(dataStr) {
