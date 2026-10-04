@@ -9,6 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
         :root {
@@ -127,6 +128,21 @@
 
         .hidden {
             display: none !important;
+        }
+
+        .codigo-dois-fatores {
+            font-size: 1.5rem;
+            letter-spacing: 0.4em;
+            text-align: center;
+        }
+
+        #dois-fatores-qrcode img,
+        #dois-fatores-qrcode canvas {
+            margin: 0 auto;
+        }
+
+        #dois-fatores-chave {
+            word-break: break-all;
         }
 
         /* O espaço da mensagem de erro fica sempre reservado. Se ela só aparecesse
@@ -305,6 +321,18 @@
                         </button>
                     </div>
                 </form>
+
+                <form id="login-dois-fatores-form" class="hidden">
+                    <div class="mb-3">
+                        <label for="codigo-dois-fatores" class="form-label">Código do Google Authenticator</label>
+                        <input id="codigo-dois-fatores" type="text" class="form-control codigo-dois-fatores" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" required />
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button id="login-dois-fatores-button" type="submit" class="btn btn-primary">Confirmar</button>
+                        <button type="button" class="btn btn-link" onclick="voltarParaSenha()">Voltar</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -320,6 +348,7 @@
 
                 <div class="d-flex align-items-center gap-2 cabecalho-usuario">
                     <span id="usuario-logado" class="badge text-bg-secondary p-2">Usuário</span>
+                    <button class="btn btn-outline-secondary" onclick="abrirDoisFatores()" title="Autenticação em dois fatores">2FA</button>
                     <button class="btn btn-outline-danger" onclick="logout()">Sair</button>
                 </div>
             </div>
@@ -1049,6 +1078,50 @@
     </div>
 
     <!-- MODAL NOVO ACOMPANHAMENTO DE ENERGIA -->
+    <div class="modal fade" id="modal-dois-fatores" tabindex="-1" aria-labelledby="modal-dois-fatores-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-dois-fatores-label">Autenticação em dois fatores</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="dois-fatores-alerta" class="alert alert-danger hidden" role="alert"></div>
+                    <div id="dois-fatores-sucesso" class="alert alert-success hidden" role="alert"></div>
+
+                    <p id="dois-fatores-carregando" class="text-muted text-center mb-0">Carregando...</p>
+
+                    <div id="dois-fatores-inativo" class="hidden">
+                        <p>Além da senha, o login passa a pedir um código de 6 dígitos gerado pelo Google Authenticator no seu celular.</p>
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-primary" id="dois-fatores-configurar">Configurar</button>
+                        </div>
+                    </div>
+
+                    <form id="dois-fatores-configurando" class="hidden">
+                        <p class="mb-2"><strong>1.</strong> No Google Authenticator, toque em <em>+</em> e leia o QR code:</p>
+                        <div id="dois-fatores-qrcode" class="d-flex justify-content-center my-3"></div>
+                        <p class="small text-muted text-center">Ou escolha <em>Inserir chave de configuração</em> e digite:<br><code id="dois-fatores-chave"></code></p>
+                        <label for="dois-fatores-codigo-ativar" class="form-label"><strong>2.</strong> Digite o código que aparece no app:</label>
+                        <input id="dois-fatores-codigo-ativar" type="text" class="form-control codigo-dois-fatores mb-3" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" />
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" id="dois-fatores-ativar">Ativar</button>
+                        </div>
+                    </form>
+
+                    <form id="dois-fatores-ativo" class="hidden">
+                        <p><span class="badge text-bg-success">Ativo</span> O login pede o código do Google Authenticator.</p>
+                        <label for="dois-fatores-codigo-desativar" class="form-label">Para desativar, digite o código atual do app:</label>
+                        <input id="dois-fatores-codigo-desativar" type="text" class="form-control codigo-dois-fatores mb-3" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" />
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-outline-danger" id="dois-fatores-desativar">Desativar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="modal-novo-acompanhamento" tabindex="-1" aria-labelledby="modal-novo-acompanhamento-label" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <form class="modal-content form-validado" id="form-novo-acompanhamento" novalidate>
@@ -1154,6 +1227,8 @@
 
         const LOGIN_URL = `${API_BASE}/autenticacao-service/login`;
         const REFRESH_URL = `${API_BASE}/autenticacao-service/refresh-token`;
+        const LOGIN_DOIS_FATORES_URL = `${API_BASE}/autenticacao-service/login/dois-fatores`;
+        const DOIS_FATORES_URL = `${API_BASE}/autenticacao-service/dois-fatores`;
 
         const ENERGIA_BASE_URL = `${API_BASE}/energia-service/acompanhamentos/`;
         const ENERGIA_TOTAL_URL = `${API_BASE}/energia-service/total`;
@@ -1193,6 +1268,9 @@
         const SAUDE_METRICAS_MAIS_RECENTES_URL = `${API_BASE}/saude-service/metricas/mais_recente`;
 
         const TOKEN_BUFFER_SECONDS = 60;
+
+        // { email, tokenDoisFatores } entre a senha aceita e o código do autenticador.
+        let loginDoisFatoresPendente = null;
 
         // ============================================
         // ESTADO DOS GRÁFICOS
@@ -1267,6 +1345,7 @@
         }
 
         function mostrarLogin() {
+            voltarParaSenha();
             show('login-section');
             hide('dashboard-section');
         }
@@ -1480,6 +1559,37 @@
             }
 
             const data = await response.json();
+
+            // Com dois fatores ativo a senha não devolve tokens, e sim um token
+            // curto (5 min) que só serve para trocar pelo código em /login/dois-fatores.
+            if (data.doisFatores) {
+                loginDoisFatoresPendente = { email, tokenDoisFatores: data.tokenDoisFatores };
+                return { doisFatores: true };
+            }
+
+            return concluirLogin(data, email);
+        }
+
+        async function confirmarCodigoDoisFatores(codigo) {
+            const { email, tokenDoisFatores } = loginDoisFatoresPendente;
+
+            const response = await fetch(LOGIN_DOIS_FATORES_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ tokenDoisFatores, codigo })
+            });
+
+            if (!response.ok) {
+                throw new Error(await extrairMensagemErro(response));
+            }
+
+            loginDoisFatoresPendente = null;
+            return concluirLogin(await response.json(), email);
+        }
+
+        function concluirLogin(data, email) {
             const accessToken = data.token;
             const refreshToken = data.refreshToken;
 
@@ -1491,6 +1601,22 @@
             salvarUsuario(email);
 
             return { accessToken, refreshToken };
+        }
+
+        function mostrarEtapaCodigo() {
+            hide('login-form');
+            show('login-dois-fatores-form');
+            const campo = document.getElementById('codigo-dois-fatores');
+            campo.value = '';
+            campo.focus();
+        }
+
+        function voltarParaSenha() {
+            loginDoisFatoresPendente = null;
+            clearLoginError();
+            hide('login-dois-fatores-form');
+            show('login-form');
+            document.getElementById('password').value = '';
         }
 
         async function renovarToken() {
@@ -4437,7 +4563,11 @@
 
             try {
                 toggleLoginLoading(true);
-                await fazerLogin(username, password);
+                const resultado = await fazerLogin(username, password);
+                if (resultado.doisFatores) {
+                    mostrarEtapaCodigo();
+                    return;
+                }
                 mostrarDashboard();
                 await carregarDashboard();
             } catch (error) {
@@ -4446,6 +4576,56 @@
             } finally {
                 toggleLoginLoading(false);
             }
+        });
+
+        document.getElementById('login-dois-fatores-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            clearLoginError();
+
+            const campo = document.getElementById('codigo-dois-fatores');
+            const codigo = campo.value.trim();
+            if (!/^\d{6}$/.test(codigo)) {
+                setLoginError('Informe os 6 dígitos do código.');
+                return;
+            }
+
+            const botao = document.getElementById('login-dois-fatores-button');
+            try {
+                botao.disabled = true;
+                botao.textContent = 'Confirmando...';
+                await confirmarCodigoDoisFatores(codigo);
+                mostrarDashboard();
+                await carregarDashboard();
+            } catch (error) {
+                console.error(error);
+                setLoginError(error.message || 'Falha ao confirmar o código.');
+                campo.value = '';
+                campo.focus();
+            } finally {
+                botao.disabled = false;
+                botao.textContent = 'Confirmar';
+            }
+        });
+
+        // Só dígitos nos campos de código, como no app.
+        document.querySelectorAll('.codigo-dois-fatores').forEach(campo => {
+            campo.addEventListener('input', () => {
+                campo.value = campo.value.replace(/\D/g, '').slice(0, 6);
+            });
+        });
+
+        document.getElementById('dois-fatores-configurar').addEventListener('click', configurarDoisFatores);
+
+        document.getElementById('dois-fatores-configurando').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            await enviarCodigoDoisFatores('ativar', 'dois-fatores-codigo-ativar', 'dois-fatores-ativar',
+                'Dois fatores ativado. O próximo login vai pedir o código.');
+        });
+
+        document.getElementById('dois-fatores-ativo').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            await enviarCodigoDoisFatores('desativar', 'dois-fatores-codigo-desativar', 'dois-fatores-desativar',
+                'Dois fatores desativado.');
         });
 
         document.getElementById('btn-recarregar-salario').addEventListener('click', async function() {
@@ -4620,6 +4800,98 @@
 
             await consumirRemedio(idRemedio);
         });
+
+        // ============================================
+        // AUTENTICAÇÃO EM DOIS FATORES
+        // ============================================
+        // Etapas do modal: carregando, inativo (botão Configurar), configurando
+        // (QR code + código para ativar) e ativo (código para desativar).
+        function mostrarEtapaDoisFatores(etapa) {
+            ['carregando', 'inativo', 'configurando', 'ativo'].forEach(nome => {
+                document.getElementById(`dois-fatores-${nome}`).classList.toggle('hidden', nome !== etapa);
+            });
+        }
+
+        function alertaDoisFatores(tipo, mensagem) {
+            hide('dois-fatores-alerta');
+            hide('dois-fatores-sucesso');
+            if (!mensagem) return;
+            const alerta = document.getElementById(`dois-fatores-${tipo}`);
+            alerta.textContent = mensagem;
+            alerta.classList.remove('hidden');
+        }
+
+        async function abrirDoisFatores() {
+            alertaDoisFatores();
+            mostrarEtapaDoisFatores('carregando');
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-dois-fatores')).show();
+
+            try {
+                const status = await apiRequest({ url: DOIS_FATORES_URL });
+                mostrarEtapaDoisFatores(status.ativo ? 'ativo' : 'inativo');
+                document.getElementById('dois-fatores-codigo-desativar').value = '';
+            } catch (error) {
+                console.error(error);
+                alertaDoisFatores('alerta', error.message);
+            }
+        }
+
+        async function configurarDoisFatores() {
+            alertaDoisFatores();
+            const botao = document.getElementById('dois-fatores-configurar');
+            botao.disabled = true;
+
+            try {
+                const configuracao = await apiRequest({ url: `${DOIS_FATORES_URL}/configurar`, method: 'POST' });
+
+                const qrcode = document.getElementById('dois-fatores-qrcode');
+                qrcode.innerHTML = '';
+                new QRCode(qrcode, { text: configuracao.uri, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.M });
+
+                // Em grupos de 4, como o app mostra, para facilitar a digitação.
+                document.getElementById('dois-fatores-chave').textContent = configuracao.segredo.match(/.{1,4}/g).join(' ');
+
+                const campo = document.getElementById('dois-fatores-codigo-ativar');
+                campo.value = '';
+                mostrarEtapaDoisFatores('configurando');
+                campo.focus();
+            } catch (error) {
+                console.error(error);
+                alertaDoisFatores('alerta', error.message);
+            } finally {
+                botao.disabled = false;
+            }
+        }
+
+        async function enviarCodigoDoisFatores(acao, idCampo, idBotao, mensagemSucesso) {
+            alertaDoisFatores();
+            const campo = document.getElementById(idCampo);
+            const codigo = campo.value.trim();
+
+            if (!/^\d{6}$/.test(codigo)) {
+                alertaDoisFatores('alerta', 'Informe os 6 dígitos do código.');
+                campo.focus();
+                return;
+            }
+
+            const botao = document.getElementById(idBotao);
+            botao.disabled = true;
+
+            try {
+                await apiRequest({ url: `${DOIS_FATORES_URL}/${acao}`, method: 'POST', body: { codigo } });
+                mostrarEtapaDoisFatores(acao === 'ativar' ? 'ativo' : 'inativo');
+                document.getElementById('dois-fatores-qrcode').innerHTML = '';
+                document.getElementById('dois-fatores-codigo-desativar').value = '';
+                alertaDoisFatores('sucesso', mensagemSucesso);
+            } catch (error) {
+                console.error(error);
+                alertaDoisFatores('alerta', error.message);
+                campo.value = '';
+                campo.focus();
+            } finally {
+                botao.disabled = false;
+            }
+        }
 
         // ============================================
         // INICIALIZAÇÃO

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A single-page dashboard (Saúde, Energia, Salário, Supermercado, Remédios) for a personal microservices system. The **entire application is `index.html`** — markup, CSS in one `<style>` block, and all JavaScript in one `<script>` block at the end of `<body>`. There is no build step, no bundler, no framework, no `package.json`, and no test suite. Dependencies (Bootstrap 5, Chart.js, `chartjs-plugin-datalabels`) are loaded from CDNs in `<head>`.
+A single-page dashboard (Saúde, Energia, Salário, Supermercado, Remédios) for a personal microservices system. The **entire application is `index.html`** — markup, CSS in one `<style>` block, and all JavaScript in one `<script>` block at the end of `<body>`. There is no build step, no bundler, no framework, no `package.json`, and no test suite. Dependencies (Bootstrap 5, Chart.js, `chartjs-plugin-datalabels`, `qrcodejs`) are loaded from CDNs in `<head>`.
 
 ## Running / developing
 
@@ -27,7 +27,7 @@ docker compose up -d
 
 The gateway fronts several Spring services; this frontend calls six, all under `API_BASE`:
 
-- `autenticacao-service` — `login` and `refresh-token`
+- `autenticacao-service` — `login`, `login/dois-fatores`, `refresh-token` and `dois-fatores/*` (status, configurar, ativar, desativar)
 - `energia-service` — `acompanhamentos/*` endpoints (solar generation/consumption/balance), `total` and `POST acompanhamentos` (new monthly bill)
 - `salario-service` — `ano` (years with payrolls), `folha/ano/{ano}` (payroll for a year), `folha/{id}` (detail with line items), `tipo-folha`, `tipo-item/P` / `tipo-item/D` and `POST folha` (new payroll)
 - `saude-service` — `treinos/*` and `metricas/*` (weekly/moving-average health series)
@@ -41,6 +41,8 @@ Sibling repos for these live at `../sistema-*-service`.
 Read these concerns together; they span the whole `<script>`:
 
 - **Auth + auto-refresh.** `apiRequest({url, ...})` is the single entry point for every backend call. It calls `garantirAccessTokenValido()` first (refreshes proactively when the access token is expired or within `TOKEN_BUFFER_SECONDS` of expiry), then retries once on a 401/403 by calling `renovarToken()`. On terminal auth failure it throws `'Sessão expirada'` / `'não autenticado'`, which the loaders catch to force re-login. Tokens and the logged-in username live in `localStorage` (`salvar*`/`obter*`/`remover*` helpers).
+
+- **Two-factor login.** When `POST /login` answers `{ doisFatores: true, tokenDoisFatores }`, `fazerLogin` keeps that in `loginDoisFatoresPendente` and the card swaps `#login-form` for `#login-dois-fatores-form`; `confirmarCodigoDoisFatores` posts the code and `concluirLogin` saves tokens exactly as a plain login does. `mostrarLogin()` always goes back to the password step. The "2FA" button in the header opens `#modal-dois-fatores`, whose four steps (`carregando`, `inativo`, `configurando`, `ativo`) are switched by `mostrarEtapaDoisFatores`; the QR code is drawn client-side by `qrcodejs` from the `otpauth://` URI the service returns. A wrong code at login counts toward the backend's 3-strike account deactivation.
 
 - **Five tabs, five loaders.** `carregarEnergiaDashboard()`, `carregarSalarioDashboard(ano)`, `carregarSaudeDashboard()` and `carregarSupermercadoDashboard(pagina)` and `carregarRemediosDashboard()` each `Promise.all` their endpoints, transform, then build charts or tables. `carregarDashboard()` runs all five; `carregarSomenteSalario()` reloads just the Salário tab when the year `<select>` changes (year is persisted in `localStorage`). The year options are not hard-coded: `carregarAnosSalario()` builds them from `GET salario-service/ano` (the service creates a year when its first payroll is saved), keeps the saved year if it still exists and otherwise picks the most recent; both `carregarDashboard()` and `carregarSomenteSalario()` call it before loading payrolls, and `carregarSomenteSupermercado(pagina)` reloads just the Supermercado table when a pagination button is clicked.
 
