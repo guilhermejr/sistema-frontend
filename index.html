@@ -1478,7 +1478,7 @@
                         </div>
                         <div class="col-6 hidden" id="gl-parcelas-grupo">
                             <label for="gl-parcelas" class="form-label">Parcelas</label>
-                            <input type="text" class="form-control" id="gl-parcelas" data-tipo="inteiro" data-minimo="2" data-maximo="120" inputmode="numeric" maxlength="3" autocomplete="off">
+                            <input type="number" class="form-control" id="gl-parcelas" data-tipo="inteiro" data-minimo="2" data-maximo="120" min="2" max="120" step="1" inputmode="numeric" autocomplete="off">
                             <div class="invalid-feedback"></div>
                         </div>
 
@@ -6652,6 +6652,13 @@
             if (['gl-valor', 'gl-parcelas', 'gl-data'].includes(event.target.id)) atualizarFormLancamentoGastos();
         });
         document.getElementById('gl-excluir').addEventListener('click', excluirLancamentoGastos);
+        // Ao escolher Parcelada o campo já vem com o mínimo, para só ajustar nas setas. Só
+        // na troca da opção: se fosse a cada atualização, apagar para digitar "12" voltaria o 2.
+        document.getElementById('gl-repeticao-parcelada').addEventListener('change', function() {
+            const parcelas = document.getElementById('gl-parcelas');
+            if (!parcelas.value) parcelas.value = '2';
+            atualizarFormLancamentoGastos();
+        });
         document.getElementById('modal-gastos-lancamento').addEventListener('hidden.bs.modal', function() {
             const retorno = gastosLancamento?.retorno;
             if (!retorno) return;
