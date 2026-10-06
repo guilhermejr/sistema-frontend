@@ -6081,7 +6081,7 @@
                 renderizarFaturaGastos(await apiRequest({ url }));
             } catch (error) {
                 console.error(error);
-                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gf-alerta', error.message || 'Não foi possível carregar a fatura.');
+                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gf-alerta', error.message || 'Não foi possível carregar a fatura.', 'danger');
             }
         }
 
@@ -6093,13 +6093,20 @@
             document.getElementById('gf-titulo').textContent = `Fatura ${fatura.cartao.nome}`;
             document.getElementById('gf-mes').textContent = nomeMes(ano, mes);
 
+            // Compra ainda não paga pode ir para a próxima fatura; a que já foi transferida
+            // pode voltar uma (o backend recusa ir antes da fatura natural da compra).
+            const acoesFatura = l => l.realizado
+                ? '<span class="badge text-bg-success">Paga</span>'
+                : `${l.faturaTransferida ? `<button type="button" class="btn btn-sm btn-outline-secondary" data-mover-fatura="${l.id}" data-delta="-1" title="Voltar para a fatura anterior">&lsaquo; Anterior</button>` : ''}
+                   <button type="button" class="btn btn-sm btn-outline-secondary" data-mover-fatura="${l.id}" data-delta="1" title="Transferir para a próxima fatura">Próxima &rsaquo;</button>`;
+
             const linhas = fatura.lancamentos.map(l => `
                 <tr class="item-clicavel" data-editar-lancamento="${l.id}">
                     <td>${formatarDataISO(l.data)}</td>
-                    <td>${descricaoComParcela(l)}</td>
+                    <td>${descricaoComParcela(l)}${l.faturaTransferida ? ' <span class="badge text-bg-light border">transferida</span>' : ''}</td>
                     <td>${escapeHtml(l.categoria?.descricao || '')}</td>
-                    <td class="text-end ${l.tipo === 'R' ? 'valor-receita' : ''}">${l.tipo === 'R' ? '−' : ''}${formatarMoedaBR(l.valor)}</td>
-                    <td class="text-center">${l.realizado ? '<span class="badge text-bg-success">Paga</span>' : ''}</td>
+                    <td class="text-end text-nowrap ${l.tipo === 'R' ? 'valor-receita' : ''}">${l.tipo === 'R' ? '−' : ''}${formatarMoedaBR(l.valor)}</td>
+                    <td class="text-end text-nowrap">${acoesFatura(l)}</td>
                 </tr>`).join('');
 
             const pagamentos = fatura.pagamentos.map(p => `
@@ -6163,9 +6170,32 @@
                 await recarregarGastos();
             } catch (error) {
                 console.error(error);
-                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gf-alerta', error.message || 'Não foi possível pagar a fatura.');
+                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gf-alerta', error.message || 'Não foi possível pagar a fatura.', 'danger');
             } finally {
                 botao.disabled = false;
+            }
+        }
+
+        async function moverFaturaGastos(botao) {
+            const destino = somarMeses(gastosFatura.ano, gastosFatura.mes, Number(botao.dataset.delta));
+            const lancamento = gastosFatura.dados.lancamentos.find(l => String(l.id) === botao.dataset.moverFatura);
+            esconderAlertaModalGastos('gf-alerta');
+            botao.disabled = true;
+
+            try {
+                await apiRequest({
+                    url: `${GASTOS_URL}/lancamentos/${botao.dataset.moverFatura}/fatura`,
+                    method: 'PUT',
+                    body: destino
+                });
+                await carregarFaturaGastos();
+                mostrarAlertaModalGastos('gf-alerta',
+                    `"${lancamento?.descricao || 'Compra'}" foi para a fatura de ${nomeMes(destino.ano, destino.mes)}.`, 'success');
+                await recarregarGastos();
+            } catch (error) {
+                console.error(error);
+                botao.disabled = false;
+                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gf-alerta', error.message || 'Não foi possível transferir.', 'danger');
             }
         }
 
@@ -6178,7 +6208,7 @@
                 await recarregarGastos();
             } catch (error) {
                 console.error(error);
-                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gf-alerta', error.message || 'Não foi possível estornar.');
+                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gf-alerta', error.message || 'Não foi possível estornar.', 'danger');
             }
         }
 
@@ -6547,6 +6577,12 @@
                 document.getElementById('gf-conteudo').innerHTML = '<p class="text-muted text-center my-3">Carregando...</p>';
                 document.getElementById('form-gastos-pagamento').classList.add('hidden');
                 carregarFaturaGastos();
+                return;
+            }
+
+            const mover = event.target.closest('[data-mover-fatura]');
+            if (mover) {
+                moverFaturaGastos(mover);
                 return;
             }
 
