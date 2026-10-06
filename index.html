@@ -5796,6 +5796,16 @@
             return html;
         }
 
+        // Destino sugerido num lançamento novo: despesa vem no primeiro cartão ativo (o
+        // primeiro da lista); receita, na primeira conta ativa. Sem cartão, a despesa
+        // também vai para a conta.
+        function destinoPadraoGastos(tipo) {
+            const cartao = gastosDados.cartoes.find(c => c.ativo);
+            const conta = gastosDados.contas.find(c => c.ativo);
+            if (tipo === 'D' && cartao) return `cartao:${cartao.id}`;
+            return conta ? `conta:${conta.id}` : '';
+        }
+
         // Só contas ativas, com valor numérico — para movimentações e pagamento de fatura.
         function opcoesContasGastos(atualId = null) {
             return '<option value="">Escolha...</option>' + gastosDados.contas
@@ -5917,7 +5927,7 @@
 
             const destino = lancamento
                 ? (lancamento.cartao ? `cartao:${lancamento.cartao.id}` : `conta:${lancamento.conta.id}`)
-                : (gastosDados.contas.find(c => c.ativo) ? `conta:${gastosDados.contas.find(c => c.ativo).id}` : '');
+                : destinoPadraoGastos(tipo);
 
             const selectDestino = document.getElementById('gl-destino');
             selectDestino.innerHTML = opcoesDestinoGastos(destino);
