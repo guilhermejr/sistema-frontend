@@ -306,24 +306,39 @@
             vertical-align: -2px;
         }
 
-        /* O seletor nativo fica invisível, ancorado no botão do calendário: o
-           showPicker() abre o mini calendário do navegador, e o valor escolhido
-           volta para o campo de texto com a máscara dd/mm/aaaa. Não pode ser
-           display:none, senão alguns navegadores recusam abrir o seletor. */
         .campo-data {
             position: relative;
         }
 
-        .seletor-data-nativo {
-            position: absolute;
-            right: 0;
-            top: 2.2rem;
-            width: 1px;
-            height: 1px;
-            opacity: 0;
-            pointer-events: none;
-            border: 0;
-            padding: 0;
+        /* Mini calendário próprio em vez do seletor nativo: o do Safari não fecha ao
+           escolher o dia. É position:fixed (coordenadas calculadas no JS) para não ser
+           cortado pelo corpo rolável do modal. */
+        .mini-calendario {
+            position: fixed;
+            z-index: 1060;
+            width: 16.5rem;
+            padding: 0.5rem;
+            background-color: #fff;
+            border: 1px solid var(--bs-border-color);
+            border-radius: 12px;
+            box-shadow: var(--shadow-strong);
+        }
+
+        .grade-calendario {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            text-align: center;
+        }
+
+        .grade-calendario .btn {
+            padding: 0.25rem 0;
+        }
+
+        @media (pointer: coarse) {
+            .grade-calendario .btn {
+                min-height: 36px;
+            }
         }
 
         .lista-gastos .list-group-item {
@@ -436,7 +451,12 @@
         <!-- Abas -->
         <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
           <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="saude-tab" data-bs-toggle="tab" data-bs-target="#tab-saude" type="button" role="tab">
+            <button class="nav-link active" id="gastos-tab" data-bs-toggle="tab" data-bs-target="#tab-gastos" type="button" role="tab">
+                Gastos
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="saude-tab" data-bs-toggle="tab" data-bs-target="#tab-saude" type="button" role="tab">
                 Saúde
             </button>
           </li>
@@ -458,11 +478,6 @@
           <li class="nav-item" role="presentation">
             <button class="nav-link" id="remedios-tab" data-bs-toggle="tab" data-bs-target="#tab-remedios" type="button" role="tab">
                 Remédios
-            </button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="gastos-tab" data-bs-toggle="tab" data-bs-target="#tab-gastos" type="button" role="tab">
-                Gastos
             </button>
           </li>
         </ul>
@@ -848,7 +863,7 @@
 
 
             <!-- ABA GASTOS -->
-            <div class="tab-pane fade" id="tab-gastos" role="tabpanel" aria-labelledby="gastos-tab">
+            <div class="tab-pane fade show active" id="tab-gastos" role="tabpanel" aria-labelledby="gastos-tab">
 
                 <div id="gastos-alerta" class="alert hidden" role="alert"></div>
 
@@ -967,7 +982,7 @@
             </div>
 
             <!-- ABA SAÚDE -->
-            <div class="tab-pane fade show active" id="tab-saude" role="tabpanel" aria-labelledby="saude-tab">
+            <div class="tab-pane fade" id="tab-saude" role="tabpanel" aria-labelledby="saude-tab">
                 <div class="row mb-2">
                     <div class="col-12">
                         <h5 class="mb-3" id="titulo-treinos">Treinos</h5>
@@ -1432,9 +1447,9 @@
                             <div class="campo-data">
                                 <div class="input-group">
                                     <input type="text" class="form-control" id="gl-data" data-tipo="data" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10" autocomplete="off">
-                                    <button type="button" class="btn btn-outline-secondary botao-calendario" data-calendario aria-label="Abrir calendário"></button>
+                                    <button type="button" class="btn btn-outline-secondary botao-calendario" data-calendario aria-label="Abrir calendário" aria-expanded="false"></button>
                                 </div>
-                                <input type="date" class="seletor-data-nativo" tabindex="-1" aria-hidden="true">
+                                <div class="mini-calendario hidden" role="dialog" aria-label="Escolher data"></div>
                                 <div class="invalid-feedback"></div>
                             </div>
                         </div>
@@ -1536,9 +1551,9 @@
                             <div class="campo-data">
                                 <div class="input-group">
                                     <input type="text" class="form-control" id="gm-data" data-tipo="data" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10" autocomplete="off">
-                                    <button type="button" class="btn btn-outline-secondary botao-calendario" data-calendario aria-label="Abrir calendário"></button>
+                                    <button type="button" class="btn btn-outline-secondary botao-calendario" data-calendario aria-label="Abrir calendário" aria-expanded="false"></button>
                                 </div>
-                                <input type="date" class="seletor-data-nativo" tabindex="-1" aria-hidden="true">
+                                <div class="mini-calendario hidden" role="dialog" aria-label="Escolher data"></div>
                                 <div class="invalid-feedback"></div>
                             </div>
                         </div>
@@ -1587,9 +1602,9 @@
                             <div class="campo-data">
                                 <div class="input-group">
                                     <input type="text" class="form-control" id="gf-data" data-tipo="data" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10" autocomplete="off">
-                                    <button type="button" class="btn btn-outline-secondary botao-calendario" data-calendario aria-label="Abrir calendário"></button>
+                                    <button type="button" class="btn btn-outline-secondary botao-calendario" data-calendario aria-label="Abrir calendário" aria-expanded="false"></button>
                                 </div>
-                                <input type="date" class="seletor-data-nativo" tabindex="-1" aria-hidden="true">
+                                <div class="mini-calendario hidden" role="dialog" aria-label="Escolher data"></div>
                                 <div class="invalid-feedback"></div>
                             </div>
                         </div>
@@ -5517,11 +5532,6 @@
             return `${doisDigitos(hoje.getDate())}/${doisDigitos(hoje.getMonth() + 1)}/${hoje.getFullYear()}`;
         }
 
-        function brParaISO(valor) {
-            const data = parseDataBR(valor);
-            return data ? `${data.getFullYear()}-${doisDigitos(data.getMonth() + 1)}-${doisDigitos(data.getDate())}` : '';
-        }
-
         // 1234.5 → "1.234,50", o formato que os campos com máscara de moeda esperam.
         function numeroParaMoedaBR(valor) {
             return formatarNumero(valor, 2);
@@ -5798,20 +5808,88 @@
 
         // ---------- calendário
 
-        // O campo de texto continua com a máscara dd/mm/aaaa; o botão abre o seletor
-        // nativo do navegador, e a data escolhida volta para o campo.
+        // O campo de texto continua com a máscara dd/mm/aaaa; o botão abre um mini
+        // calendário próprio (o seletor nativo do Safari não fecha ao escolher o dia).
+        // Ele fecha ao escolher o dia, com Esc, com clique fora e quando o modal fecha.
+
+        const DIAS_SEMANA = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+
+        // { campo, texto, painel, ano, mes } do calendário aberto; só um por vez.
+        let calendarioAberto = null;
+
         function abrirCalendarioGastos(botao) {
             const campo = botao.closest('.campo-data');
-            const texto = campo.querySelector('input[data-tipo="data"]');
-            const nativo = campo.querySelector('.seletor-data-nativo');
-
-            nativo.value = brParaISO(texto.value.trim());
-            try {
-                nativo.showPicker();
-            } catch {
-                nativo.focus();
-                nativo.click();
+            if (calendarioAberto?.campo === campo) {
+                fecharCalendarioGastos();
+                return;
             }
+            fecharCalendarioGastos();
+
+            const texto = campo.querySelector('input[data-tipo="data"]');
+            const base = parseDataBR(texto.value.trim()) || new Date();
+            calendarioAberto = { campo, texto, painel: campo.querySelector('.mini-calendario'), ano: base.getFullYear(), mes: base.getMonth() + 1 };
+
+            renderizarCalendarioGastos();
+            calendarioAberto.painel.classList.remove('hidden');
+            posicionarCalendarioGastos();
+            botao.setAttribute('aria-expanded', 'true');
+        }
+
+        function fecharCalendarioGastos() {
+            if (!calendarioAberto) return;
+            calendarioAberto.painel.classList.add('hidden');
+            calendarioAberto.campo.querySelector('[data-calendario]').setAttribute('aria-expanded', 'false');
+            calendarioAberto = null;
+        }
+
+        // Abaixo do campo, alinhado à direita (no botão); acima quando não cabe embaixo.
+        function posicionarCalendarioGastos() {
+            const { campo, painel } = calendarioAberto;
+            const grupo = campo.querySelector('.input-group').getBoundingClientRect();
+            const largura = painel.offsetWidth;
+            const altura = painel.offsetHeight;
+
+            const esquerda = Math.max(8, Math.min(grupo.right - largura, window.innerWidth - largura - 8));
+            const cabeAbaixo = grupo.bottom + 4 + altura <= window.innerHeight - 8;
+            painel.style.left = `${esquerda}px`;
+            painel.style.top = `${cabeAbaixo ? grupo.bottom + 4 : Math.max(8, grupo.top - 4 - altura)}px`;
+        }
+
+        function renderizarCalendarioGastos() {
+            const { painel, texto, ano, mes } = calendarioAberto;
+            const selecionada = parseDataBR(texto.value.trim());
+            const hoje = new Date();
+            const ehDia = (data, dia) => data && data.getFullYear() === ano && data.getMonth() === mes - 1 && data.getDate() === dia;
+
+            const vazios = '<span></span>'.repeat(new Date(ano, mes - 1, 1).getDay());
+            let dias = '';
+            for (let dia = 1; dia <= new Date(ano, mes, 0).getDate(); dia++) {
+                const classe = ehDia(selecionada, dia) ? 'btn-primary' : ehDia(hoje, dia) ? 'btn-outline-primary' : 'btn-light';
+                dias += `<button type="button" class="btn btn-sm ${classe}" data-cal-dia="${dia}">${dia}</button>`;
+            }
+
+            painel.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <button type="button" class="btn btn-sm btn-light" data-cal-navegar="-1" aria-label="Mês anterior">&lsaquo;</button>
+                    <strong>${MESES[mes - 1]} ${ano}</strong>
+                    <button type="button" class="btn btn-sm btn-light" data-cal-navegar="1" aria-label="Próximo mês">&rsaquo;</button>
+                </div>
+                <div class="grade-calendario">
+                    ${DIAS_SEMANA.map(dia => `<span class="small-muted">${dia}</span>`).join('')}
+                    ${vazios}${dias}
+                </div>
+                <div class="text-end mt-1">
+                    <button type="button" class="btn btn-sm btn-link" data-cal-hoje>Hoje</button>
+                </div>`;
+        }
+
+        function escolherDataGastos(data) {
+            const { texto } = calendarioAberto;
+            texto.value = `${doisDigitos(data.getDate())}/${doisDigitos(data.getMonth() + 1)}/${data.getFullYear()}`;
+            marcarCampo(texto, validarCampo(texto));
+            fecharCalendarioGastos();
+            texto.dispatchEvent(new Event('change', { bubbles: true }));
+            texto.focus();
         }
 
         // ---------- lançamento (despesa/receita)
@@ -6500,18 +6578,46 @@
 
         document.addEventListener('click', function(event) {
             const botao = event.target.closest('[data-calendario]');
-            if (botao) abrirCalendarioGastos(botao);
+            if (botao) {
+                abrirCalendarioGastos(botao);
+                return;
+            }
+            if (!calendarioAberto || !calendarioAberto.painel.contains(event.target)) return;
+
+            const navegar = event.target.closest('[data-cal-navegar]');
+            const dia = event.target.closest('[data-cal-dia]');
+            if (navegar) {
+                const { ano, mes } = somarMeses(calendarioAberto.ano, calendarioAberto.mes, Number(navegar.dataset.calNavegar));
+                Object.assign(calendarioAberto, { ano, mes });
+                renderizarCalendarioGastos();
+                posicionarCalendarioGastos();
+            } else if (dia) {
+                escolherDataGastos(new Date(calendarioAberto.ano, calendarioAberto.mes - 1, Number(dia.dataset.calDia)));
+            } else if (event.target.closest('[data-cal-hoje]')) {
+                escolherDataGastos(new Date());
+            }
         });
 
-        document.addEventListener('change', function(event) {
-            const nativo = event.target;
-            if (!nativo.classList?.contains('seletor-data-nativo') || !nativo.value) return;
-
-            const texto = nativo.closest('.campo-data').querySelector('input[data-tipo="data"]');
-            texto.value = formatarDataISO(nativo.value);
-            marcarCampo(texto, validarCampo(texto));
-            texto.dispatchEvent(new Event('change', { bubbles: true }));
+        // Clique fora fecha. O próprio botão do calendário fica de fora: o click dele alterna.
+        document.addEventListener('pointerdown', function(event) {
+            if (calendarioAberto && !calendarioAberto.painel.contains(event.target) && !event.target.closest('[data-calendario]')) {
+                fecharCalendarioGastos();
+            }
         });
+
+        // Esc fecha só o calendário; sem o stopPropagation, fecharia o modal junto.
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && calendarioAberto) {
+                event.stopPropagation();
+                const texto = calendarioAberto.texto;
+                fecharCalendarioGastos();
+                texto.focus();
+            }
+        }, true);
+
+        document.addEventListener('hide.bs.modal', fecharCalendarioGastos);
+        window.addEventListener('resize', () => calendarioAberto && posicionarCalendarioGastos());
+        document.addEventListener('scroll', () => calendarioAberto && posicionarCalendarioGastos(), true);
 
         document.getElementById('tab-gastos').addEventListener('click', function(event) {
             const alvo = event.target.closest('[data-ocultar], [data-novo-lancamento], [data-fatura-cartao], [data-agenda-lancamento], [data-agenda-fatura]');
