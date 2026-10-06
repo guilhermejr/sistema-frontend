@@ -291,6 +291,76 @@
             color: #6c757d;
             margin-top: 4px;
         }
+
+        /* ---------- Gastos ---------- */
+        .botao-olho {
+            color: #6c757d;
+            line-height: 1;
+            text-decoration: none;
+        }
+
+        .botao-olho svg,
+        .botao-calendario svg {
+            width: 16px;
+            height: 16px;
+            vertical-align: -2px;
+        }
+
+        /* O seletor nativo fica invisível, ancorado no botão do calendário: o
+           showPicker() abre o mini calendário do navegador, e o valor escolhido
+           volta para o campo de texto com a máscara dd/mm/aaaa. Não pode ser
+           display:none, senão alguns navegadores recusam abrir o seletor. */
+        .campo-data {
+            position: relative;
+        }
+
+        .seletor-data-nativo {
+            position: absolute;
+            right: 0;
+            top: 2.2rem;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+            border: 0;
+            padding: 0;
+        }
+
+        .lista-gastos .list-group-item {
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        .item-clicavel {
+            cursor: pointer;
+        }
+
+        @media (hover: hover) {
+            .item-clicavel:hover {
+                background-color: #eef6ff;
+            }
+        }
+
+        .valor-receita {
+            color: var(--bs-success);
+        }
+
+        .valor-despesa {
+            color: var(--bs-danger);
+        }
+
+        .navegacao-mes {
+            min-width: 10rem;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        @media (pointer: coarse) {
+            .gastos-acoes .btn,
+            .navegacao-mes-botao {
+                min-height: 44px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -388,6 +458,11 @@
           <li class="nav-item" role="presentation">
             <button class="nav-link" id="remedios-tab" data-bs-toggle="tab" data-bs-target="#tab-remedios" type="button" role="tab">
                 Remédios
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="gastos-tab" data-bs-toggle="tab" data-bs-target="#tab-gastos" type="button" role="tab">
+                Gastos
             </button>
           </li>
         </ul>
@@ -767,6 +842,126 @@
                         <h5 class="mb-1" id="titulo-remedios-sintoma">Remédios</h5>
                         <div class="item-dica mb-3" id="subtitulo-remedios-sintoma">Selecione um sintoma acima.</div>
                         <div id="remedios-do-sintoma" class="row g-3"></div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- ABA GASTOS -->
+            <div class="tab-pane fade" id="tab-gastos" role="tabpanel" aria-labelledby="gastos-tab">
+
+                <div id="gastos-alerta" class="alert hidden" role="alert"></div>
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <h5 class="mb-0" id="gastos-titulo-mes">Mês atual</h5>
+                    <div class="d-flex flex-wrap gap-2 gastos-acoes">
+                        <button type="button" class="btn btn-danger" data-novo-lancamento="D">Despesa</button>
+                        <button type="button" class="btn btn-success" data-novo-lancamento="R">Receita</button>
+                        <button type="button" class="btn btn-outline-primary" id="btn-gastos-transferencia">Transferência</button>
+                        <button type="button" class="btn btn-outline-secondary" id="btn-gastos-relatorio">Relatório</button>
+                        <button type="button" class="btn btn-outline-secondary" id="btn-gastos-cadastros">Contas e cartões</button>
+                    </div>
+                </div>
+
+                <div class="row row-cols-2 row-cols-md-3 row-cols-xl-5 g-3 mb-4">
+                    <div class="col">
+                        <div class="card card-resumo text-center h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-center align-items-center gap-2">
+                                    <h6 class="text-muted mb-0">Receitas</h6>
+                                    <button type="button" class="btn btn-link btn-sm p-0 botao-olho" data-ocultar="receitas" aria-label="Mostrar ou ocultar receitas"></button>
+                                </div>
+                                <div id="gastos-card-receitas" class="fs-4 fw-bold valor-receita">--</div>
+                                <div id="gastos-card-receitas-detalhe" class="small-muted mt-1">&nbsp;</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card card-resumo text-center h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-center align-items-center gap-2">
+                                    <h6 class="text-muted mb-0">Despesas</h6>
+                                    <button type="button" class="btn btn-link btn-sm p-0 botao-olho" data-ocultar="despesas" aria-label="Mostrar ou ocultar despesas"></button>
+                                </div>
+                                <div id="gastos-card-despesas" class="fs-4 fw-bold valor-despesa">--</div>
+                                <div id="gastos-card-despesas-detalhe" class="small-muted mt-1">&nbsp;</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card card-resumo text-center h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-center align-items-center gap-2">
+                                    <h6 class="text-muted mb-0">Saldo Geral</h6>
+                                    <button type="button" class="btn btn-link btn-sm p-0 botao-olho" data-ocultar="saldoGeral" aria-label="Mostrar ou ocultar saldo geral"></button>
+                                </div>
+                                <div id="gastos-card-saldoGeral" class="fs-4 fw-bold ">--</div>
+                                <div id="gastos-card-saldoGeral-detalhe" class="small-muted mt-1">&nbsp;</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card card-resumo text-center h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-center align-items-center gap-2">
+                                    <h6 class="text-muted mb-0">Saldo Total</h6>
+                                    <button type="button" class="btn btn-link btn-sm p-0 botao-olho" data-ocultar="saldoTotal" aria-label="Mostrar ou ocultar saldo total"></button>
+                                </div>
+                                <div id="gastos-card-saldoTotal" class="fs-4 fw-bold ">--</div>
+                                <div id="gastos-card-saldoTotal-detalhe" class="small-muted mt-1">&nbsp;</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card card-resumo text-center h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-center align-items-center gap-2">
+                                    <h6 class="text-muted mb-0">Faturas</h6>
+                                    <button type="button" class="btn btn-link btn-sm p-0 botao-olho" data-ocultar="faturas" aria-label="Mostrar ou ocultar faturas"></button>
+                                </div>
+                                <div id="gastos-card-faturas" class="fs-4 fw-bold ">--</div>
+                                <div id="gastos-card-faturas-detalhe" class="small-muted mt-1">&nbsp;</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12 col-lg-6">
+                        <div class="card table-card">
+                            <div class="card-body">
+                                <h5 class="mb-1">Contas</h5>
+                                <div class="item-dica mb-2">Contas que somam no Saldo Geral.</div>
+                                <ul id="gastos-contas" class="list-group list-group-flush lista-gastos"></ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <div class="card table-card">
+                            <div class="card-body">
+                                <h5 class="mb-1">Cartões de crédito</h5>
+                                <div class="item-dica mb-2">Fatura atual de cada cartão.</div>
+                                <ul id="gastos-cartoes" class="list-group list-group-flush lista-gastos"></ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <div class="card table-card">
+                            <div class="card-body">
+                                <h5 class="mb-1">Próximos a pagar</h5>
+                                <div class="item-dica mb-2">Despesas pendentes e faturas, atrasadas primeiro.</div>
+                                <ul id="gastos-a-pagar" class="list-group list-group-flush lista-gastos"></ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <div class="card table-card">
+                            <div class="card-body">
+                                <h5 class="mb-1">Próximos a receber</h5>
+                                <div class="item-dica mb-2">Receitas pendentes, atrasadas primeiro.</div>
+                                <ul id="gastos-a-receber" class="list-group list-group-flush lista-gastos"></ul>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1207,6 +1402,351 @@
         </div>
     </div>
 
+    <!-- MODAL LANÇAMENTO DE GASTOS (DESPESA/RECEITA) -->
+    <div class="modal fade" id="modal-gastos-lancamento" tabindex="-1" aria-labelledby="gl-titulo" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <form class="modal-content form-validado" id="form-gastos-lancamento" novalidate>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="gl-titulo">Nova despesa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="gl-alerta" class="alert alert-danger hidden" role="alert"></div>
+                    <div id="gl-aviso-pago" class="alert alert-info hidden" role="status">
+                        Já foi pago na fatura do cartão. Para alterar ou excluir, estorne o pagamento da fatura.
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label for="gl-descricao" class="form-label">Descrição</label>
+                            <input type="text" class="form-control" id="gl-descricao" data-tipo="texto" maxlength="255" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-6">
+                            <label for="gl-valor" class="form-label" id="gl-valor-rotulo">Valor (R$)</label>
+                            <input type="text" class="form-control" id="gl-valor" data-tipo="moeda" placeholder="0,00" inputmode="numeric" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-6">
+                            <label for="gl-data" class="form-label">Data</label>
+                            <div class="campo-data">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="gl-data" data-tipo="data" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10" autocomplete="off">
+                                    <button type="button" class="btn btn-outline-secondary botao-calendario" data-calendario aria-label="Abrir calendário"></button>
+                                </div>
+                                <input type="date" class="seletor-data-nativo" tabindex="-1" aria-hidden="true">
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <label for="gl-destino" class="form-label">Conta/Cartão</label>
+                            <select class="form-select" id="gl-destino" data-tipo="obrigatorio"></select>
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <label for="gl-categoria" class="form-label">Categoria</label>
+                            <select class="form-select" id="gl-categoria" data-tipo="obrigatorio"></select>
+                            <div class="invalid-feedback"></div>
+                        </div>
+
+                        <div class="col-12" id="gl-repeticao-grupo">
+                            <div class="form-label mb-1">Repetição</div>
+                            <div class="btn-group w-100" role="group" aria-label="Repetição">
+                                <input type="radio" class="btn-check" name="gl-repeticao" id="gl-repeticao-unica" value="UNICA" checked>
+                                <label class="btn btn-outline-secondary" for="gl-repeticao-unica">Única</label>
+                                <input type="radio" class="btn-check" name="gl-repeticao" id="gl-repeticao-fixa" value="FIXA">
+                                <label class="btn btn-outline-secondary" for="gl-repeticao-fixa">Fixa mensal</label>
+                                <input type="radio" class="btn-check" name="gl-repeticao" id="gl-repeticao-parcelada" value="PARCELADA">
+                                <label class="btn btn-outline-secondary" for="gl-repeticao-parcelada">Parcelada</label>
+                            </div>
+                            <div class="item-dica" id="gl-repeticao-dica">&nbsp;</div>
+                        </div>
+                        <div class="col-6 hidden" id="gl-parcelas-grupo">
+                            <label for="gl-parcelas" class="form-label">Parcelas</label>
+                            <input type="text" class="form-control" id="gl-parcelas" data-tipo="inteiro" data-minimo="2" data-maximo="120" inputmode="numeric" maxlength="3" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+
+                        <div class="col-12 hidden" id="gl-escopo-grupo">
+                            <div class="form-label mb-1" id="gl-escopo-rotulo">Aplicar a</div>
+                            <div class="btn-group w-100" role="group" aria-label="Alcance da alteração">
+                                <input type="radio" class="btn-check" name="gl-escopo" id="gl-escopo-unico" value="UNICO" checked>
+                                <label class="btn btn-outline-secondary" for="gl-escopo-unico">Só este</label>
+                                <input type="radio" class="btn-check" name="gl-escopo" id="gl-escopo-seguintes" value="SEGUINTES">
+                                <label class="btn btn-outline-secondary" for="gl-escopo-seguintes">Este e os próximos</label>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="gl-realizado">
+                                <label class="form-check-label" for="gl-realizado" id="gl-realizado-rotulo">Pago</label>
+                            </div>
+                            <div class="item-dica hidden" id="gl-realizado-dica">No cartão, o lançamento é dado como pago quando a fatura é paga.</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-danger me-auto hidden" id="gl-excluir">Excluir</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="gl-salvar">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL TRANSFERÊNCIA / DEPÓSITO / SAQUE -->
+    <div class="modal fade" id="modal-gastos-movimentacao" tabindex="-1" aria-labelledby="gm-titulo" aria-hidden="true">
+        <div class="modal-dialog">
+            <form class="modal-content form-validado" id="form-gastos-movimentacao" novalidate>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="gm-titulo">Movimentar conta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="gm-alerta" class="alert alert-danger hidden" role="alert"></div>
+
+                    <div class="btn-group w-100 mb-3" role="group" aria-label="Tipo de movimentação">
+                        <input type="radio" class="btn-check" name="gm-tipo" id="gm-tipo-transferencia" value="TRANSFERENCIA" checked>
+                        <label class="btn btn-outline-primary" for="gm-tipo-transferencia">Transferência</label>
+                        <input type="radio" class="btn-check" name="gm-tipo" id="gm-tipo-deposito" value="DEPOSITO">
+                        <label class="btn btn-outline-primary" for="gm-tipo-deposito">Depósito</label>
+                        <input type="radio" class="btn-check" name="gm-tipo" id="gm-tipo-saque" value="SAQUE">
+                        <label class="btn btn-outline-primary" for="gm-tipo-saque">Saque</label>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-sm-6" id="gm-origem-grupo">
+                            <label for="gm-origem" class="form-label">De</label>
+                            <select class="form-select" id="gm-origem" data-tipo="obrigatorio"></select>
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-12 col-sm-6" id="gm-destino-grupo">
+                            <label for="gm-destino" class="form-label">Para</label>
+                            <select class="form-select" id="gm-destino" data-tipo="obrigatorio"></select>
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-6">
+                            <label for="gm-valor" class="form-label">Valor (R$)</label>
+                            <input type="text" class="form-control" id="gm-valor" data-tipo="moeda" placeholder="0,00" inputmode="numeric" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-6">
+                            <label for="gm-data" class="form-label">Data</label>
+                            <div class="campo-data">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="gm-data" data-tipo="data" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10" autocomplete="off">
+                                    <button type="button" class="btn btn-outline-secondary botao-calendario" data-calendario aria-label="Abrir calendário"></button>
+                                </div>
+                                <input type="date" class="seletor-data-nativo" tabindex="-1" aria-hidden="true">
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label for="gm-descricao" class="form-label">Descrição <span class="text-muted">(opcional)</span></label>
+                            <input type="text" class="form-control" id="gm-descricao" maxlength="255" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="gm-salvar">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL FATURA DO CARTÃO -->
+    <div class="modal fade" id="modal-gastos-fatura" tabindex="-1" aria-labelledby="gf-titulo" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="gf-titulo">Fatura</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-center align-items-center gap-2 mb-3">
+                        <button type="button" class="btn btn-outline-secondary navegacao-mes-botao" data-fatura-navegar="-1" aria-label="Fatura anterior">&lsaquo;</button>
+                        <div class="navegacao-mes" id="gf-mes">--</div>
+                        <button type="button" class="btn btn-outline-secondary navegacao-mes-botao" data-fatura-navegar="1" aria-label="Próxima fatura">&rsaquo;</button>
+                    </div>
+                    <div id="gf-alerta" class="alert alert-danger hidden" role="alert"></div>
+                    <div id="gf-conteudo"></div>
+
+                    <form class="form-validado border-top pt-3 mt-3 hidden" id="form-gastos-pagamento" novalidate>
+                        <h6 class="text-muted">Pagar fatura</h6>
+                        <div class="row g-3 align-items-start">
+                            <div class="col-12 col-sm-5">
+                                <label for="gf-conta" class="form-label">Conta</label>
+                                <select class="form-select" id="gf-conta" data-tipo="obrigatorio"></select>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        <div class="col-7 col-sm-4">
+                            <label for="gf-data" class="form-label">Data</label>
+                            <div class="campo-data">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="gf-data" data-tipo="data" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10" autocomplete="off">
+                                    <button type="button" class="btn btn-outline-secondary botao-calendario" data-calendario aria-label="Abrir calendário"></button>
+                                </div>
+                                <input type="date" class="seletor-data-nativo" tabindex="-1" aria-hidden="true">
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                            <div class="col-5 col-sm-3">
+                                <label class="form-label d-block">&nbsp;</label>
+                                <button type="submit" class="btn btn-primary w-100" id="gf-pagar">Pagar</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL RELATÓRIO MENSAL -->
+    <div class="modal fade" id="modal-gastos-relatorio" tabindex="-1" aria-labelledby="gr-titulo" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="gr-titulo">Relatório do mês</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-center align-items-center gap-2 mb-3">
+                        <button type="button" class="btn btn-outline-secondary navegacao-mes-botao" data-relatorio-navegar="-1" aria-label="Mês anterior">&lsaquo;</button>
+                        <div class="navegacao-mes" id="gr-mes">--</div>
+                        <button type="button" class="btn btn-outline-secondary navegacao-mes-botao" data-relatorio-navegar="1" aria-label="Próximo mês">&rsaquo;</button>
+                    </div>
+                    <div id="gr-alerta" class="alert alert-danger hidden" role="alert"></div>
+                    <div id="gr-conteudo"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CADASTROS: CONTAS, CARTÕES E CATEGORIAS -->
+    <div class="modal fade" id="modal-gastos-cadastros" tabindex="-1" aria-labelledby="gc-titulo" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="gc-titulo">Contas, cartões e categorias</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs mb-3" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#gc-pane-contas" type="button" role="tab">Contas</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#gc-pane-cartoes" type="button" role="tab">Cartões</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#gc-pane-categorias" type="button" role="tab">Categorias</button>
+                        </li>
+                    </ul>
+                    <div id="gc-alerta" class="alert hidden" role="alert"></div>
+
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="gc-pane-contas" role="tabpanel">
+                            <form class="form-validado row g-2 align-items-start mb-3" id="form-gastos-conta" novalidate>
+                                <div class="col-12 col-md-4">
+                                    <label for="gc-conta-nome" class="form-label">Nome</label>
+                                    <input type="text" class="form-control" id="gc-conta-nome" data-tipo="texto" maxlength="255" autocomplete="off">
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <label for="gc-conta-saldo" class="form-label">Saldo inicial</label>
+                                    <input type="text" class="form-control" id="gc-conta-saldo" data-tipo="moeda-sinal" placeholder="0,00" autocomplete="off">
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="col-6 col-md-2 pt-md-4">
+                                    <div class="form-check mt-md-2">
+                                        <input class="form-check-input" type="checkbox" id="gc-conta-geral" checked>
+                                        <label class="form-check-label" for="gc-conta-geral">Saldo Geral</label>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-3 pt-md-4 d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary flex-fill mt-md-1" id="gc-conta-salvar">Adicionar</button>
+                                    <button type="button" class="btn btn-outline-secondary mt-md-1 hidden" id="gc-conta-cancelar">Cancelar</button>
+                                </div>
+                            </form>
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle">
+                                    <thead><tr><th>Nome</th><th class="text-end">Saldo</th><th>Saldo Geral</th><th></th></tr></thead>
+                                    <tbody id="gc-contas-lista"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="gc-pane-cartoes" role="tabpanel">
+                            <form class="form-validado row g-2 align-items-start mb-3" id="form-gastos-cartao" novalidate>
+                                <div class="col-12 col-md-4">
+                                    <label for="gc-cartao-nome" class="form-label">Nome</label>
+                                    <input type="text" class="form-control" id="gc-cartao-nome" data-tipo="texto" maxlength="255" autocomplete="off">
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="col-6 col-md-2">
+                                    <label for="gc-cartao-vencimento" class="form-label">Vence dia</label>
+                                    <input type="text" class="form-control" id="gc-cartao-vencimento" data-tipo="inteiro" data-minimo="1" data-maximo="31" inputmode="numeric" maxlength="2" autocomplete="off">
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="col-6 col-md-2">
+                                    <label for="gc-cartao-fechamento" class="form-label" title="Quantos dias antes do vencimento a fatura fecha">Fecha (dias antes)</label>
+                                    <input type="text" class="form-control" id="gc-cartao-fechamento" data-tipo="inteiro" data-minimo="1" data-maximo="28" inputmode="numeric" maxlength="2" autocomplete="off">
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="col-12 col-md-4">
+                                    <label for="gc-cartao-conta" class="form-label">Conta de pagamento</label>
+                                    <select class="form-select" id="gc-cartao-conta" data-tipo="obrigatorio"></select>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="col-12 d-flex justify-content-end gap-2">
+                                    <button type="button" class="btn btn-outline-secondary hidden" id="gc-cartao-cancelar">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary" id="gc-cartao-salvar">Adicionar</button>
+                                </div>
+                            </form>
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle">
+                                    <thead><tr><th>Nome</th><th>Vencimento</th><th>Fechamento</th><th>Conta</th><th></th></tr></thead>
+                                    <tbody id="gc-cartoes-lista"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="gc-pane-categorias" role="tabpanel">
+                            <form class="form-validado row g-2 align-items-start mb-3" id="form-gastos-categoria" novalidate>
+                                <div class="col-12 col-md-5">
+                                    <label for="gc-categoria-descricao" class="form-label">Descrição</label>
+                                    <input type="text" class="form-control" id="gc-categoria-descricao" data-tipo="texto" maxlength="255" autocomplete="off">
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <label for="gc-categoria-tipo" class="form-label">Tipo</label>
+                                    <select class="form-select" id="gc-categoria-tipo" data-tipo="obrigatorio">
+                                        <option value="D">Despesa</option>
+                                        <option value="R">Receita</option>
+                                    </select>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="col-6 col-md-4 pt-md-4 d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary flex-fill mt-md-1" id="gc-categoria-salvar">Adicionar</button>
+                                    <button type="button" class="btn btn-outline-secondary mt-md-1 hidden" id="gc-categoria-cancelar">Cancelar</button>
+                                </div>
+                            </form>
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle">
+                                    <thead><tr><th>Descrição</th><th>Tipo</th><th></th></tr></thead>
+                                    <tbody id="gc-categorias-lista"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         Chart.register(ChartDataLabels);
 
@@ -1252,6 +1792,11 @@
         const REMEDIOS_ESTOQUE_BAIXO_URL = `${API_BASE}/remedios-service/remedios/estoque-baixo`;
         const REMEDIOS_CONSUMIR_URL = `${API_BASE}/remedios-service/remedios/consumir/`;
         const SINTOMAS_URL = `${API_BASE}/remedios-service/sintomas`;
+
+        const GASTOS_URL = `${API_BASE}/gastos-service`;
+        // Formulários da aba Gastos que usam as máscaras e a validação compartilhadas.
+        const FORMULARIOS_GASTOS = ['form-gastos-lancamento', 'form-gastos-movimentacao', 'form-gastos-pagamento',
+            'form-gastos-conta', 'form-gastos-cartao', 'form-gastos-categoria'];
 
         const SAUDE_DISTANCIA_URL = `${API_BASE}/saude-service/treinos/distancia_total_por_semana`;
         const SAUDE_ENERGIA_ATIVA_URL = `${API_BASE}/saude-service/treinos/energia_ativa_por_semana`;
@@ -2157,6 +2702,7 @@
 
         function limparDashboard() {
             destruirGraficos();
+            limparAbaGastos();
 
             // Energia
             document.getElementById('card-geracao').textContent = '--';
@@ -3067,7 +3613,8 @@
                     carregarAnosSalario().then(() => carregarSalarioDashboard(obterAnoSalarioSelecionado())),
                     carregarSaudeDashboard(),
                     carregarSupermercadoDashboard(0),
-                    carregarRemediosDashboard()
+                    carregarRemediosDashboard(),
+                    carregarGastosDashboard()
                 ]);
             } catch (error) {
                 console.error(error);
@@ -3267,6 +3814,12 @@
                     if (!REGEX_VALOR_MONETARIO.test(valor)) return 'Valor inválido.';
                     return null;
 
+                // Saldo inicial de conta: aceita um "-" na frente (conta que já começa no negativo).
+                case 'moeda-sinal':
+                    if (!valor || valor === '-') return 'Informe o valor.';
+                    if (!REGEX_VALOR_MONETARIO.test(valor.replace(/^-/, ''))) return 'Valor inválido.';
+                    return null;
+
                 case 'moeda-opcional':
                     if (valor && !REGEX_VALOR_MONETARIO.test(valor)) return 'Valor inválido.';
                     return null;
@@ -3274,6 +3827,18 @@
                 case 'obrigatorio':
                     if (!valor) return 'Escolha uma opção.';
                     return null;
+
+                case 'texto':
+                    if (!valor) return 'Preencha este campo.';
+                    return null;
+
+                case 'inteiro': {
+                    const minimo = Number(input.dataset.minimo);
+                    const maximo = Number(input.dataset.maximo);
+                    if (!valor) return 'Informe um número.';
+                    if (!/^\d+$/.test(valor) || Number(valor) < minimo || Number(valor) > maximo) return `De ${minimo} a ${maximo}.`;
+                    return null;
+                }
 
                 default:
                     return null;
@@ -3295,7 +3860,10 @@
 
         function marcarCampo(input, mensagem) {
             input.classList.toggle('is-invalid', Boolean(mensagem));
-            input.nextElementSibling.textContent = mensagem || '';
+            // Nos campos de data o input fica num input-group com o botão do calendário,
+            // então a mensagem não é o elemento seguinte.
+            const feedback = input.closest('.campo-data')?.querySelector('.invalid-feedback') || input.nextElementSibling;
+            feedback.textContent = mensagem || '';
         }
 
         function validarFormularioAcompanhamento() {
@@ -4644,8 +5212,8 @@
             await salvarAcompanhamento();
         });
 
-        // Máscaras e validação campo a campo valem para os dois formulários de cadastro.
-        ['form-novo-acompanhamento', 'form-nova-folha'].forEach(idFormulario => {
+        // Máscaras e validação campo a campo valem para todos os formulários de cadastro.
+        ['form-novo-acompanhamento', 'form-nova-folha', ...FORMULARIOS_GASTOS].forEach(idFormulario => {
             const form = document.getElementById(idFormulario);
 
             form.addEventListener('input', function(event) {
@@ -4653,6 +5221,8 @@
 
                 if (input.dataset.tipo === 'data') {
                     input.value = mascararDataBR(input.value);
+                } else if (input.dataset.tipo === 'moeda-sinal') {
+                    input.value = (input.value.trim().startsWith('-') ? '-' : '') + mascararMoedaBR(input.value);
                 } else if (input.dataset.tipo?.startsWith('moeda')) {
                     input.value = mascararMoedaBR(input.value);
                 }
@@ -4892,6 +5462,1150 @@
                 botao.disabled = false;
             }
         }
+
+        // ============================================
+        // GASTOS
+        // ============================================
+
+        // Tudo vem do gastos-service. Os valores monetários vão para o backend como
+        // texto BR ("1.234,56", o formato do @ValorMonetario) e voltam como número;
+        // as datas vão como "dd/MM/yyyy" (@DataBrasil) e voltam como "yyyy-MM-dd".
+
+        const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+        // Cartões do topo que podem ter o valor escondido; a escolha fica no navegador.
+        const CHAVE_GASTOS_OCULTOS = 'gastosValoresOcultos';
+
+        const ICONE_OLHO = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/></svg>';
+        const ICONE_OLHO_FECHADO = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7 7 0 0 0-2.79.588l.77.771A6 6 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755q-.247.248-.517.486z"/><path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829"/><path d="M3.35 5.47q-.27.24-.518.487A13 13 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7 7 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12z"/></svg>';
+        const ICONE_CALENDARIO = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/></svg>';
+
+        const STATUS_FATURA = {
+            ABERTA: { texto: 'Aberta', classe: 'text-bg-primary' },
+            FECHADA: { texto: 'Fechada', classe: 'text-bg-warning' },
+            VENCIDA: { texto: 'Vencida', classe: 'text-bg-danger' },
+            PAGA: { texto: 'Paga', classe: 'text-bg-success' }
+        };
+
+        // { dashboard, contas, cartoes, categorias } — contas e cartões incluem os desativados.
+        let gastosDados = null;
+        // { tipo, edicao (LancamentoResponse ou null), retorno (id do modal a reabrir) }
+        let gastosLancamento = null;
+        // { cartaoId, ano, mes, dados }
+        let gastosFatura = null;
+        // { ano, mes }
+        let gastosRelatorio = null;
+        // Registro em edição em cada aba do modal de cadastros.
+        const gastosEdicaoCadastro = { conta: null, cartao: null, categoria: null };
+
+        function nomeMes(ano, mes) {
+            return `${MESES[mes - 1]} de ${ano}`;
+        }
+
+        function somarMeses(ano, mes, delta) {
+            const data = new Date(ano, mes - 1 + delta, 1);
+            return { ano: data.getFullYear(), mes: data.getMonth() + 1 };
+        }
+
+        function doisDigitos(numero) {
+            return String(numero).padStart(2, '0');
+        }
+
+        function hojeBR() {
+            const hoje = new Date();
+            return `${doisDigitos(hoje.getDate())}/${doisDigitos(hoje.getMonth() + 1)}/${hoje.getFullYear()}`;
+        }
+
+        function brParaISO(valor) {
+            const data = parseDataBR(valor);
+            return data ? `${data.getFullYear()}-${doisDigitos(data.getMonth() + 1)}-${doisDigitos(data.getDate())}` : '';
+        }
+
+        // 1234.5 → "1.234,50", o formato que os campos com máscara de moeda esperam.
+        function numeroParaMoedaBR(valor) {
+            return formatarNumero(valor, 2);
+        }
+
+        function formatarCentavos(centavos) {
+            return formatarMoedaBR(centavos / 100);
+        }
+
+        function descricaoComParcela(lancamento) {
+            const descricao = escapeHtml(lancamento.descricao);
+            return lancamento.parcela ? `${descricao} <span class="text-muted">(${lancamento.parcela}/${lancamento.totalParcelas})</span>` : descricao;
+        }
+
+        function valoresOcultosGastos() {
+            try {
+                return new Set(JSON.parse(localStorage.getItem(CHAVE_GASTOS_OCULTOS)) || []);
+            } catch {
+                return new Set();
+            }
+        }
+
+        function alternarValorOcultoGastos(chave) {
+            const ocultos = valoresOcultosGastos();
+            ocultos.has(chave) ? ocultos.delete(chave) : ocultos.add(chave);
+            try {
+                localStorage.setItem(CHAVE_GASTOS_OCULTOS, JSON.stringify([...ocultos]));
+            } catch {
+                // Sem armazenamento a escolha só não sobrevive ao recarregar.
+            }
+            renderizarGastosDashboard();
+        }
+
+        function mostrarAlertaGastos(mensagem, tipo = 'success') {
+            const alerta = document.getElementById('gastos-alerta');
+            alerta.className = `alert alert-${tipo}`;
+            alerta.textContent = mensagem;
+            show('gastos-alerta');
+        }
+
+        function esconderAlertaGastos() {
+            document.getElementById('gastos-alerta').textContent = '';
+            hide('gastos-alerta');
+        }
+
+        // Alerta dentro de um modal: id do elemento .alert, e o tipo só nos que mudam de cor.
+        function mostrarAlertaModalGastos(id, mensagem, tipo = null) {
+            const alerta = document.getElementById(id);
+            if (tipo) alerta.className = `alert alert-${tipo}`;
+            alerta.textContent = mensagem;
+            alerta.classList.remove('hidden');
+            alerta.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function esconderAlertaModalGastos(id) {
+            const alerta = document.getElementById(id);
+            alerta.textContent = '';
+            alerta.classList.add('hidden');
+        }
+
+        // Sessão expirada no meio de uma ação: fecha o modal aberto antes de voltar ao login.
+        function sessaoExpirouGastos(error) {
+            const expirou = sessaoExpirou(error);
+            if (expirou) {
+                document.querySelectorAll('.modal.show').forEach(modal => bootstrap.Modal.getInstance(modal)?.hide());
+            }
+            return expirou;
+        }
+
+        // Valida os campos com data-tipo, ignorando os que estão escondidos.
+        function validarFormularioGastos(form) {
+            let primeiroInvalido = null;
+
+            form.querySelectorAll('[data-tipo]').forEach(campo => {
+                if (campo.closest('.hidden')) {
+                    marcarCampo(campo, null);
+                    return;
+                }
+                const mensagem = validarCampo(campo);
+                marcarCampo(campo, mensagem);
+                if (mensagem && !primeiroInvalido) primeiroInvalido = campo;
+            });
+
+            primeiroInvalido?.focus();
+            return !primeiroInvalido;
+        }
+
+        function limparCamposGastos(form) {
+            form.reset();
+            form.querySelectorAll('[data-tipo]').forEach(campo => marcarCampo(campo, null));
+        }
+
+        // O Bootstrap não empilha modais. Para editar um lançamento a partir da fatura
+        // ou do relatório, o modal de origem fecha antes e é reaberto (atualizado)
+        // quando a edição termina — ver o 'hidden.bs.modal' do modal de lançamento.
+        async function trocarModalGastos(idDestino, aoMostrar = null) {
+            const aberto = document.querySelector('.modal.show');
+            if (aberto && aberto.id !== idDestino) {
+                await new Promise(resolve => {
+                    aberto.addEventListener('hidden.bs.modal', resolve, { once: true });
+                    bootstrap.Modal.getOrCreateInstance(aberto).hide();
+                });
+            }
+
+            const destino = document.getElementById(idDestino);
+            if (aoMostrar) destino.addEventListener('shown.bs.modal', aoMostrar, { once: true });
+            bootstrap.Modal.getOrCreateInstance(destino).show();
+        }
+
+        function fecharModalGastos(id) {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById(id)).hide();
+        }
+
+        // ---------- carga e dashboard
+
+        async function carregarGastosDashboard() {
+            const [dashboard, contas, cartoes, categorias] = await Promise.all([
+                apiRequest({ url: `${GASTOS_URL}/dashboard` }),
+                apiRequest({ url: `${GASTOS_URL}/contas` }),
+                apiRequest({ url: `${GASTOS_URL}/cartoes` }),
+                apiRequest({ url: `${GASTOS_URL}/categorias` })
+            ]);
+
+            gastosDados = {
+                dashboard,
+                contas: Array.isArray(contas) ? contas : [],
+                cartoes: Array.isArray(cartoes) ? cartoes : [],
+                categorias: Array.isArray(categorias) ? categorias : []
+            };
+
+            renderizarGastosDashboard();
+        }
+
+        // Recarrega depois de uma gravação. Erro aqui não desfaz a gravação, só avisa.
+        async function recarregarGastos() {
+            try {
+                await carregarGastosDashboard();
+            } catch (error) {
+                console.error(error);
+                if (!sessaoExpirouGastos(error)) {
+                    mostrarAlertaGastos(error.message || 'Não foi possível atualizar a aba Gastos.', 'danger');
+                }
+            }
+        }
+
+        function limparAbaGastos() {
+            gastosDados = null;
+            ['receitas', 'despesas', 'saldoGeral', 'saldoTotal', 'faturas'].forEach(chave => {
+                document.getElementById(`gastos-card-${chave}`).textContent = '--';
+                document.getElementById(`gastos-card-${chave}-detalhe`).innerHTML = '&nbsp;';
+            });
+            ['gastos-contas', 'gastos-cartoes', 'gastos-a-pagar', 'gastos-a-receber'].forEach(id => {
+                document.getElementById(id).innerHTML = '';
+            });
+            esconderAlertaGastos();
+        }
+
+        function itemVazioGastos(texto) {
+            return `<li class="list-group-item text-muted">${texto}</li>`;
+        }
+
+        function renderizarGastosDashboard() {
+            const dashboard = gastosDados?.dashboard;
+            if (!dashboard) return;
+
+            const ocultos = valoresOcultosGastos();
+            const moeda = (valor, chave) => ocultos.has(chave) ? 'R$ ••••' : formatarMoedaBR(valor);
+            const detalhe = (chave, texto) => ocultos.has(chave) ? '&nbsp;' : texto;
+
+            document.getElementById('gastos-titulo-mes').textContent = nomeMes(dashboard.ano, dashboard.mes);
+
+            const cards = {
+                receitas: [dashboard.receitas.total, `Recebido ${formatarMoedaBR(dashboard.receitas.realizado)}`],
+                despesas: [dashboard.despesas.total, `Pago ${formatarMoedaBR(dashboard.despesas.realizado)}`],
+                saldoGeral: [dashboard.saldoGeral, `${dashboard.contas.length} conta${dashboard.contas.length === 1 ? '' : 's'}`],
+                saldoTotal: [dashboard.saldoTotal, 'Todas as contas ativas'],
+                faturas: [dashboard.faturas, `${dashboard.cartoes.length} cart${dashboard.cartoes.length === 1 ? 'ão' : 'ões'}`]
+            };
+            Object.entries(cards).forEach(([chave, [valor, texto]]) => {
+                document.getElementById(`gastos-card-${chave}`).textContent = moeda(valor, chave);
+                document.getElementById(`gastos-card-${chave}-detalhe`).innerHTML = detalhe(chave, escapeHtml(texto));
+            });
+
+            document.querySelectorAll('[data-ocultar]').forEach(botao => {
+                const oculto = ocultos.has(botao.dataset.ocultar);
+                botao.innerHTML = oculto ? ICONE_OLHO_FECHADO : ICONE_OLHO;
+                botao.setAttribute('aria-pressed', String(oculto));
+                botao.title = oculto ? 'Mostrar valor' : 'Ocultar valor';
+            });
+
+            document.getElementById('gastos-contas').innerHTML = dashboard.contas.length
+                ? dashboard.contas.map(conta => `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>${escapeHtml(conta.nome)}</span>
+                        <span class="fw-semibold ${conta.saldo < 0 ? 'valor-despesa' : ''}">${moeda(conta.saldo, 'saldoGeral')}</span>
+                    </li>`).join('')
+                : itemVazioGastos('Nenhuma conta no Saldo Geral. Cadastre em "Contas e cartões".');
+
+            document.getElementById('gastos-cartoes').innerHTML = dashboard.cartoes.length
+                ? dashboard.cartoes.map(fatura => {
+                    const status = STATUS_FATURA[fatura.status] || { texto: fatura.status, classe: 'text-bg-secondary' };
+                    return `
+                    <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+                        <div>
+                            <div>${escapeHtml(fatura.cartaoNome)}</div>
+                            <div class="small-muted">Vence ${formatarDataISO(fatura.vencimento)} <span class="badge ${status.classe}">${status.texto}</span></div>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-semibold">${moeda(fatura.total, 'faturas')}</div>
+                            <button type="button" class="btn btn-link btn-sm p-0" data-fatura-cartao="${fatura.cartaoId}">Ver fatura</button>
+                        </div>
+                    </li>`;
+                }).join('')
+                : itemVazioGastos('Nenhum cartão ativo.');
+
+            document.getElementById('gastos-a-pagar').innerHTML = renderizarAgendaGastos(dashboard.proximosPagar, 'Nada a pagar.');
+            document.getElementById('gastos-a-receber').innerHTML = renderizarAgendaGastos(dashboard.proximosReceber, 'Nada a receber.');
+        }
+
+        function renderizarAgendaGastos(itens, vazio) {
+            if (!itens?.length) return itemVazioGastos(vazio);
+
+            return itens.map(item => {
+                const alvo = item.origem === 'FATURA'
+                    ? `data-agenda-fatura="${item.cartaoId}" data-vencimento="${escapeHtml(item.data)}"`
+                    : `data-agenda-lancamento="${item.lancamentoId}"`;
+                return `
+                    <li class="list-group-item d-flex justify-content-between align-items-center gap-2 item-clicavel" ${alvo}>
+                        <div>
+                            <div>${escapeHtml(item.descricao)}</div>
+                            <div class="small-muted">${formatarDataISO(item.data)}${item.atrasado ? ' <span class="badge text-bg-danger">Atrasado</span>' : ''}</div>
+                        </div>
+                        <span class="fw-semibold">${formatarMoedaBR(item.valor)}</span>
+                    </li>`;
+            }).join('');
+        }
+
+        // ---------- selects compartilhados
+
+        // Conta ou cartão num select só, com o valor "conta:1" / "cartao:2". Itens
+        // desativados só aparecem quando já são o valor atual (edição).
+        function opcoesDestinoGastos(atual, incluirCartoes = true) {
+            const contas = gastosDados.contas.filter(c => c.ativo || `conta:${c.id}` === atual);
+            const cartoes = incluirCartoes ? gastosDados.cartoes.filter(c => c.ativo || `cartao:${c.id}` === atual) : [];
+            const opcao = (valor, nome, ativo) =>
+                `<option value="${valor}">${escapeHtml(nome)}${ativo ? '' : ' (desativado)'}</option>`;
+
+            let html = '<option value="">Escolha...</option>';
+            if (contas.length) {
+                html += `<optgroup label="Contas">${contas.map(c => opcao(`conta:${c.id}`, c.nome, c.ativo)).join('')}</optgroup>`;
+            }
+            if (cartoes.length) {
+                html += `<optgroup label="Cartões">${cartoes.map(c => opcao(`cartao:${c.id}`, c.nome, c.ativo)).join('')}</optgroup>`;
+            }
+            return html;
+        }
+
+        // Só contas ativas, com valor numérico — para movimentações e pagamento de fatura.
+        function opcoesContasGastos(atualId = null) {
+            return '<option value="">Escolha...</option>' + gastosDados.contas
+                .filter(c => c.ativo || c.id === atualId)
+                .map(c => `<option value="${c.id}">${escapeHtml(c.nome)}</option>`)
+                .join('');
+        }
+
+        function opcoesCategoriasGastos(tipo, atualId = null) {
+            const categorias = gastosDados.categorias.filter(c => c.tipo === tipo && (c.ativo || c.id === atualId));
+            if (!categorias.length) return '<option value="">Cadastre uma categoria em "Contas e cartões"</option>';
+
+            return '<option value="">Escolha...</option>' + categorias
+                .map(c => `<option value="${c.id}">${escapeHtml(c.descricao)}</option>`)
+                .join('');
+        }
+
+        // ---------- calendário
+
+        // O campo de texto continua com a máscara dd/mm/aaaa; o botão abre o seletor
+        // nativo do navegador, e a data escolhida volta para o campo.
+        function abrirCalendarioGastos(botao) {
+            const campo = botao.closest('.campo-data');
+            const texto = campo.querySelector('input[data-tipo="data"]');
+            const nativo = campo.querySelector('.seletor-data-nativo');
+
+            nativo.value = brParaISO(texto.value.trim());
+            try {
+                nativo.showPicker();
+            } catch {
+                nativo.focus();
+                nativo.click();
+            }
+        }
+
+        // ---------- lançamento (despesa/receita)
+
+        function abrirLancamentoGastos({ tipo, lancamento = null, retorno = null }) {
+            if (!gastosDados) return;
+
+            const form = document.getElementById('form-gastos-lancamento');
+            limparCamposGastos(form);
+            esconderAlertaModalGastos('gl-alerta');
+
+            tipo = lancamento?.tipo || tipo;
+            gastosLancamento = { tipo, edicao: lancamento, retorno };
+
+            const nome = tipo === 'D' ? 'despesa' : 'receita';
+            document.getElementById('gl-titulo').textContent = `${lancamento ? 'Editar' : 'Nova'} ${nome}`;
+            document.getElementById('gl-realizado-rotulo').textContent = tipo === 'D' ? 'Pago' : 'Recebido';
+
+            const destino = lancamento
+                ? (lancamento.cartao ? `cartao:${lancamento.cartao.id}` : `conta:${lancamento.conta.id}`)
+                : (gastosDados.contas.find(c => c.ativo) ? `conta:${gastosDados.contas.find(c => c.ativo).id}` : '');
+
+            const selectDestino = document.getElementById('gl-destino');
+            selectDestino.innerHTML = opcoesDestinoGastos(destino);
+            selectDestino.value = destino;
+
+            const selectCategoria = document.getElementById('gl-categoria');
+            selectCategoria.innerHTML = opcoesCategoriasGastos(tipo, lancamento?.categoria?.id);
+            selectCategoria.value = lancamento?.categoria?.id ?? '';
+
+            document.getElementById('gl-descricao').value = lancamento?.descricao || '';
+            document.getElementById('gl-valor').value = lancamento ? numeroParaMoedaBR(lancamento.valor) : '';
+            document.getElementById('gl-data').value = lancamento ? formatarDataISO(lancamento.data) : hojeBR();
+            document.getElementById('gl-realizado').checked = Boolean(lancamento?.realizado);
+
+            // Repetição só na inclusão; numa série, a edição pergunta o alcance.
+            const emSerie = Boolean(lancamento?.recorrenciaId || lancamento?.parcelamento);
+            document.getElementById('gl-repeticao-grupo').classList.toggle('hidden', Boolean(lancamento));
+            document.getElementById('gl-escopo-grupo').classList.toggle('hidden', !emSerie);
+            document.getElementById('gl-escopo-rotulo').textContent = lancamento?.recorrenciaId
+                ? 'Despesa/receita fixa: aplicar a'
+                : `Parcela ${lancamento?.parcela}/${lancamento?.totalParcelas}: aplicar a`;
+            document.getElementById('gl-excluir').classList.toggle('hidden', !lancamento);
+
+            // Compra de cartão já paga na fatura: só leitura até estornar o pagamento.
+            const pagoNaFatura = Boolean(lancamento?.cartao && lancamento.realizado);
+            document.getElementById('gl-aviso-pago').classList.toggle('hidden', !pagoNaFatura);
+            document.getElementById('gl-salvar').disabled = pagoNaFatura;
+            document.getElementById('gl-excluir').disabled = pagoNaFatura;
+
+            atualizarFormLancamentoGastos();
+            trocarModalGastos('modal-gastos-lancamento', () => document.getElementById('gl-descricao').focus());
+        }
+
+        async function abrirEdicaoLancamentoGastos(id, retorno = null) {
+            try {
+                const lancamento = await apiRequest({ url: `${GASTOS_URL}/lancamentos/${id}` });
+                abrirLancamentoGastos({ lancamento, retorno });
+            } catch (error) {
+                console.error(error);
+                if (!sessaoExpirouGastos(error)) mostrarAlertaGastos(error.message || 'Não foi possível abrir o lançamento.', 'danger');
+            }
+        }
+
+        function repeticaoGastos() {
+            return document.querySelector('input[name="gl-repeticao"]:checked').value;
+        }
+
+        // Ajusta o formulário à repetição e à conta/cartão escolhidos.
+        function atualizarFormLancamentoGastos() {
+            const repeticao = gastosLancamento?.edicao ? 'UNICA' : repeticaoGastos();
+            const emCartao = document.getElementById('gl-destino').value.startsWith('cartao:');
+            const pagoNaFatura = Boolean(gastosLancamento?.edicao?.cartao && gastosLancamento.edicao.realizado);
+
+            document.getElementById('gl-parcelas-grupo').classList.toggle('hidden', repeticao !== 'PARCELADA');
+            document.getElementById('gl-valor-rotulo').textContent = repeticao === 'PARCELADA' ? 'Valor total (R$)' : 'Valor (R$)';
+
+            const realizado = document.getElementById('gl-realizado');
+            realizado.disabled = emCartao;
+            if (emCartao && !pagoNaFatura) realizado.checked = false;
+            document.getElementById('gl-realizado-dica').classList.toggle('hidden', !emCartao);
+
+            const dica = document.getElementById('gl-repeticao-dica');
+            const data = parseDataBR(document.getElementById('gl-data').value.trim());
+            if (repeticao === 'FIXA') {
+                dica.textContent = data ? `Repete todo dia ${data.getDate()}, até ser encerrada.` : 'Repete todo mês no mesmo dia.';
+            } else if (repeticao === 'PARCELADA') {
+                const total = Math.round(parseMoedaBR(document.getElementById('gl-valor').value) * 100);
+                const parcelas = Number(document.getElementById('gl-parcelas').value);
+                if (total > 0 && parcelas >= 2 && parcelas <= 120) {
+                    // Mesma divisão do backend: o resto em centavos vai para a primeira parcela.
+                    const parcela = Math.floor(total / parcelas);
+                    const primeira = parcela + total - parcela * parcelas;
+                    dica.textContent = primeira === parcela
+                        ? `${parcelas}x de ${formatarCentavos(parcela)}, uma por mês.`
+                        : `1ª de ${formatarCentavos(primeira)} e ${parcelas - 1}x de ${formatarCentavos(parcela)}, uma por mês.`;
+                } else {
+                    dica.textContent = 'O valor total é dividido em parcelas mensais.';
+                }
+            } else {
+                dica.innerHTML = '&nbsp;';
+            }
+        }
+
+        async function salvarLancamentoGastos() {
+            esconderAlertaModalGastos('gl-alerta');
+            const form = document.getElementById('form-gastos-lancamento');
+            if (!validarFormularioGastos(form)) return;
+
+            const { tipo, edicao } = gastosLancamento;
+            const [tipoDestino, idDestino] = document.getElementById('gl-destino').value.split(':');
+            const repeticao = edicao ? 'UNICA' : repeticaoGastos();
+
+            const corpo = {
+                tipo,
+                descricao: document.getElementById('gl-descricao').value.trim(),
+                valor: document.getElementById('gl-valor').value.trim(),
+                data: document.getElementById('gl-data').value.trim(),
+                categoriaId: Number(document.getElementById('gl-categoria').value),
+                contaId: tipoDestino === 'conta' ? Number(idDestino) : null,
+                cartaoId: tipoDestino === 'cartao' ? Number(idDestino) : null,
+                realizado: document.getElementById('gl-realizado').checked,
+                repeticao,
+                parcelas: repeticao === 'PARCELADA' ? Number(document.getElementById('gl-parcelas').value) : null
+            };
+
+            const escopo = document.querySelector('input[name="gl-escopo"]:checked').value;
+            const botao = document.getElementById('gl-salvar');
+            botao.disabled = true;
+            botao.textContent = 'Salvando...';
+
+            try {
+                if (edicao) {
+                    await apiRequest({ url: `${GASTOS_URL}/lancamentos/${edicao.id}?escopo=${escopo}`, method: 'PUT', body: corpo });
+                } else {
+                    await apiRequest({ url: `${GASTOS_URL}/lancamentos`, method: 'POST', body: corpo });
+                }
+
+                fecharModalGastos('modal-gastos-lancamento');
+                const nome = tipo === 'D' ? 'Despesa' : 'Receita';
+                mostrarAlertaGastos(`${nome} "${corpo.descricao}" ${edicao ? 'alterada' : 'lançada'}.`);
+                await recarregarGastos();
+            } catch (error) {
+                console.error(error);
+                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gl-alerta', error.message || 'Não foi possível salvar.');
+            } finally {
+                botao.disabled = false;
+                botao.textContent = 'Salvar';
+            }
+        }
+
+        async function excluirLancamentoGastos() {
+            const { edicao } = gastosLancamento;
+            const escopo = document.querySelector('input[name="gl-escopo"]:checked').value;
+            const emSerie = Boolean(edicao.recorrenciaId || edicao.parcelamento);
+
+            let pergunta = `Excluir "${edicao.descricao}"?`;
+            if (emSerie && escopo === 'SEGUINTES') {
+                pergunta = edicao.recorrenciaId
+                    ? `Excluir "${edicao.descricao}" deste mês em diante? A repetição será encerrada.`
+                    : `Excluir esta e as próximas parcelas de "${edicao.descricao}"?`;
+            }
+            if (!confirm(pergunta)) return;
+
+            try {
+                await apiRequest({ url: `${GASTOS_URL}/lancamentos/${edicao.id}?escopo=${escopo}`, method: 'DELETE' });
+                fecharModalGastos('modal-gastos-lancamento');
+                mostrarAlertaGastos(`"${edicao.descricao}" excluído.`);
+                await recarregarGastos();
+            } catch (error) {
+                console.error(error);
+                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gl-alerta', error.message || 'Não foi possível excluir.');
+            }
+        }
+
+        // ---------- transferência, depósito e saque
+
+        function tipoMovimentacaoGastos() {
+            return document.querySelector('input[name="gm-tipo"]:checked').value;
+        }
+
+        function abrirMovimentacaoGastos() {
+            if (!gastosDados) return;
+
+            const form = document.getElementById('form-gastos-movimentacao');
+            limparCamposGastos(form);
+            esconderAlertaModalGastos('gm-alerta');
+
+            document.getElementById('gm-origem').innerHTML = opcoesContasGastos();
+            document.getElementById('gm-destino').innerHTML = opcoesContasGastos();
+            document.getElementById('gm-data').value = hojeBR();
+
+            atualizarFormMovimentacaoGastos();
+            trocarModalGastos('modal-gastos-movimentacao', () => document.getElementById('gm-origem').focus());
+        }
+
+        function atualizarFormMovimentacaoGastos() {
+            const tipo = tipoMovimentacaoGastos();
+            document.getElementById('gm-origem-grupo').classList.toggle('hidden', tipo === 'DEPOSITO');
+            document.getElementById('gm-destino-grupo').classList.toggle('hidden', tipo === 'SAQUE');
+            document.getElementById('gm-titulo').textContent =
+                { TRANSFERENCIA: 'Transferência entre contas', DEPOSITO: 'Depósito', SAQUE: 'Saque' }[tipo];
+        }
+
+        async function salvarMovimentacaoGastos() {
+            esconderAlertaModalGastos('gm-alerta');
+            const form = document.getElementById('form-gastos-movimentacao');
+            if (!validarFormularioGastos(form)) return;
+
+            const tipo = tipoMovimentacaoGastos();
+            const origem = document.getElementById('gm-origem');
+            const destino = document.getElementById('gm-destino');
+            if (tipo === 'TRANSFERENCIA' && origem.value === destino.value) {
+                marcarCampo(destino, 'Escolha outra conta.');
+                destino.focus();
+                return;
+            }
+
+            const corpo = {
+                tipo,
+                contaOrigemId: tipo === 'DEPOSITO' ? null : Number(origem.value),
+                contaDestinoId: tipo === 'SAQUE' ? null : Number(destino.value),
+                valor: document.getElementById('gm-valor').value.trim(),
+                data: document.getElementById('gm-data').value.trim(),
+                descricao: document.getElementById('gm-descricao').value.trim() || null
+            };
+
+            const botao = document.getElementById('gm-salvar');
+            botao.disabled = true;
+            botao.textContent = 'Salvando...';
+
+            try {
+                await apiRequest({ url: `${GASTOS_URL}/movimentacoes`, method: 'POST', body: corpo });
+                fecharModalGastos('modal-gastos-movimentacao');
+                mostrarAlertaGastos(`Movimentação registrada: ${document.getElementById('gm-titulo').textContent}, R$ ${corpo.valor}.`);
+                await recarregarGastos();
+            } catch (error) {
+                console.error(error);
+                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gm-alerta', error.message || 'Não foi possível salvar.');
+            } finally {
+                botao.disabled = false;
+                botao.textContent = 'Salvar';
+            }
+        }
+
+        // ---------- fatura do cartão
+
+        // Sem ano/mês abre a fatura atual (a que recebe uma compra feita hoje).
+        async function abrirFaturaGastos(cartaoId, ano = null, mes = null) {
+            gastosFatura = { cartaoId: Number(cartaoId), ano, mes, dados: null };
+            document.getElementById('gf-conteudo').innerHTML = '<p class="text-muted text-center my-3">Carregando...</p>';
+            document.getElementById('gf-mes').textContent = ano ? nomeMes(ano, mes) : '--';
+            document.getElementById('form-gastos-pagamento').classList.add('hidden');
+            esconderAlertaModalGastos('gf-alerta');
+
+            await trocarModalGastos('modal-gastos-fatura');
+            await carregarFaturaGastos();
+        }
+
+        async function carregarFaturaGastos() {
+            const { cartaoId, ano, mes } = gastosFatura;
+            const url = ano
+                ? `${GASTOS_URL}/cartoes/${cartaoId}/faturas/${ano}/${mes}`
+                : `${GASTOS_URL}/cartoes/${cartaoId}/faturas/atual`;
+
+            try {
+                renderizarFaturaGastos(await apiRequest({ url }));
+            } catch (error) {
+                console.error(error);
+                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gf-alerta', error.message || 'Não foi possível carregar a fatura.');
+            }
+        }
+
+        function renderizarFaturaGastos(fatura) {
+            const [ano, mes] = fatura.vencimento.split('-').map(Number);
+            gastosFatura = { ...gastosFatura, ano, mes, dados: fatura };
+
+            const status = STATUS_FATURA[fatura.status] || { texto: fatura.status, classe: 'text-bg-secondary' };
+            document.getElementById('gf-titulo').textContent = `Fatura ${fatura.cartao.nome}`;
+            document.getElementById('gf-mes').textContent = nomeMes(ano, mes);
+
+            const linhas = fatura.lancamentos.map(l => `
+                <tr class="item-clicavel" data-editar-lancamento="${l.id}">
+                    <td>${formatarDataISO(l.data)}</td>
+                    <td>${descricaoComParcela(l)}</td>
+                    <td>${escapeHtml(l.categoria?.descricao || '')}</td>
+                    <td class="text-end ${l.tipo === 'R' ? 'valor-receita' : ''}">${l.tipo === 'R' ? '−' : ''}${formatarMoedaBR(l.valor)}</td>
+                    <td class="text-center">${l.realizado ? '<span class="badge text-bg-success">Paga</span>' : ''}</td>
+                </tr>`).join('');
+
+            const pagamentos = fatura.pagamentos.map(p => `
+                <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+                    <span>${formatarDataISO(p.data)} · ${escapeHtml(p.contaOrigem?.nome || '')} · <strong>${formatarMoedaBR(p.valor)}</strong></span>
+                    <button type="button" class="btn btn-sm btn-outline-danger" data-estornar="${p.id}">Estornar</button>
+                </li>`).join('');
+
+            document.getElementById('gf-conteudo').innerHTML = `
+                <div class="text-center mb-3">
+                    <span class="badge ${status.classe}">${status.texto}</span>
+                    <span class="small-muted ms-1">Fecha em ${formatarDataISO(fatura.fechamento)} · vence em ${formatarDataISO(fatura.vencimento)}</span>
+                </div>
+                <div class="row text-center mb-3">
+                    <div class="col-4"><div class="small-muted">Total</div><div class="fw-bold">${formatarMoedaBR(fatura.total)}</div></div>
+                    <div class="col-4"><div class="small-muted">Pago</div><div class="fw-bold valor-receita">${formatarMoedaBR(fatura.pago)}</div></div>
+                    <div class="col-4"><div class="small-muted">Pendente</div><div class="fw-bold valor-despesa">${formatarMoedaBR(fatura.pendente)}</div></div>
+                </div>
+                ${linhas ? `
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                        <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th class="text-end">Valor</th><th></th></tr></thead>
+                        <tbody>${linhas}</tbody>
+                    </table>
+                </div>` : '<p class="text-muted text-center">Nenhuma compra nesta fatura.</p>'}
+                ${pagamentos ? `<h6 class="text-muted mt-3">Pagamentos</h6><ul class="list-group list-group-flush lista-gastos">${pagamentos}</ul>` : ''}`;
+
+            // Formulário de pagamento só com valor pendente; sugere a conta padrão do cartão.
+            const formPagamento = document.getElementById('form-gastos-pagamento');
+            formPagamento.classList.toggle('hidden', !(fatura.pendente > 0));
+            if (fatura.pendente > 0) {
+                const cartao = gastosDados?.cartoes.find(c => c.id === fatura.cartao.id);
+                const contaPadrao = cartao?.conta?.id ?? null;
+                const selectConta = document.getElementById('gf-conta');
+                selectConta.innerHTML = opcoesContasGastos();
+                selectConta.value = gastosDados?.contas.some(c => c.ativo && c.id === contaPadrao) ? contaPadrao : '';
+                marcarCampo(selectConta, null);
+                const data = document.getElementById('gf-data');
+                data.value = hojeBR();
+                marcarCampo(data, null);
+                document.getElementById('gf-pagar').textContent = `Pagar ${formatarMoedaBR(fatura.pendente)}`;
+            }
+        }
+
+        async function pagarFaturaGastos() {
+            esconderAlertaModalGastos('gf-alerta');
+            const form = document.getElementById('form-gastos-pagamento');
+            if (!validarFormularioGastos(form)) return;
+
+            const { cartaoId, ano, mes } = gastosFatura;
+            const botao = document.getElementById('gf-pagar');
+            botao.disabled = true;
+
+            try {
+                const fatura = await apiRequest({
+                    url: `${GASTOS_URL}/cartoes/${cartaoId}/faturas/${ano}/${mes}/pagamento`,
+                    method: 'POST',
+                    body: { contaId: Number(document.getElementById('gf-conta').value), data: document.getElementById('gf-data').value.trim() }
+                });
+                renderizarFaturaGastos(fatura);
+                await recarregarGastos();
+            } catch (error) {
+                console.error(error);
+                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gf-alerta', error.message || 'Não foi possível pagar a fatura.');
+            } finally {
+                botao.disabled = false;
+            }
+        }
+
+        async function estornarPagamentoGastos(id) {
+            if (!confirm('Estornar este pagamento? O valor volta para a conta e as compras voltam a ficar pendentes.')) return;
+
+            try {
+                await apiRequest({ url: `${GASTOS_URL}/movimentacoes/${id}`, method: 'DELETE' });
+                await carregarFaturaGastos();
+                await recarregarGastos();
+            } catch (error) {
+                console.error(error);
+                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gf-alerta', error.message || 'Não foi possível estornar.');
+            }
+        }
+
+        // ---------- relatório do mês
+
+        async function abrirRelatorioGastos(ano = null, mes = null) {
+            const atual = gastosDados?.dashboard;
+            const hoje = new Date();
+            gastosRelatorio = {
+                ano: ano ?? atual?.ano ?? hoje.getFullYear(),
+                mes: mes ?? atual?.mes ?? hoje.getMonth() + 1
+            };
+            document.getElementById('gr-conteudo').innerHTML = '<p class="text-muted text-center my-3">Carregando...</p>';
+            esconderAlertaModalGastos('gr-alerta');
+
+            await trocarModalGastos('modal-gastos-relatorio');
+            await carregarRelatorioGastos();
+        }
+
+        async function carregarRelatorioGastos() {
+            const { ano, mes } = gastosRelatorio;
+            document.getElementById('gr-mes').textContent = nomeMes(ano, mes);
+
+            try {
+                renderizarRelatorioGastos(await apiRequest({ url: `${GASTOS_URL}/relatorios/${ano}/${mes}` }));
+            } catch (error) {
+                console.error(error);
+                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gr-alerta', error.message || 'Não foi possível carregar o relatório.');
+            }
+        }
+
+        function cardTotaisRelatorio(titulo, totais, classe, rotuloRealizado) {
+            return `
+                <div class="col-12 col-md-4">
+                    <div class="card card-resumo h-100">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted">${titulo}</h6>
+                            <div class="fs-5 fw-bold ${classe}">${formatarMoedaBR(totais.total)}</div>
+                            <div class="small-muted">${rotuloRealizado} ${formatarMoedaBR(totais.realizado)} · pendentes ${formatarMoedaBR(totais.pendente)}</div>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        function renderizarRelatorioGastos(relatorio) {
+            const linhas = relatorio.lancamentos.map(l => {
+                const emCartao = Boolean(l.cartao);
+                const fixa = l.recorrenciaId ? ' <span class="badge text-bg-light border">fixa</span>' : '';
+                return `
+                <tr class="item-clicavel" data-editar-lancamento="${l.id}">
+                    <td>${formatarDataISO(l.data)}</td>
+                    <td>${descricaoComParcela(l)}${fixa}</td>
+                    <td>${escapeHtml(l.categoria?.descricao || '')}</td>
+                    <td>${escapeHtml((l.conta || l.cartao)?.nome || '')}</td>
+                    <td class="text-end text-nowrap ${l.tipo === 'R' ? 'valor-receita' : 'valor-despesa'}">${l.tipo === 'R' ? '+' : '−'} ${formatarMoedaBR(l.valor)}</td>
+                    <td class="text-center">
+                        <div class="form-check form-switch d-inline-block mb-0" ${emCartao ? 'title="No cartão, é pago com a fatura"' : ''}>
+                            <input class="form-check-input" type="checkbox" role="switch" aria-label="Realizado"
+                                data-realizado-lancamento="${l.id}" ${l.realizado ? 'checked' : ''} ${emCartao ? 'disabled' : ''}>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+
+            const saldoClasse = relatorio.saldoPrevisto < 0 ? 'valor-despesa' : 'valor-receita';
+            document.getElementById('gr-conteudo').innerHTML = `
+                <div class="row g-3 mb-3">
+                    ${cardTotaisRelatorio('Entradas', relatorio.entradas, 'valor-receita', 'recebidas')}
+                    ${cardTotaisRelatorio('Saídas', relatorio.saidas, 'valor-despesa', 'pagas')}
+                    <div class="col-12 col-md-4">
+                        <div class="card card-resumo h-100">
+                            <div class="card-body text-center">
+                                <h6 class="text-muted">Saldo previsto</h6>
+                                <div class="fs-5 fw-bold ${saldoClasse}">${formatarMoedaBR(relatorio.saldoPrevisto)}</div>
+                                <div class="small-muted">Só o realizado: ${formatarMoedaBR(relatorio.saldoRealizado)}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                ${linhas ? `
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                        <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Conta/Cartão</th><th class="text-end">Valor</th><th class="text-center">Realizado</th></tr></thead>
+                        <tbody>${linhas}</tbody>
+                    </table>
+                </div>` : '<p class="text-muted text-center">Nenhum lançamento neste mês.</p>'}`;
+        }
+
+        async function alterarRealizadoGastos(checkbox) {
+            esconderAlertaModalGastos('gr-alerta');
+            checkbox.disabled = true;
+
+            try {
+                await apiRequest({
+                    url: `${GASTOS_URL}/lancamentos/${checkbox.dataset.realizadoLancamento}/realizado`,
+                    method: 'PUT',
+                    body: { realizado: checkbox.checked }
+                });
+                await carregarRelatorioGastos();
+                await recarregarGastos();
+            } catch (error) {
+                console.error(error);
+                checkbox.checked = !checkbox.checked;
+                checkbox.disabled = false;
+                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gr-alerta', error.message || 'Não foi possível alterar.');
+            }
+        }
+
+        // ---------- cadastros: contas, cartões e categorias
+
+        async function abrirCadastrosGastos() {
+            if (!gastosDados) return;
+            ['conta', 'cartao', 'categoria'].forEach(cancelarEdicaoCadastroGastos);
+            esconderAlertaModalGastos('gc-alerta');
+            renderizarCadastrosGastos();
+            await trocarModalGastos('modal-gastos-cadastros');
+        }
+
+        function botaoAtivoGastos(tipo, item) {
+            return item.ativo
+                ? `<button type="button" class="btn btn-sm btn-outline-secondary" data-cadastro-acao="desativar" data-cadastro-tipo="${tipo}" data-id="${item.id}">Desativar</button>`
+                : `<button type="button" class="btn btn-sm btn-outline-success" data-cadastro-acao="ativar" data-cadastro-tipo="${tipo}" data-id="${item.id}">Ativar</button>`;
+        }
+
+        function botaoEditarGastos(tipo, item) {
+            return `<button type="button" class="btn btn-sm btn-outline-primary" data-cadastro-acao="editar" data-cadastro-tipo="${tipo}" data-id="${item.id}">Editar</button>`;
+        }
+
+        function nomeComSituacao(nome, ativo) {
+            return `${escapeHtml(nome)}${ativo ? '' : ' <span class="badge text-bg-secondary">Desativado</span>'}`;
+        }
+
+        function renderizarCadastrosGastos() {
+            const { contas, cartoes, categorias } = gastosDados;
+            const vazio = colunas => `<tr><td colspan="${colunas}" class="text-muted">Nenhum cadastro.</td></tr>`;
+
+            document.getElementById('gc-contas-lista').innerHTML = contas.length ? contas.map(c => `
+                <tr class="${c.ativo ? '' : 'text-muted'}">
+                    <td>${nomeComSituacao(c.nome, c.ativo)}</td>
+                    <td class="text-end text-nowrap ${c.saldo < 0 ? 'valor-despesa' : ''}">${formatarMoedaBR(c.saldo)}</td>
+                    <td>${c.somaSaldoGeral ? 'Sim' : 'Não'}</td>
+                    <td class="text-end text-nowrap">${botaoEditarGastos('conta', c)} ${botaoAtivoGastos('conta', c)}</td>
+                </tr>`).join('') : vazio(4);
+
+            document.getElementById('gc-cartoes-lista').innerHTML = cartoes.length ? cartoes.map(c => `
+                <tr class="${c.ativo ? '' : 'text-muted'}">
+                    <td>${nomeComSituacao(c.nome, c.ativo)}</td>
+                    <td>Dia ${c.diaVencimento}</td>
+                    <td>${c.diasFechamento} dia${c.diasFechamento === 1 ? '' : 's'} antes</td>
+                    <td>${escapeHtml(c.conta?.nome || '')}</td>
+                    <td class="text-end text-nowrap">${botaoEditarGastos('cartao', c)} ${botaoAtivoGastos('cartao', c)}</td>
+                </tr>`).join('') : vazio(5);
+
+            const ordenadas = [...categorias].sort((a, b) =>
+                a.tipo.localeCompare(b.tipo) || a.descricao.localeCompare(b.descricao, 'pt-BR'));
+            document.getElementById('gc-categorias-lista').innerHTML = ordenadas.length ? ordenadas.map(c => `
+                <tr class="${c.ativo ? '' : 'text-muted'}">
+                    <td>${nomeComSituacao(c.descricao, c.ativo)}</td>
+                    <td>${c.tipo === 'D' ? 'Despesa' : 'Receita'}</td>
+                    <td class="text-end text-nowrap">${botaoEditarGastos('categoria', c)} ${botaoAtivoGastos('categoria', c)}
+                        <button type="button" class="btn btn-sm btn-outline-danger" data-cadastro-acao="excluir" data-cadastro-tipo="categoria" data-id="${c.id}">Excluir</button></td>
+                </tr>`).join('') : vazio(3);
+
+            // A conta de pagamento do cartão em edição continua na lista mesmo desativada.
+            const selectConta = document.getElementById('gc-cartao-conta');
+            const atual = selectConta.value;
+            selectConta.innerHTML = opcoesContasGastos(gastosEdicaoCadastro.cartao?.conta?.id ?? null);
+            selectConta.value = atual;
+        }
+
+        const CADASTROS_GASTOS = {
+            conta: { url: 'contas', form: 'form-gastos-conta', foco: 'gc-conta-nome', nome: 'Conta' },
+            cartao: { url: 'cartoes', form: 'form-gastos-cartao', foco: 'gc-cartao-nome', nome: 'Cartão' },
+            categoria: { url: 'categorias', form: 'form-gastos-categoria', foco: 'gc-categoria-descricao', nome: 'Categoria' }
+        };
+
+        function cancelarEdicaoCadastroGastos(tipo) {
+            gastosEdicaoCadastro[tipo] = null;
+            const form = document.getElementById(CADASTROS_GASTOS[tipo].form);
+            limparCamposGastos(form);
+            document.getElementById(`gc-${tipo}-salvar`).textContent = 'Adicionar';
+            document.getElementById(`gc-${tipo}-cancelar`).classList.add('hidden');
+            if (tipo === 'cartao') {
+                document.getElementById('gc-cartao-conta').innerHTML = opcoesContasGastos();
+            }
+        }
+
+        function editarCadastroGastos(tipo, id) {
+            const lista = { conta: gastosDados.contas, cartao: gastosDados.cartoes, categoria: gastosDados.categorias }[tipo];
+            const item = lista.find(i => i.id === id);
+            if (!item) return;
+
+            cancelarEdicaoCadastroGastos(tipo);
+            gastosEdicaoCadastro[tipo] = item;
+
+            if (tipo === 'conta') {
+                document.getElementById('gc-conta-nome').value = item.nome;
+                document.getElementById('gc-conta-saldo').value = numeroParaMoedaBR(item.saldoInicial);
+                document.getElementById('gc-conta-geral').checked = item.somaSaldoGeral;
+            } else if (tipo === 'cartao') {
+                document.getElementById('gc-cartao-nome').value = item.nome;
+                document.getElementById('gc-cartao-vencimento').value = item.diaVencimento;
+                document.getElementById('gc-cartao-fechamento').value = item.diasFechamento;
+                const selectConta = document.getElementById('gc-cartao-conta');
+                selectConta.innerHTML = opcoesContasGastos(item.conta?.id);
+                selectConta.value = item.conta?.id ?? '';
+            } else {
+                document.getElementById('gc-categoria-descricao').value = item.descricao;
+                document.getElementById('gc-categoria-tipo').value = item.tipo;
+            }
+
+            document.getElementById(`gc-${tipo}-salvar`).textContent = 'Salvar';
+            document.getElementById(`gc-${tipo}-cancelar`).classList.remove('hidden');
+            document.getElementById(CADASTROS_GASTOS[tipo].foco).focus();
+        }
+
+        function corpoCadastroGastos(tipo) {
+            if (tipo === 'conta') {
+                return {
+                    nome: document.getElementById('gc-conta-nome').value.trim(),
+                    saldoInicial: document.getElementById('gc-conta-saldo').value.trim(),
+                    somaSaldoGeral: document.getElementById('gc-conta-geral').checked
+                };
+            }
+            if (tipo === 'cartao') {
+                return {
+                    nome: document.getElementById('gc-cartao-nome').value.trim(),
+                    diaVencimento: Number(document.getElementById('gc-cartao-vencimento').value),
+                    diasFechamento: Number(document.getElementById('gc-cartao-fechamento').value),
+                    contaId: Number(document.getElementById('gc-cartao-conta').value)
+                };
+            }
+            return {
+                descricao: document.getElementById('gc-categoria-descricao').value.trim(),
+                tipo: document.getElementById('gc-categoria-tipo').value
+            };
+        }
+
+        async function salvarCadastroGastos(tipo) {
+            esconderAlertaModalGastos('gc-alerta');
+            const config = CADASTROS_GASTOS[tipo];
+            if (!validarFormularioGastos(document.getElementById(config.form))) return;
+
+            const edicao = gastosEdicaoCadastro[tipo];
+            const botao = document.getElementById(`gc-${tipo}-salvar`);
+            botao.disabled = true;
+
+            try {
+                await apiRequest({
+                    url: `${GASTOS_URL}/${config.url}${edicao ? `/${edicao.id}` : ''}`,
+                    method: edicao ? 'PUT' : 'POST',
+                    body: corpoCadastroGastos(tipo)
+                });
+                cancelarEdicaoCadastroGastos(tipo);
+                mostrarAlertaModalGastos('gc-alerta', `${config.nome} ${edicao ? 'alterad' : 'cadastrad'}${tipo === 'cartao' ? 'o' : 'a'}.`, 'success');
+                await recarregarGastos();
+                renderizarCadastrosGastos();
+            } catch (error) {
+                console.error(error);
+                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gc-alerta', error.message || 'Não foi possível salvar.', 'danger');
+            } finally {
+                botao.disabled = false;
+            }
+        }
+
+        async function acaoCadastroGastos(tipo, acao, id) {
+            const config = CADASTROS_GASTOS[tipo];
+            if (acao === 'excluir' && !confirm('Excluir esta categoria?')) return;
+            esconderAlertaModalGastos('gc-alerta');
+
+            try {
+                await apiRequest(acao === 'excluir'
+                    ? { url: `${GASTOS_URL}/${config.url}/${id}`, method: 'DELETE' }
+                    : { url: `${GASTOS_URL}/${config.url}/${id}/${acao}`, method: 'PUT' });
+                if (gastosEdicaoCadastro[tipo]?.id === id) cancelarEdicaoCadastroGastos(tipo);
+                await recarregarGastos();
+                renderizarCadastrosGastos();
+            } catch (error) {
+                console.error(error);
+                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gc-alerta', error.message || 'Não foi possível concluir.', 'danger');
+            }
+        }
+
+        // ---------- eventos
+
+        document.querySelectorAll('[data-calendario]').forEach(botao => {
+            botao.innerHTML = ICONE_CALENDARIO;
+        });
+
+        document.addEventListener('click', function(event) {
+            const botao = event.target.closest('[data-calendario]');
+            if (botao) abrirCalendarioGastos(botao);
+        });
+
+        document.addEventListener('change', function(event) {
+            const nativo = event.target;
+            if (!nativo.classList?.contains('seletor-data-nativo') || !nativo.value) return;
+
+            const texto = nativo.closest('.campo-data').querySelector('input[data-tipo="data"]');
+            texto.value = formatarDataISO(nativo.value);
+            marcarCampo(texto, validarCampo(texto));
+            texto.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+
+        document.getElementById('tab-gastos').addEventListener('click', function(event) {
+            const alvo = event.target.closest('[data-ocultar], [data-novo-lancamento], [data-fatura-cartao], [data-agenda-lancamento], [data-agenda-fatura]');
+            if (!alvo) return;
+
+            if (alvo.dataset.ocultar) {
+                alternarValorOcultoGastos(alvo.dataset.ocultar);
+            } else if (alvo.dataset.novoLancamento) {
+                esconderAlertaGastos();
+                abrirLancamentoGastos({ tipo: alvo.dataset.novoLancamento });
+            } else if (alvo.dataset.faturaCartao) {
+                abrirFaturaGastos(alvo.dataset.faturaCartao);
+            } else if (alvo.dataset.agendaLancamento) {
+                abrirEdicaoLancamentoGastos(alvo.dataset.agendaLancamento);
+            } else if (alvo.dataset.agendaFatura) {
+                const [ano, mes] = alvo.dataset.vencimento.split('-').map(Number);
+                abrirFaturaGastos(alvo.dataset.agendaFatura, ano, mes);
+            }
+        });
+
+        document.getElementById('btn-gastos-transferencia').addEventListener('click', abrirMovimentacaoGastos);
+        document.getElementById('btn-gastos-relatorio').addEventListener('click', () => abrirRelatorioGastos());
+        document.getElementById('btn-gastos-cadastros').addEventListener('click', abrirCadastrosGastos);
+
+        // Lançamento
+        document.getElementById('form-gastos-lancamento').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            await salvarLancamentoGastos();
+        });
+        document.getElementById('form-gastos-lancamento').addEventListener('change', atualizarFormLancamentoGastos);
+        document.getElementById('form-gastos-lancamento').addEventListener('input', function(event) {
+            if (['gl-valor', 'gl-parcelas', 'gl-data'].includes(event.target.id)) atualizarFormLancamentoGastos();
+        });
+        document.getElementById('gl-excluir').addEventListener('click', excluirLancamentoGastos);
+        document.getElementById('modal-gastos-lancamento').addEventListener('hidden.bs.modal', function() {
+            const retorno = gastosLancamento?.retorno;
+            if (!retorno) return;
+            gastosLancamento.retorno = null;
+
+            if (retorno === 'modal-gastos-fatura' && gastosFatura) {
+                abrirFaturaGastos(gastosFatura.cartaoId, gastosFatura.ano, gastosFatura.mes);
+            } else if (retorno === 'modal-gastos-relatorio' && gastosRelatorio) {
+                abrirRelatorioGastos(gastosRelatorio.ano, gastosRelatorio.mes);
+            }
+        });
+
+        // Movimentação
+        document.getElementById('form-gastos-movimentacao').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            await salvarMovimentacaoGastos();
+        });
+        document.querySelectorAll('input[name="gm-tipo"]').forEach(radio => radio.addEventListener('change', atualizarFormMovimentacaoGastos));
+
+        // Fatura
+        document.getElementById('modal-gastos-fatura').addEventListener('click', function(event) {
+            const navegar = event.target.closest('[data-fatura-navegar]');
+            if (navegar && gastosFatura?.ano) {
+                const { ano, mes } = somarMeses(gastosFatura.ano, gastosFatura.mes, Number(navegar.dataset.faturaNavegar));
+                gastosFatura = { ...gastosFatura, ano, mes };
+                esconderAlertaModalGastos('gf-alerta');
+                // Limpa antes de buscar: senão o mês novo aparece no topo com as compras do anterior.
+                document.getElementById('gf-mes').textContent = nomeMes(ano, mes);
+                document.getElementById('gf-conteudo').innerHTML = '<p class="text-muted text-center my-3">Carregando...</p>';
+                document.getElementById('form-gastos-pagamento').classList.add('hidden');
+                carregarFaturaGastos();
+                return;
+            }
+
+            const estornar = event.target.closest('[data-estornar]');
+            if (estornar) {
+                estornarPagamentoGastos(estornar.dataset.estornar);
+                return;
+            }
+
+            const linha = event.target.closest('[data-editar-lancamento]');
+            if (linha) abrirEdicaoLancamentoGastos(linha.dataset.editarLancamento, 'modal-gastos-fatura');
+        });
+        document.getElementById('form-gastos-pagamento').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            await pagarFaturaGastos();
+        });
+
+        // Relatório
+        document.getElementById('modal-gastos-relatorio').addEventListener('click', function(event) {
+            const navegar = event.target.closest('[data-relatorio-navegar]');
+            if (navegar && gastosRelatorio) {
+                gastosRelatorio = somarMeses(gastosRelatorio.ano, gastosRelatorio.mes, Number(navegar.dataset.relatorioNavegar));
+                esconderAlertaModalGastos('gr-alerta');
+                // Limpa antes de buscar: senão o mês novo aparece no topo com os lançamentos do anterior.
+                document.getElementById('gr-conteudo').innerHTML = '<p class="text-muted text-center my-3">Carregando...</p>';
+                carregarRelatorioGastos();
+                return;
+            }
+
+            // O switch de realizado fica dentro da linha; clicar nele não abre a edição.
+            if (event.target.closest('.form-switch')) return;
+
+            const linha = event.target.closest('[data-editar-lancamento]');
+            if (linha) abrirEdicaoLancamentoGastos(linha.dataset.editarLancamento, 'modal-gastos-relatorio');
+        });
+        document.getElementById('modal-gastos-relatorio').addEventListener('change', function(event) {
+            if (event.target.dataset.realizadoLancamento) alterarRealizadoGastos(event.target);
+        });
+
+        // Cadastros
+        Object.entries(CADASTROS_GASTOS).forEach(([tipo, config]) => {
+            document.getElementById(config.form).addEventListener('submit', async function(event) {
+                event.preventDefault();
+                await salvarCadastroGastos(tipo);
+            });
+            document.getElementById(`gc-${tipo}-cancelar`).addEventListener('click', () => cancelarEdicaoCadastroGastos(tipo));
+        });
+        document.getElementById('modal-gastos-cadastros').addEventListener('click', function(event) {
+            const botao = event.target.closest('[data-cadastro-acao]');
+            if (!botao) return;
+
+            const { cadastroTipo, cadastroAcao } = botao.dataset;
+            const id = Number(botao.dataset.id);
+            if (cadastroAcao === 'editar') {
+                editarCadastroGastos(cadastroTipo, id);
+            } else {
+                acaoCadastroGastos(cadastroTipo, cadastroAcao, id);
+            }
+        });
 
         // ============================================
         // INICIALIZAÇÃO
