@@ -5627,13 +5627,19 @@
         // O Bootstrap não empilha modais. Para editar um lançamento a partir da fatura
         // ou do relatório, o modal de origem fecha antes e é reaberto (atualizado)
         // quando a edição termina — ver o 'hidden.bs.modal' do modal de lançamento.
+        // Verdadeiro enquanto um modal fecha só para dar lugar a outro: aí o modal que
+        // fecha não deve reabrir a sua origem (ver o 'hidden.bs.modal' da fatura).
+        let trocandoModalGastos = false;
+
         async function trocarModalGastos(idDestino, aoMostrar = null) {
             const aberto = document.querySelector('.modal.show');
             if (aberto && aberto.id !== idDestino) {
+                trocandoModalGastos = true;
                 await new Promise(resolve => {
                     aberto.addEventListener('hidden.bs.modal', resolve, { once: true });
                     bootstrap.Modal.getOrCreateInstance(aberto).hide();
                 });
+                trocandoModalGastos = false;
             }
 
             const destino = document.getElementById(idDestino);
@@ -6138,8 +6144,9 @@
         // ---------- fatura do cartão
 
         // Sem ano/mês abre a fatura atual (a que recebe uma compra feita hoje).
-        async function abrirFaturaGastos(cartaoId, ano = null, mes = null) {
-            gastosFatura = { cartaoId: Number(cartaoId), ano, mes, dados: null };
+        // retorno: id do modal a reabrir quando a fatura for fechada (o relatório).
+        async function abrirFaturaGastos(cartaoId, ano = null, mes = null, retorno = null) {
+            gastosFatura = { cartaoId: Number(cartaoId), ano, mes, dados: null, retorno };
             document.getElementById('gf-conteudo').innerHTML = '<p class="text-muted text-center my-3">Carregando...</p>';
             document.getElementById('gf-mes').textContent = ano ? nomeMes(ano, mes) : '--';
             document.getElementById('form-gastos-pagamento').classList.add('hidden');
@@ -6333,25 +6340,49 @@
                 </div>`;
         }
 
+        // Lançamentos em conta pela data de cada um; cartão só pelo total da fatura que
+        // vence no mês (o service já separa as duas listas e soma as faturas nos totais).
         function renderizarRelatorioGastos(relatorio) {
-            const linhas = relatorio.lancamentos.map(l => {
-                const emCartao = Boolean(l.cartao);
+            const linhasLancamentos = relatorio.lancamentos.map(l => {
                 const fixa = l.recorrenciaId ? ' <span class="badge text-bg-light border">fixa</span>' : '';
-                return `
+                return { data: l.data, html: `
                 <tr class="item-clicavel" data-editar-lancamento="${l.id}">
                     <td>${formatarDataISO(l.data)}</td>
                     <td>${descricaoComParcela(l)}${fixa}</td>
                     <td>${escapeHtml(l.categoria?.descricao || '')}</td>
-                    <td>${escapeHtml((l.conta || l.cartao)?.nome || '')}</td>
+                    <td>${escapeHtml(l.conta?.nome || '')}</td>
                     <td class="text-end text-nowrap ${l.tipo === 'R' ? 'valor-receita' : 'valor-despesa'}">${l.tipo === 'R' ? '+' : '−'} ${formatarMoedaBR(l.valor)}</td>
                     <td class="text-center">
-                        <div class="form-check form-switch d-inline-block mb-0" ${emCartao ? 'title="No cartão, é pago com a fatura"' : ''}>
+                        <div class="form-check form-switch d-inline-block mb-0">
                             <input class="form-check-input" type="checkbox" role="switch" aria-label="Realizado"
-                                data-realizado-lancamento="${l.id}" ${l.realizado ? 'checked' : ''} ${emCartao ? 'disabled' : ''}>
+                                data-realizado-lancamento="${l.id}" ${l.realizado ? 'checked' : ''}>
                         </div>
                     </td>
-                </tr>`;
-            }).join('');
+                </tr>` };
+            });
+
+            const linhasFaturas = (relatorio.faturas || []).map(f => {
+                const status = STATUS_FATURA[f.status] || { texto: f.status, classe: 'text-bg-secondary' };
+                const quitada = f.pendente <= 0 && f.total > 0;
+                return { data: f.vencimento, html: `
+                <tr class="item-clicavel" data-relatorio-fatura="${f.cartaoId}" title="Ver a fatura">
+                    <td>${formatarDataISO(f.vencimento)}</td>
+                    <td>Fatura ${escapeHtml(f.cartaoNome)} <span class="badge ${status.classe}">${status.texto}</span></td>
+                    <td class="text-muted">Cartão de crédito</td>
+                    <td>${escapeHtml(f.cartaoNome)}</td>
+                    <td class="text-end text-nowrap valor-despesa">− ${formatarMoedaBR(f.total)}</td>
+                    <td class="text-center">
+                        <div class="form-check form-switch d-inline-block mb-0" title="A fatura é dada como paga pelo pagamento dela">
+                            <input class="form-check-input" type="checkbox" role="switch" aria-label="Realizado" ${quitada ? 'checked' : ''} disabled>
+                        </div>
+                    </td>
+                </tr>` };
+            });
+
+            const linhas = [...linhasLancamentos, ...linhasFaturas]
+                .sort((a, b) => a.data.localeCompare(b.data))
+                .map(linha => linha.html)
+                .join('');
 
             const saldoClasse = relatorio.saldoPrevisto < 0 ? 'valor-despesa' : 'valor-receita';
             document.getElementById('gr-conteudo').innerHTML = `
@@ -6667,7 +6698,7 @@
             gastosLancamento.retorno = null;
 
             if (retorno === 'modal-gastos-fatura' && gastosFatura) {
-                abrirFaturaGastos(gastosFatura.cartaoId, gastosFatura.ano, gastosFatura.mes);
+                abrirFaturaGastos(gastosFatura.cartaoId, gastosFatura.ano, gastosFatura.mes, gastosFatura.retorno);
             } else if (retorno === 'modal-gastos-relatorio' && gastosRelatorio) {
                 abrirRelatorioGastos(gastosRelatorio.ano, gastosRelatorio.mes);
             }
@@ -6710,6 +6741,15 @@
             const linha = event.target.closest('[data-editar-lancamento]');
             if (linha) abrirEdicaoLancamentoGastos(linha.dataset.editarLancamento, 'modal-gastos-fatura');
         });
+        // Fatura aberta a partir do relatório: ao fechar, volta para ele (atualizado, porque
+        // pagar ou estornar muda os totais). Não quando a fatura só deu lugar a outro modal,
+        // nem quando fechou por sessão expirada.
+        document.getElementById('modal-gastos-fatura').addEventListener('hidden.bs.modal', function() {
+            if (trocandoModalGastos || gastosFatura?.retorno !== 'modal-gastos-relatorio' || !gastosRelatorio || !obterAccessToken()) return;
+            gastosFatura.retorno = null;
+            abrirRelatorioGastos(gastosRelatorio.ano, gastosRelatorio.mes);
+        });
+
         document.getElementById('form-gastos-pagamento').addEventListener('submit', async function(event) {
             event.preventDefault();
             await pagarFaturaGastos();
@@ -6729,6 +6769,12 @@
 
             // O switch de realizado fica dentro da linha; clicar nele não abre a edição.
             if (event.target.closest('.form-switch')) return;
+
+            const fatura = event.target.closest('[data-relatorio-fatura]');
+            if (fatura) {
+                abrirFaturaGastos(fatura.dataset.relatorioFatura, gastosRelatorio.ano, gastosRelatorio.mes, 'modal-gastos-relatorio');
+                return;
+            }
 
             const linha = event.target.closest('[data-editar-lancamento]');
             if (linha) abrirEdicaoLancamentoGastos(linha.dataset.editarLancamento, 'modal-gastos-relatorio');
