@@ -5785,12 +5785,13 @@
             const opcao = (valor, nome, ativo) =>
                 `<option value="${valor}">${escapeHtml(nome)}${ativo ? '' : ' (desativado)'}</option>`;
 
+            // Cartões primeiro: são o destino mais comum de uma despesa.
             let html = '<option value="">Escolha...</option>';
-            if (contas.length) {
-                html += `<optgroup label="Contas">${contas.map(c => opcao(`conta:${c.id}`, c.nome, c.ativo)).join('')}</optgroup>`;
-            }
             if (cartoes.length) {
                 html += `<optgroup label="Cartões">${cartoes.map(c => opcao(`cartao:${c.id}`, c.nome, c.ativo)).join('')}</optgroup>`;
+            }
+            if (contas.length) {
+                html += `<optgroup label="Contas">${contas.map(c => opcao(`conta:${c.id}`, c.nome, c.ativo)).join('')}</optgroup>`;
             }
             return html;
         }
