@@ -6194,14 +6194,16 @@
                 </li>`).join('');
 
             document.getElementById('gf-conteudo').innerHTML = `
-                <div class="text-center mb-3">
+                <div class="text-center mb-2">
                     <span class="badge ${status.classe}">${status.texto}</span>
-                    <span class="small-muted ms-1">Fecha em ${formatarDataISO(fatura.fechamento)} · vence em ${formatarDataISO(fatura.vencimento)}</span>
                 </div>
-                <div class="row text-center mb-3">
-                    <div class="col-4"><div class="small-muted">Total</div><div class="fw-bold">${formatarMoedaBR(fatura.total)}</div></div>
-                    <div class="col-4"><div class="small-muted">Pago</div><div class="fw-bold valor-receita">${formatarMoedaBR(fatura.pago)}</div></div>
-                    <div class="col-4"><div class="small-muted">Pendente</div><div class="fw-bold valor-despesa">${formatarMoedaBR(fatura.pendente)}</div></div>
+                <!-- Datas e valores numa linha só; no celular, as datas numa linha e os valores na outra. -->
+                <div class="row g-2 text-center mb-3" id="gf-resumo">
+                    <div class="col-6 col-sm"><div class="small-muted">Fechamento</div><div class="fw-bold">${formatarDataISO(fatura.fechamento)}</div></div>
+                    <div class="col-6 col-sm"><div class="small-muted">Vencimento</div><div class="fw-bold">${formatarDataISO(fatura.vencimento)}</div></div>
+                    <div class="col-4 col-sm"><div class="small-muted">Total</div><div class="fw-bold">${formatarMoedaBR(fatura.total)}</div></div>
+                    <div class="col-4 col-sm"><div class="small-muted">Pago</div><div class="fw-bold valor-receita">${formatarMoedaBR(fatura.pago)}</div></div>
+                    <div class="col-4 col-sm"><div class="small-muted">Pendente</div><div class="fw-bold valor-despesa">${formatarMoedaBR(fatura.pendente)}</div></div>
                 </div>
                 ${linhas ? `
                 <div class="table-responsive">
