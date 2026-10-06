@@ -5546,6 +5546,13 @@
             return lancamento.parcela ? `${descricao} <span class="text-muted">(${lancamento.parcela}/${lancamento.totalParcelas})</span>` : descricao;
         }
 
+        // Marca de lançamento que vem de uma despesa/receita fixa mensal (fatura e relatório).
+        function marcaFixa(lancamento) {
+            return lancamento.recorrenciaId
+                ? ` <span class="badge text-bg-light border" title="${lancamento.tipo === 'R' ? 'Receita' : 'Despesa'} fixa mensal">fixa</span>`
+                : '';
+        }
+
         function valoresOcultosGastos() {
             try {
                 return new Set(JSON.parse(localStorage.getItem(CHAVE_GASTOS_OCULTOS)) || []);
@@ -6199,7 +6206,7 @@
             const linhas = fatura.lancamentos.map(l => `
                 <tr class="item-clicavel" data-editar-lancamento="${l.id}">
                     <td>${formatarDataISO(l.data)}</td>
-                    <td>${descricaoComParcela(l)}${l.faturaTransferida ? ' <span class="badge text-bg-light border">transferida</span>' : ''}</td>
+                    <td>${descricaoComParcela(l)}${marcaFixa(l)}${l.faturaTransferida ? ' <span class="badge text-bg-light border">transferida</span>' : ''}</td>
                     <td>${escapeHtml(l.categoria?.descricao || '')}</td>
                     <td class="text-end text-nowrap ${l.tipo === 'R' ? 'valor-receita' : ''}">${l.tipo === 'R' ? '−' : ''}${formatarMoedaBR(l.valor)}</td>
                     <td class="text-end text-nowrap">${acoesFatura(l)}</td>
@@ -6355,11 +6362,10 @@
         // vence no mês (o service já separa as duas listas e soma as faturas nos totais).
         function renderizarRelatorioGastos(relatorio) {
             const linhasLancamentos = relatorio.lancamentos.map(l => {
-                const fixa = l.recorrenciaId ? ' <span class="badge text-bg-light border">fixa</span>' : '';
                 return { data: l.data, html: `
                 <tr class="item-clicavel" data-editar-lancamento="${l.id}">
                     <td>${formatarDataISO(l.data)}</td>
-                    <td>${descricaoComParcela(l)}${fixa}</td>
+                    <td>${descricaoComParcela(l)}${marcaFixa(l)}</td>
                     <td>${escapeHtml(l.categoria?.descricao || '')}</td>
                     <td>${escapeHtml(l.conta?.nome || '')}</td>
                     <td class="text-end text-nowrap ${l.tipo === 'R' ? 'valor-receita' : 'valor-despesa'}">${l.tipo === 'R' ? '+' : '−'} ${formatarMoedaBR(l.valor)}</td>
