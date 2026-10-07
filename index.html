@@ -875,7 +875,7 @@
                         <button type="button" class="btn btn-success" data-novo-lancamento="R">Receita</button>
                         <button type="button" class="btn btn-outline-primary" id="btn-gastos-transferencia">Transferência</button>
                         <button type="button" class="btn btn-outline-secondary" id="btn-gastos-relatorio">Relatório</button>
-                        <button type="button" class="btn btn-outline-secondary" id="btn-gastos-cadastros">Contas e cartões</button>
+                        <button type="button" class="btn btn-outline-secondary" id="btn-gastos-cadastros">Cadastros</button>
                     </div>
                 </div>
 
@@ -5788,7 +5788,7 @@
                         <span>${escapeHtml(conta.nome)}</span>
                         <span class="fw-semibold ${conta.saldo < 0 ? 'valor-despesa' : ''}">${moeda(conta.saldo, 'saldoGeral')}</span>
                     </li>`).join('')
-                : itemVazioGastos('Nenhuma conta no Saldo Geral. Cadastre em "Contas e cartões".');
+                : itemVazioGastos('Nenhuma conta no Saldo Geral. Inclua uma em "Cadastros".');
 
             document.getElementById('gastos-cartoes').innerHTML = dashboard.cartoes.length
                 ? dashboard.cartoes.map(fatura => {
@@ -5959,7 +5959,7 @@
 
         function opcoesCategoriasGastos(tipo, atualId = null) {
             const categorias = gastosDados.categorias.filter(c => c.tipo === tipo && (c.ativo || c.id === atualId));
-            if (!categorias.length) return '<option value="">Cadastre uma categoria em "Contas e cartões"</option>';
+            if (!categorias.length) return '<option value="">Inclua uma categoria em "Cadastros"</option>';
 
             return '<option value="">Escolha...</option>' + categorias
                 .map(c => `<option value="${c.id}">${escapeHtml(c.descricao)}</option>`)
