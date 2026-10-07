@@ -6062,7 +6062,7 @@
             esconderAlertaModalGastos('gl-alerta');
 
             tipo = lancamento?.tipo || tipo;
-            gastosLancamento = { tipo, edicao: lancamento, retorno };
+            gastosLancamento = { tipo, edicao: lancamento, retorno, realizadoManual: false };
 
             const nome = tipo === 'D' ? 'despesa' : 'receita';
             document.getElementById('gl-titulo').textContent = `${lancamento ? 'Editar' : 'Nova'} ${nome}`;
@@ -6130,6 +6130,11 @@
             const realizado = document.getElementById('gl-realizado');
             realizado.disabled = emCartao;
             if (emCartao && !pagoNaFatura) realizado.checked = false;
+            // Inclusão em conta com data de hoje já vem efetivada; acompanha a data e a
+            // conta/cartão até o usuário mexer no switch.
+            if (!gastosLancamento?.edicao && !gastosLancamento?.realizadoManual) {
+                realizado.checked = !emCartao && document.getElementById('gl-data').value.trim() === hojeBR();
+            }
             document.getElementById('gl-realizado-dica').classList.toggle('hidden', !emCartao);
 
             const dica = document.getElementById('gl-repeticao-dica');
@@ -6837,6 +6842,10 @@
         document.getElementById('form-gastos-lancamento').addEventListener('submit', async function(event) {
             event.preventDefault();
             await salvarLancamentoGastos();
+        });
+        // No próprio switch, antes de o change chegar ao formulário.
+        document.getElementById('gl-realizado').addEventListener('change', () => {
+            if (gastosLancamento) gastosLancamento.realizadoManual = true;
         });
         document.getElementById('form-gastos-lancamento').addEventListener('change', atualizarFormLancamentoGastos);
         document.getElementById('form-gastos-lancamento').addEventListener('input', function(event) {
