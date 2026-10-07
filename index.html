@@ -1814,6 +1814,18 @@
         const FORMULARIOS_GASTOS = ['form-gastos-lancamento', 'form-gastos-movimentacao', 'form-gastos-pagamento',
             'form-gastos-conta', 'form-gastos-cartao', 'form-gastos-categoria'];
 
+        // Próximos a pagar e a receber: cada lista mostra 5 e "Mostrar mais" pede mais 5,
+        // sempre desde o início (o serviço aceita até 100). O tamanho sobrevive às recargas
+        // da aba, para a lista não encolher depois de efetivar um item lá de baixo. Fica
+        // aqui porque limparAbaGastos() roda na carga da página.
+        const AGENDA_GASTOS = {
+            pagar: { lista: 'gastos-a-pagar', chave: 'proximosPagar', vazio: 'Nada a pagar.', rotulo: 'Pagar' },
+            receber: { lista: 'gastos-a-receber', chave: 'proximosReceber', vazio: 'Nada a receber.', rotulo: 'Receber' }
+        };
+        const ITENS_AGENDA_GASTOS = 5;
+        const MAXIMO_AGENDA_GASTOS = 100;
+        let quantidadeAgendaGastos = { pagar: ITENS_AGENDA_GASTOS, receber: ITENS_AGENDA_GASTOS };
+
         const SAUDE_DISTANCIA_URL = `${API_BASE}/saude-service/treinos/distancia_total_por_semana`;
         const SAUDE_ENERGIA_ATIVA_URL = `${API_BASE}/saude-service/treinos/energia_ativa_por_semana`;
         const SAUDE_TEMPO_TOTAL_URL = `${API_BASE}/saude-service/treinos/tempo_total_treino_por_semana`;
@@ -5690,12 +5702,17 @@
         // ---------- carga e dashboard
 
         async function carregarGastosDashboard() {
-            const [dashboard, contas, cartoes, categorias] = await Promise.all([
+            // Lista já expandida com "Mostrar mais" volta com o mesmo tamanho: o dashboard
+            // só traz 5, então ela vem do endpoint da agenda.
+            const ladosExpandidos = Object.keys(AGENDA_GASTOS).filter(lado => quantidadeAgendaGastos[lado] > ITENS_AGENDA_GASTOS);
+            const [dashboard, contas, cartoes, categorias, ...agendas] = await Promise.all([
                 apiRequest({ url: `${GASTOS_URL}/dashboard` }),
                 apiRequest({ url: `${GASTOS_URL}/contas` }),
                 apiRequest({ url: `${GASTOS_URL}/cartoes` }),
-                apiRequest({ url: `${GASTOS_URL}/categorias` })
+                apiRequest({ url: `${GASTOS_URL}/categorias` }),
+                ...ladosExpandidos.map(buscarAgendaGastos)
             ]);
+            ladosExpandidos.forEach((lado, i) => { dashboard[AGENDA_GASTOS[lado].chave] = agendas[i]; });
 
             gastosDados = {
                 dashboard,
@@ -5721,6 +5738,7 @@
 
         function limparAbaGastos() {
             gastosDados = null;
+            quantidadeAgendaGastos = { pagar: ITENS_AGENDA_GASTOS, receber: ITENS_AGENDA_GASTOS };
             ['receitas', 'despesas', 'saldoGeral', 'saldoTotal', 'faturas'].forEach(chave => {
                 document.getElementById(`gastos-card-${chave}`).textContent = '--';
                 document.getElementById(`gastos-card-${chave}-detalhe`).innerHTML = '&nbsp;';
@@ -5789,8 +5807,44 @@
                 }).join('')
                 : itemVazioGastos('Nenhum cartão ativo.');
 
-            document.getElementById('gastos-a-pagar').innerHTML = renderizarAgendaGastos(dashboard.proximosPagar, 'Nada a pagar.', 'Pagar');
-            document.getElementById('gastos-a-receber').innerHTML = renderizarAgendaGastos(dashboard.proximosReceber, 'Nada a receber.', 'Receber');
+            Object.keys(AGENDA_GASTOS).forEach(renderizarListaAgendaGastos);
+        }
+
+        // ---------- próximos a pagar e a receber
+
+        function buscarAgendaGastos(lado) {
+            return apiRequest({ url: `${GASTOS_URL}/agenda/${lado}?quantidade=${quantidadeAgendaGastos[lado]}` });
+        }
+
+        function renderizarListaAgendaGastos(lado) {
+            const { lista, chave, vazio, rotulo } = AGENDA_GASTOS[lado];
+            const agenda = gastosDados.dashboard[chave];
+            const mais = agenda.temMais && agenda.itens.length < MAXIMO_AGENDA_GASTOS
+                ? `<li class="list-group-item text-center">
+                        <button type="button" class="btn btn-sm btn-link" data-agenda-mais="${lado}">Mostrar mais ${ITENS_AGENDA_GASTOS}</button>
+                   </li>`
+                : '';
+            document.getElementById(lista).innerHTML = renderizarAgendaGastos(agenda.itens, vazio, rotulo) + mais;
+        }
+
+        async function mostrarMaisAgendaGastos(botao) {
+            const lado = botao.dataset.agendaMais;
+            const anterior = quantidadeAgendaGastos[lado];
+            esconderAlertaGastos();
+            botao.disabled = true;
+            botao.textContent = 'Carregando...';
+
+            try {
+                quantidadeAgendaGastos[lado] = Math.min(anterior + ITENS_AGENDA_GASTOS, MAXIMO_AGENDA_GASTOS);
+                gastosDados.dashboard[AGENDA_GASTOS[lado].chave] = await buscarAgendaGastos(lado);
+                renderizarListaAgendaGastos(lado);
+            } catch (error) {
+                console.error(error);
+                quantidadeAgendaGastos[lado] = anterior;
+                botao.disabled = false;
+                botao.textContent = `Mostrar mais ${ITENS_AGENDA_GASTOS}`;
+                if (!sessaoExpirouGastos(error)) mostrarAlertaGastos(error.message || 'Não foi possível carregar mais itens.', 'danger');
+            }
         }
 
         // A linha abre a edição (ou a fatura); o botão efetiva com um clique.
@@ -6752,12 +6806,14 @@
         document.addEventListener('scroll', () => calendarioAberto && posicionarCalendarioGastos(), true);
 
         document.getElementById('tab-gastos').addEventListener('click', function(event) {
-            const alvo = event.target.closest('[data-ocultar], [data-novo-lancamento], [data-fatura-cartao], [data-efetivar-lancamento], [data-efetivar-fatura], [data-agenda-lancamento], [data-agenda-fatura]');
+            const alvo = event.target.closest('[data-ocultar], [data-novo-lancamento], [data-fatura-cartao], [data-efetivar-lancamento], [data-efetivar-fatura], [data-agenda-mais], [data-agenda-lancamento], [data-agenda-fatura]');
             if (!alvo) return;
 
             // O botão de efetivar fica dentro da linha; o closest() acha ele antes dela.
             if (alvo.dataset.efetivarLancamento || alvo.dataset.efetivarFatura) {
                 efetivarAgendaGastos(alvo);
+            } else if (alvo.dataset.agendaMais) {
+                mostrarMaisAgendaGastos(alvo);
             } else if (alvo.dataset.ocultar) {
                 alternarValorOcultoGastos(alvo.dataset.ocultar);
             } else if (alvo.dataset.novoLancamento) {
