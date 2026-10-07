@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A single-page dashboard (Gastos, Saúde, Energia, Salário, Supermercado, Remédios — Gastos is the tab that opens first) for a personal microservices system. The **entire application is `index.html`** — markup, CSS in one `<style>` block, and all JavaScript in one `<script>` block at the end of `<body>`. There is no build step, no bundler, no framework, no `package.json`, and no test suite. Dependencies (Bootstrap 5, Chart.js, `chartjs-plugin-datalabels`, `qrcodejs`) are loaded from CDNs in `<head>`.
+A single-page dashboard (Gastos, Saúde, Energia, Remédios, Salário, Supermercado — Gastos is the tab that opens first) for a personal microservices system. The **entire application is `index.html`** — markup, CSS in one `<style>` block, and all JavaScript in one `<script>` block at the end of `<body>`. There is no build step, no bundler, no framework, no `package.json`, and no test suite. Dependencies (Bootstrap 5, Chart.js, `chartjs-plugin-datalabels`, `qrcodejs`) are loaded from CDNs in `<head>`.
 
 ## Running / developing
 
