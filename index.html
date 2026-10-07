@@ -207,6 +207,7 @@
         @media (pointer: coarse) {
             .chip-sintoma,
             .remedio-card .btn,
+            .botao-efetivar,
             #supermercado-paginacao .page-link {
                 min-height: 44px;
                 display: inline-flex;
@@ -5788,11 +5789,12 @@
                 }).join('')
                 : itemVazioGastos('Nenhum cartão ativo.');
 
-            document.getElementById('gastos-a-pagar').innerHTML = renderizarAgendaGastos(dashboard.proximosPagar, 'Nada a pagar.');
-            document.getElementById('gastos-a-receber').innerHTML = renderizarAgendaGastos(dashboard.proximosReceber, 'Nada a receber.');
+            document.getElementById('gastos-a-pagar').innerHTML = renderizarAgendaGastos(dashboard.proximosPagar, 'Nada a pagar.', 'Pagar');
+            document.getElementById('gastos-a-receber').innerHTML = renderizarAgendaGastos(dashboard.proximosReceber, 'Nada a receber.', 'Receber');
         }
 
-        function renderizarAgendaGastos(itens, vazio) {
+        // A linha abre a edição (ou a fatura); o botão efetiva com um clique.
+        function renderizarAgendaGastos(itens, vazio, rotuloEfetivar) {
             if (!itens?.length) return itemVazioGastos(vazio);
 
             return itens.map(item => {
@@ -5805,9 +5807,61 @@
                             <div>${escapeHtml(item.descricao)}</div>
                             <div class="small-muted">${formatarDataISO(item.data)}${item.atrasado ? ' <span class="badge text-bg-danger">Atrasado</span>' : ''}</div>
                         </div>
-                        <span class="fw-semibold">${formatarMoedaBR(item.valor)}</span>
+                        <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                            <span class="fw-semibold">${formatarMoedaBR(item.valor)}</span>
+                            ${botaoEfetivarAgendaGastos(item, rotuloEfetivar)}
+                        </div>
                     </li>`;
             }).join('');
+        }
+
+        // Fatura: paga hoje pela conta padrão do cartão. Sem conta padrão ativa não há
+        // botão — a linha abre a fatura, onde a conta é escolhida.
+        function botaoEfetivarAgendaGastos(item, rotulo) {
+            if (item.origem === 'FATURA') {
+                const conta = contaPagamentoFaturaGastos(item.cartaoId);
+                if (!conta) return '';
+                return `<button type="button" class="btn btn-sm btn-outline-success botao-efetivar"
+                    data-efetivar-fatura="${item.cartaoId}" data-vencimento="${escapeHtml(item.data)}"
+                    title="Pagar hoje pela conta ${escapeHtml(conta.nome)}">${rotulo}</button>`;
+            }
+            return `<button type="button" class="btn btn-sm btn-outline-success botao-efetivar"
+                data-efetivar-lancamento="${item.lancamentoId}" title="Marcar como ${rotulo === 'Pagar' ? 'pago' : 'recebido'}">${rotulo}</button>`;
+        }
+
+        function contaPagamentoFaturaGastos(cartaoId) {
+            const cartao = gastosDados?.cartoes.find(c => c.id === Number(cartaoId));
+            const contaId = cartao?.conta?.id;
+            return gastosDados?.contas.find(c => c.ativo && c.id === contaId) || null;
+        }
+
+        async function efetivarAgendaGastos(botao) {
+            esconderAlertaGastos();
+            botao.disabled = true;
+
+            try {
+                if (botao.dataset.efetivarFatura) {
+                    const cartaoId = botao.dataset.efetivarFatura;
+                    const conta = contaPagamentoFaturaGastos(cartaoId);
+                    const [ano, mes] = botao.dataset.vencimento.split('-').map(Number);
+                    await apiRequest({
+                        url: `${GASTOS_URL}/cartoes/${cartaoId}/faturas/${ano}/${mes}/pagamento`,
+                        method: 'POST',
+                        body: { contaId: conta.id, data: hojeBR() }
+                    });
+                } else {
+                    await apiRequest({
+                        url: `${GASTOS_URL}/lancamentos/${botao.dataset.efetivarLancamento}/realizado`,
+                        method: 'PUT',
+                        body: { realizado: true }
+                    });
+                }
+                await recarregarGastos();
+            } catch (error) {
+                console.error(error);
+                botao.disabled = false;
+                if (!sessaoExpirouGastos(error)) mostrarAlertaGastos(error.message || 'Não foi possível efetivar.', 'danger');
+            }
         }
 
         // ---------- selects compartilhados
@@ -6698,10 +6752,13 @@
         document.addEventListener('scroll', () => calendarioAberto && posicionarCalendarioGastos(), true);
 
         document.getElementById('tab-gastos').addEventListener('click', function(event) {
-            const alvo = event.target.closest('[data-ocultar], [data-novo-lancamento], [data-fatura-cartao], [data-agenda-lancamento], [data-agenda-fatura]');
+            const alvo = event.target.closest('[data-ocultar], [data-novo-lancamento], [data-fatura-cartao], [data-efetivar-lancamento], [data-efetivar-fatura], [data-agenda-lancamento], [data-agenda-fatura]');
             if (!alvo) return;
 
-            if (alvo.dataset.ocultar) {
+            // O botão de efetivar fica dentro da linha; o closest() acha ele antes dela.
+            if (alvo.dataset.efetivarLancamento || alvo.dataset.efetivarFatura) {
+                efetivarAgendaGastos(alvo);
+            } else if (alvo.dataset.ocultar) {
                 alternarValorOcultoGastos(alvo.dataset.ocultar);
             } else if (alvo.dataset.novoLancamento) {
                 esconderAlertaGastos();
