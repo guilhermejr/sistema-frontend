@@ -5801,7 +5801,7 @@
                         </div>
                         <div class="text-end">
                             <div class="fw-semibold">${moeda(fatura.total, 'faturas')}</div>
-                            <button type="button" class="btn btn-link btn-sm p-0" data-fatura-cartao="${fatura.cartaoId}">Ver fatura</button>
+                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" data-fatura-cartao="${fatura.cartaoId}">Ver fatura</button>
                         </div>
                     </li>`;
                 }).join('')
@@ -5821,7 +5821,7 @@
             const agenda = gastosDados.dashboard[chave];
             const mais = agenda.temMais && agenda.itens.length < MAXIMO_AGENDA_GASTOS
                 ? `<li class="list-group-item text-center">
-                        <button type="button" class="btn btn-sm btn-link" data-agenda-mais="${lado}">Mostrar mais ${ITENS_AGENDA_GASTOS}</button>
+                        <button type="button" class="btn btn-sm btn-link text-decoration-none" data-agenda-mais="${lado}">Mostrar mais ${ITENS_AGENDA_GASTOS}</button>
                    </li>`
                 : '';
             document.getElementById(lista).innerHTML = renderizarAgendaGastos(agenda.itens, vazio, rotulo) + mais;
