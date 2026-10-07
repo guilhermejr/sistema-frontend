@@ -3618,21 +3618,39 @@
             document.getElementById('card-saude-sono-total-periodo').textContent = ultimoSonoTotal ? 'Horas' : '--';
         }
 
-        async function carregarDashboard() {
+        // Cada aba busca seus dados só quando é aberta pela primeira vez.
+        // carregarDashboard() esquece o que já foi carregado e busca apenas a aba
+        // ativa (Gastos, ao entrar); as outras carregam no primeiro clique.
+        const CARREGADORES_ABAS = {
+            'tab-gastos': () => carregarGastosDashboard(),
+            'tab-saude': () => carregarSaudeDashboard(),
+            'tab-energia': () => carregarEnergiaDashboard(),
+            'tab-salario': () => carregarAnosSalario().then(() => carregarSalarioDashboard(obterAnoSalarioSelecionado())),
+            'tab-supermercado': () => carregarSupermercadoDashboard(0),
+            'tab-remedios': () => carregarRemediosDashboard()
+        };
+
+        const abasCarregadas = new Set();
+
+        function idAbaDoBotao(botao) {
+            return botao.getAttribute('data-bs-target').slice(1);
+        }
+
+        function idAbaAtiva() {
+            return idAbaDoBotao(document.querySelector('#dashboardTabs .nav-link.active'));
+        }
+
+        async function carregarAba(idAba) {
             clearDashboardError();
             toggleDashboardLoading(true);
+            abasCarregadas.add(idAba);
 
             try {
-                await Promise.all([
-                    carregarEnergiaDashboard(),
-                    carregarAnosSalario().then(() => carregarSalarioDashboard(obterAnoSalarioSelecionado())),
-                    carregarSaudeDashboard(),
-                    carregarSupermercadoDashboard(0),
-                    carregarRemediosDashboard(),
-                    carregarGastosDashboard()
-                ]);
+                await CARREGADORES_ABAS[idAba]();
             } catch (error) {
                 console.error(error);
+                // Falhou: abrir a aba de novo tenta outra vez.
+                abasCarregadas.delete(idAba);
 
                 if (
                     String(error.message || '').includes('Sessão expirada') ||
@@ -3649,6 +3667,16 @@
                 toggleDashboardLoading(false);
             }
         }
+
+        async function carregarDashboard() {
+            abasCarregadas.clear();
+            await carregarAba(idAbaAtiva());
+        }
+
+        document.getElementById('dashboardTabs').addEventListener('shown.bs.tab', function(event) {
+            const idAba = idAbaDoBotao(event.target);
+            if (!abasCarregadas.has(idAba)) carregarAba(idAba);
+        });
 
         async function carregarSomenteSupermercado(pagina = 0) {
             clearDashboardError();
