@@ -176,6 +176,15 @@
             font-weight: 600;
         }
 
+        /* Ícone do módulo antes do nome da aba (SVG do Bootstrap Icons, em linha). */
+        .icone-aba {
+            width: 1em;
+            height: 1em;
+            margin-right: 0.4rem;
+            vertical-align: -0.125em;
+            flex-shrink: 0;
+        }
+
         /* Cinco abas somam mais que a largura de um celular. Em vez de quebrar
            em duas fileiras, a barra rola na horizontal; a borda inferior do
            <ul> sai porque o overflow cortaria o encaixe da aba ativa nela. */
@@ -454,37 +463,37 @@
         <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
           <li class="nav-item" role="presentation">
             <button class="nav-link active" id="gastos-tab" data-perfil="ROLE_GASTOS" data-bs-toggle="tab" data-bs-target="#tab-gastos" type="button" role="tab">
-                Gastos
+                <svg class="icone-aba" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.136.326A1.5 1.5 0 0 1 14 1.78V3h.5A1.5 1.5 0 0 1 16 4.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 13.5v-9a1.5 1.5 0 0 1 1.432-1.499zM5.562 3H13V1.78a.5.5 0 0 0-.621-.484zM1.5 4a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5z"/></svg>Gastos
             </button>
           </li>
           <li class="nav-item" role="presentation">
             <button class="nav-link" id="saude-tab" data-perfil="ROLE_SAUDE" data-bs-toggle="tab" data-bs-target="#tab-saude" type="button" role="tab">
-                Saúde
+                <svg class="icone-aba" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053.918 3.995.78 5.323 1.508 7H.43c-2.128-5.697 4.165-8.83 7.394-5.857q.09.083.176.171a3 3 0 0 1 .176-.17c3.23-2.974 9.522.159 7.394 5.856h-1.078c.728-1.677.59-3.005.108-3.947C13.486.878 10.4.28 8.717 2.01zM2.212 10h1.315C4.593 11.183 6.05 12.458 8 13.795c1.949-1.337 3.407-2.612 4.473-3.795h1.315c-1.265 1.566-3.14 3.25-5.788 5-2.648-1.75-4.523-3.434-5.788-5"/><path d="M10.464 3.314a.5.5 0 0 0-.945.049L7.921 8.956 6.464 5.314a.5.5 0 0 0-.88-.091L3.732 8H.5a.5.5 0 0 0 0 1H4a.5.5 0 0 0 .416-.223l1.473-2.209 1.647 4.118a.5.5 0 0 0 .945-.049l1.598-5.593 1.457 3.642A.5.5 0 0 0 12 9h3.5a.5.5 0 0 0 0-1h-3.162z"/></svg>Saúde
             </button>
           </li>
           <li class="nav-item" role="presentation">
             <button class="nav-link" id="energia-tab" data-perfil="ROLE_ENERGIA" data-bs-toggle="tab" data-bs-target="#tab-energia" type="button" role="tab">
-                Energia
+                <svg class="icone-aba" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M11.251.068a.5.5 0 0 1 .227.58L9.677 6.5H13a.5.5 0 0 1 .364.843l-8 8.5a.5.5 0 0 1-.842-.49L6.323 9.5H3a.5.5 0 0 1-.364-.843l8-8.5a.5.5 0 0 1 .615-.09zM4.157 8.5H7a.5.5 0 0 1 .478.647L6.11 13.59l5.732-6.09H9a.5.5 0 0 1-.478-.647L9.89 2.41z"/></svg>Energia
             </button>
           </li>
           <li class="nav-item" role="presentation">
             <button class="nav-link" id="remedios-tab" data-perfil="ROLE_REMEDIOS" data-bs-toggle="tab" data-bs-target="#tab-remedios" type="button" role="tab">
-                Remédios
+                <svg class="icone-aba" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M1.828 8.9 8.9 1.827a4 4 0 1 1 5.657 5.657l-7.07 7.071A4 4 0 1 1 1.827 8.9Zm9.128.771 2.893-2.893a3 3 0 1 0-4.243-4.242L6.713 5.429z"/></svg>Remédios
             </button>
           </li>
           <li class="nav-item" role="presentation">
             <button class="nav-link" id="salario-tab" data-perfil="ROLE_SALARIO" data-bs-toggle="tab" data-bs-target="#tab-salario" type="button" role="tab">
-                Salário
+                <svg class="icone-aba" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M1 3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1zm7 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4"/><path d="M0 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1zm3 0a2 2 0 0 1-2 2v4a2 2 0 0 1 2 2h10a2 2 0 0 1 2-2V7a2 2 0 0 1-2-2z"/></svg>Salário
             </button>
           </li>
           <li class="nav-item" role="presentation">
             <button class="nav-link" id="supermercado-tab" data-perfil="ROLE_SUPERMERCADO" data-bs-toggle="tab" data-bs-target="#tab-supermercado" type="button" role="tab">
-                Supermercado
+                <svg class="icone-aba" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .49.598l-1 5a.5.5 0 0 1-.465.401l-9.397.472L4.415 11H13a.5.5 0 0 1 0 1H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5M3.102 4l.84 4.479 9.144-.459L13.89 4zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4m7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4m-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2m7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/></svg>Supermercado
             </button>
           </li>
           <li class="nav-item" role="presentation">
             <button class="nav-link" id="administracao-tab" data-perfil="ROLE_ADMIN" data-bs-toggle="tab" data-bs-target="#tab-administracao" type="button" role="tab">
-                Administração
+                <svg class="icone-aba" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1zm-7.978-1L7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002-.014.002zM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4m3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0M6.936 9.28a6 6 0 0 0-1.23-.247A7 7 0 0 0 5 9c-4 0-5 3-5 4q0 1 1 1h4.216A2.24 2.24 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816M4.92 10A5.5 5.5 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275ZM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0m3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4"/></svg>Administração
             </button>
           </li>
         </ul>
