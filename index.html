@@ -6962,7 +6962,7 @@
                 renderizarRelatorioGastos(relatorio);
             } catch (error) {
                 console.error(error);
-                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gr-alerta', error.message || 'Não foi possível carregar o relatório.');
+                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gr-alerta', error.message || 'Não foi possível carregar o relatório.', 'danger');
             }
         }
 
@@ -7043,7 +7043,49 @@
                         <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Conta/Cartão</th><th class="text-end">Valor</th><th class="text-center">Realizado</th></tr></thead>
                         <tbody>${linhas}</tbody>
                     </table>
-                </div>` : '<p class="text-muted text-center">Nenhum lançamento neste mês.</p>'}`;
+                </div>` : '<p class="text-muted text-center">Nenhum lançamento neste mês.</p>'}
+                ${secaoTransferenciasRelatorio(relatorio.transferencias || [])}`;
+        }
+
+        // Transferências do ciclo, só para consulta: não entram em Entradas, Saídas nem
+        // Saldo (o dinheiro só muda de conta). "Desfazer" apaga a movimentação.
+        function secaoTransferenciasRelatorio(transferencias) {
+            if (!transferencias.length) return '';
+            return `
+                <h6 class="mt-4 mb-1">Transferências</h6>
+                <div class="item-dica mb-2">Dinheiro que só mudou de conta: não entra nas entradas, saídas nem no saldo acima.</div>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                        <thead><tr><th>Data</th><th>Contas</th><th class="d-none d-md-table-cell">Descrição</th><th class="text-end">Valor</th><th></th></tr></thead>
+                        <tbody>${transferencias.map(t => `
+                            <tr data-transferencia-resumo="${escapeHtml(`${formatarMoedaBR(t.valor)} de ${t.contaOrigem?.nome || ''} para ${t.contaDestino?.nome || ''} em ${formatarDataISO(t.data)}`)}">
+                                <td class="text-nowrap"><span class="d-none d-sm-inline">${formatarDataISO(t.data)}</span><span class="d-sm-none">${formatarDataISO(t.data).slice(0, 5)}</span></td>
+                                <td>${escapeHtml(t.contaOrigem?.nome || '')} <span class="text-muted">→</span> ${escapeHtml(t.contaDestino?.nome || '')}</td>
+                                <td class="d-none d-md-table-cell">${escapeHtml(t.descricao || '')}</td>
+                                <td class="text-end text-nowrap">${formatarMoedaBR(t.valor)}</td>
+                                <td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger" data-desfazer-transferencia="${t.id}">Desfazer</button></td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+        }
+
+        async function desfazerTransferenciaGastos(botao) {
+            const id = Number(botao.dataset.desfazerTransferencia);
+            const resumo = botao.closest('tr').dataset.transferenciaResumo;
+            if (!confirm(`Desfazer a transferência de ${resumo}?\n\nEla é apagada e o saldo das duas contas volta ao que era antes.`)) return;
+
+            botao.disabled = true;
+            try {
+                await apiRequest({ url: `${GASTOS_URL}/movimentacoes/${id}`, method: 'DELETE' });
+                await carregarRelatorioGastos();
+                mostrarAlertaModalGastos('gr-alerta', `Transferência de ${resumo} desfeita.`, 'success');
+                await recarregarGastos();
+            } catch (error) {
+                console.error(error);
+                botao.disabled = false;
+                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gr-alerta', error.message || 'Não foi possível desfazer.', 'danger');
+            }
         }
 
         async function alterarRealizadoGastos(checkbox) {
@@ -7062,7 +7104,7 @@
                 console.error(error);
                 checkbox.checked = !checkbox.checked;
                 checkbox.disabled = false;
-                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gr-alerta', error.message || 'Não foi possível alterar.');
+                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gr-alerta', error.message || 'Não foi possível alterar.', 'danger');
             }
         }
 
@@ -7473,6 +7515,12 @@
                 // Limpa antes de buscar: senão o mês novo aparece no topo com os lançamentos do anterior.
                 document.getElementById('gr-conteudo').innerHTML = '<p class="text-muted text-center my-3">Carregando...</p>';
                 carregarRelatorioGastos();
+                return;
+            }
+
+            const desfazer = event.target.closest('[data-desfazer-transferencia]');
+            if (desfazer) {
+                desfazerTransferenciaGastos(desfazer);
                 return;
             }
 
