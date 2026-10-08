@@ -481,6 +481,11 @@
                 Supermercado
             </button>
           </li>
+          <li class="nav-item hidden" role="presentation" id="administracao-tab-item">
+            <button class="nav-link" id="administracao-tab" data-bs-toggle="tab" data-bs-target="#tab-administracao" type="button" role="tab">
+                Administração
+            </button>
+          </li>
         </ul>
 
         <div class="tab-content">
@@ -805,6 +810,45 @@
                         <nav class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mt-3" aria-label="Paginação das notas fiscais">
                             <div class="small-muted" id="supermercado-pagina-info">--</div>
                             <ul class="pagination mb-0" id="supermercado-paginacao"></ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA ADMINISTRAÇÃO -->
+            <div class="tab-pane fade" id="tab-administracao" role="tabpanel" aria-labelledby="administracao-tab">
+                <div id="admin-alerta" class="alert hidden" role="alert"></div>
+
+                <div class="card table-card">
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                            <div>
+                                <h5 class="mb-1">Usuários</h5>
+                                <div class="item-dica">Quem acessa o sistema e o que cada um vê. Clique numa linha para editar.</div>
+                            </div>
+                            <button type="button" class="btn btn-primary" id="btn-admin-novo-usuario">Novo usuário</button>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th class="d-none d-md-table-cell">Perfis</th>
+                                        <th class="d-none d-lg-table-cell">Último acesso</th>
+                                        <th>Situação</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-usuarios-lista">
+                                    <tr><td colspan="5" class="text-center text-muted">Nenhum dado carregado.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <nav class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mt-3" aria-label="Paginação dos usuários">
+                            <div class="small-muted" id="admin-pagina-info">--</div>
+                            <ul class="pagination mb-0" id="admin-paginacao"></ul>
                         </nav>
                     </div>
                 </div>
@@ -1674,6 +1718,52 @@
     </div>
 
     <!-- MODAL CADASTROS: CONTAS, CARTÕES E CATEGORIAS -->
+    <div class="modal fade" id="modal-admin-usuario" tabindex="-1" aria-labelledby="admin-usuario-titulo" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <form class="modal-content form-validado" id="form-admin-usuario" novalidate>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="admin-usuario-titulo">Novo usuário</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="admin-usuario-alerta" class="alert alert-danger hidden" role="alert"></div>
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <label for="admin-usuario-nome" class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="admin-usuario-nome" data-tipo="texto" maxlength="255" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-12">
+                            <label for="admin-usuario-email" class="form-label">E-mail</label>
+                            <input type="email" class="form-control" id="admin-usuario-email" data-tipo="email" maxlength="255" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-12 col-sm-6" data-admin-so-novo>
+                            <label for="admin-usuario-senha" class="form-label">Senha</label>
+                            <input type="password" class="form-control" id="admin-usuario-senha" data-tipo="senha" autocomplete="new-password">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-12 col-sm-6" data-admin-so-novo>
+                            <label for="admin-usuario-confirmar" class="form-label">Confirmar senha</label>
+                            <input type="password" class="form-control" id="admin-usuario-confirmar" data-tipo="senha" autocomplete="new-password">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-12 small-muted" data-admin-so-novo>Mínimo de 8 caracteres, com letra maiúscula, minúscula, número e um destes símbolos: @ $ ! % * ? &amp;</div>
+                        <div class="col-12 mt-3">
+                            <div class="form-label mb-1">Perfis</div>
+                            <div class="row g-1" id="admin-usuario-perfis"></div>
+                            <div class="invalid-feedback d-block" id="admin-usuario-perfis-erro"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="admin-usuario-salvar">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="modal fade" id="modal-gastos-cadastros" tabindex="-1" aria-labelledby="gc-titulo" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
@@ -1861,6 +1951,9 @@
         const SINTOMAS_URL = `${API_BASE}/remedios-service/sintomas`;
 
         const GASTOS_URL = `${API_BASE}/gastos-service`;
+
+        const USUARIOS_URL = `${API_BASE}/autenticacao-service/usuarios`;
+        const PERFIS_URL = `${API_BASE}/autenticacao-service/perfis`;
         // Formulários da aba Gastos que usam as máscaras e a validação compartilhadas.
         const FORMULARIOS_GASTOS = ['form-gastos-lancamento', 'form-gastos-movimentacao', 'form-gastos-pagamento',
             'form-gastos-conta', 'form-gastos-cartao', 'form-gastos-categoria', 'form-gastos-configuracao'];
@@ -1995,6 +2088,7 @@
             hide('login-section');
             show('dashboard-section');
             document.getElementById('usuario-logado').textContent = obterNomeUsuario();
+            mostrarAbaAdministracao();
         }
 
         function limparTabelaSalario() {
@@ -2827,6 +2921,9 @@
 
             // Remédios
             limparAbaRemedios();
+
+            // Administração
+            limparAbaAdministracao();
 
             // Saúde
             document.getElementById('card-saude-distancia').textContent = '--';
@@ -3708,7 +3805,8 @@
             'tab-energia': () => carregarEnergiaDashboard(),
             'tab-salario': () => carregarAnosSalario().then(() => carregarSalarioDashboard(obterAnoSalarioSelecionado())),
             'tab-supermercado': () => carregarSupermercadoDashboard(0),
-            'tab-remedios': () => carregarRemediosDashboard()
+            'tab-remedios': () => carregarRemediosDashboard(),
+            'tab-administracao': () => carregarAdministracao(0)
         };
 
         const abasCarregadas = new Set();
@@ -3955,6 +4053,17 @@
 
                 case 'texto':
                     if (!valor) return 'Preencha este campo.';
+                    return null;
+
+                case 'email':
+                    if (!valor) return 'Informe o e-mail.';
+                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor)) return 'E-mail inválido.';
+                    return null;
+
+                // Mesma regra do UsuarioRequest no autenticacao-service.
+                case 'senha':
+                    if (!valor) return 'Informe a senha.';
+                    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(input.value)) return 'Senha fora da regra abaixo.';
                     return null;
 
                 case 'inteiro': {
@@ -5340,7 +5449,7 @@
         });
 
         // Máscaras e validação campo a campo valem para todos os formulários de cadastro.
-        ['form-novo-acompanhamento', 'form-nova-folha', ...FORMULARIOS_GASTOS].forEach(idFormulario => {
+        ['form-novo-acompanhamento', 'form-nova-folha', 'form-admin-usuario', ...FORMULARIOS_GASTOS].forEach(idFormulario => {
             const form = document.getElementById(idFormulario);
 
             form.addEventListener('input', function(event) {
@@ -7232,6 +7341,263 @@
             } else {
                 acaoCadastroGastos(cadastroTipo, cadastroAcao, id);
             }
+        });
+
+        // ============================================
+        // ADMINISTRAÇÃO (usuários e perfis do autenticacao-service)
+        // ============================================
+        const USUARIOS_POR_PAGINA = 10;
+        const PERFIL_ADMIN = 'ROLE_ADMIN';
+        const NOMES_PERFIS = {
+            ROLE_ADMIN: 'Administração', ROLE_GASTOS: 'Gastos', ROLE_SAUDE: 'Saúde', ROLE_ENERGIA: 'Energia',
+            ROLE_REMEDIOS: 'Remédios', ROLE_SALARIO: 'Salário', ROLE_SUPERMERCADO: 'Supermercado', ROLE_LIVROS: 'Livros'
+        };
+        // { pagina, usuarios, perfis }
+        let administracao = null;
+        // Usuário aberto no modal; null ao incluir.
+        let usuarioEmEdicao = null;
+
+        function nomePerfil(descricao) {
+            return NOMES_PERFIS[descricao] || descricao.replace(/^ROLE_/, '');
+        }
+
+        // A claim "perfis" do token é a lista separada por vírgula (JwtProvider do
+        // autenticacao-service). Esconder a aba é só conveniência: quem barra é o
+        // @PreAuthorize("hasAnyRole('ADMIN')") de /usuarios e /perfis.
+        function usuarioEhAdmin() {
+            const token = obterAccessToken();
+            return String((token && parseJwt(token)?.perfis) || '').split(',').includes(PERFIL_ADMIN);
+        }
+
+        function idUsuarioLogado() {
+            const token = obterAccessToken();
+            return token ? parseJwt(token)?.sub : null;
+        }
+
+        function mostrarAbaAdministracao() {
+            const admin = usuarioEhAdmin();
+            document.getElementById('administracao-tab-item').classList.toggle('hidden', !admin);
+            // Sem o perfil, a aba não pode ficar ativa: o apiRequest trataria o 403 como sessão expirada.
+            if (!admin && document.getElementById('administracao-tab').classList.contains('active')) {
+                bootstrap.Tab.getOrCreateInstance(document.getElementById('gastos-tab')).show();
+            }
+        }
+
+        function mostrarAlertaAdministracao(mensagem, tipo = 'success') {
+            const alerta = document.getElementById('admin-alerta');
+            alerta.className = `alert alert-${tipo}`;
+            alerta.textContent = mensagem;
+            show('admin-alerta');
+            sumirSeSucesso(alerta);
+        }
+
+        function limparAbaAdministracao() {
+            administracao = null;
+            hide('admin-alerta');
+            document.getElementById('admin-usuarios-lista').innerHTML =
+                '<tr><td colspan="5" class="text-center text-muted">Nenhum dado carregado.</td></tr>';
+            document.getElementById('admin-paginacao').innerHTML = '';
+            document.getElementById('admin-pagina-info').textContent = '--';
+        }
+
+        async function carregarAdministracao(pagina = administracao?.pagina ?? 0) {
+            const parametros = new URLSearchParams({ page: Math.max(0, pagina), size: USUARIOS_POR_PAGINA, sort: 'nome,asc' });
+            const [resposta, perfis] = await Promise.all([
+                apiRequest({ url: `${USUARIOS_URL}?${parametros}` }),
+                administracao?.perfis ?? apiRequest({ url: PERFIS_URL })
+            ]);
+            const paginaUsuarios = normalizarPaginaCompras(resposta);
+
+            // Página que ficou vazia (não deveria, não há exclusão): volta para a última que existe.
+            if (!paginaUsuarios.conteudo.length && paginaUsuarios.pagina > 0) {
+                return carregarAdministracao(paginaUsuarios.totalPaginas - 1);
+            }
+
+            administracao = {
+                pagina: paginaUsuarios.pagina,
+                usuarios: paginaUsuarios.conteudo,
+                perfis: [...(Array.isArray(perfis) ? perfis : [])]
+                    .sort((a, b) => nomePerfil(a.descricao).localeCompare(nomePerfil(b.descricao), 'pt-BR'))
+            };
+            renderizarUsuarios(paginaUsuarios);
+        }
+
+        // Datas do autenticacao-service são gravadas em UTC, sem fuso no JSON.
+        function formatarDataHoraUTC(dataHora) {
+            if (!dataHora) return 'Nunca';
+            const data = new Date(`${String(dataHora).slice(0, 19)}Z`);
+            if (Number.isNaN(data.getTime())) return '--';
+            return data.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        function renderizarUsuarios(paginaUsuarios) {
+            const eu = idUsuarioLogado();
+            const tbody = document.getElementById('admin-usuarios-lista');
+
+            tbody.innerHTML = paginaUsuarios.conteudo.length ? paginaUsuarios.conteudo.map(u => {
+                const perfis = (u.perfis || []).map(p => nomePerfil(p.descricao))
+                    .sort((a, b) => a.localeCompare(b, 'pt-BR'))
+                    .map(nome => `<span class="badge text-bg-light border me-1">${escapeHtml(nome)}</span>`).join('');
+                const proprio = u.id === eu;
+                const botao = proprio
+                    ? '<span class="small-muted text-nowrap">Você</span>'
+                    : `<button type="button" class="btn btn-sm ${u.ativo ? 'btn-outline-secondary' : 'btn-outline-success'}" data-admin-status="${escapeHtml(u.id)}">${u.ativo ? 'Desativar' : 'Ativar'}</button>`;
+                return `
+                <tr class="item-clicavel ${u.ativo ? '' : 'text-muted'}" data-admin-editar="${escapeHtml(u.id)}">
+                    <td><div>${escapeHtml(u.nome)}</div><div class="small-muted text-break">${escapeHtml(u.email)}</div></td>
+                    <td class="d-none d-md-table-cell">${perfis}</td>
+                    <td class="d-none d-lg-table-cell text-nowrap">${formatarDataHoraUTC(u.ultimoAcesso)}</td>
+                    <td>${u.ativo ? '<span class="badge text-bg-success">Ativo</span>' : '<span class="badge text-bg-secondary">Inativo</span>'}</td>
+                    <td class="text-end">${botao}</td>
+                </tr>`;
+            }).join('') : '<tr><td colspan="5" class="text-center text-muted">Nenhum usuário.</td></tr>';
+
+            const info = document.getElementById('admin-pagina-info');
+            const lista = document.getElementById('admin-paginacao');
+            const { pagina, tamanho, totalElementos, totalPaginas, conteudo } = paginaUsuarios;
+            const primeiro = pagina * tamanho + 1;
+            info.textContent = totalElementos
+                ? `Exibindo ${primeiro} a ${primeiro + conteudo.length - 1} de ${totalElementos} usuário(s)` : '';
+
+            if (totalPaginas <= 1) {
+                lista.innerHTML = '';
+                return;
+            }
+            const item = (rotulo, destino, desabilitado, ativo = false) => `
+                <li class="page-item${desabilitado ? ' disabled' : ''}${ativo ? ' active' : ''}">
+                    <button class="page-link" type="button" data-pagina-usuarios="${destino}" ${desabilitado || ativo ? 'disabled' : ''}>${escapeHtml(rotulo)}</button>
+                </li>`;
+            lista.innerHTML = [
+                item('Anterior', pagina - 1, pagina === 0),
+                ...paginasVisiveis(pagina, totalPaginas).map(n => n === null
+                    ? '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>'
+                    : item(String(n + 1), n, false, n === pagina)),
+                item('Próxima', pagina + 1, pagina + 1 >= totalPaginas)
+            ].join('');
+        }
+
+        async function recarregarAdministracao(pagina) {
+            try {
+                await carregarAdministracao(pagina);
+            } catch (error) {
+                console.error(error);
+                mostrarAlertaAdministracao(error.message || 'Não foi possível carregar os usuários.', 'danger');
+            }
+        }
+
+        function abrirUsuario(id = null) {
+            if (!administracao) return;
+            usuarioEmEdicao = id ? administracao.usuarios.find(u => u.id === id) : null;
+            if (id && !usuarioEmEdicao) return;
+
+            const form = document.getElementById('form-admin-usuario');
+            form.reset();
+            form.querySelectorAll('[data-tipo]').forEach(campo => marcarCampo(campo, null));
+            document.getElementById('admin-usuario-perfis-erro').textContent = '';
+            hide('admin-usuario-alerta');
+
+            const novo = !usuarioEmEdicao;
+            document.getElementById('admin-usuario-titulo').textContent = novo ? 'Novo usuário' : 'Editar usuário';
+            form.querySelectorAll('[data-admin-so-novo]').forEach(el => el.classList.toggle('hidden', !novo));
+            const email = document.getElementById('admin-usuario-email');
+            // O serviço não altera o e-mail na edição (UsuarioAtualizarRequest só tem nome e perfis).
+            email.readOnly = !novo;
+            email.value = usuarioEmEdicao?.email || '';
+            document.getElementById('admin-usuario-nome').value = usuarioEmEdicao?.nome || '';
+
+            const marcados = new Set((usuarioEmEdicao?.perfis || []).map(p => p.descricao));
+            const proprio = usuarioEmEdicao?.id === idUsuarioLogado();
+            document.getElementById('admin-usuario-perfis').innerHTML = administracao.perfis.map(p => {
+                // Tirar o próprio perfil de administração trancaria o acesso a esta aba.
+                const travado = proprio && p.descricao === PERFIL_ADMIN;
+                return `
+                <div class="col-6 col-sm-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="admin-perfil-${escapeHtml(p.id)}" value="${escapeHtml(p.descricao)}"
+                            ${marcados.has(p.descricao) ? 'checked' : ''} ${travado ? 'disabled' : ''}>
+                        <label class="form-check-label" for="admin-perfil-${escapeHtml(p.id)}"${travado ? ' title="Você não pode tirar o seu próprio acesso à administração."' : ''}>${escapeHtml(nomePerfil(p.descricao))}</label>
+                    </div>
+                </div>`;
+            }).join('');
+
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-admin-usuario')).show();
+        }
+
+        async function salvarUsuarioAdministracao() {
+            const form = document.getElementById('form-admin-usuario');
+            hide('admin-usuario-alerta');
+            const novo = !usuarioEmEdicao;
+
+            let valido = validarFormularioGastos(form);
+            const senha = document.getElementById('admin-usuario-senha');
+            const confirmar = document.getElementById('admin-usuario-confirmar');
+            if (novo && valido && senha.value !== confirmar.value) {
+                marcarCampo(confirmar, 'As senhas não conferem.');
+                confirmar.focus();
+                valido = false;
+            }
+            const perfis = [...document.querySelectorAll('#admin-usuario-perfis input:checked')].map(c => c.value);
+            document.getElementById('admin-usuario-perfis-erro').textContent = perfis.length ? '' : 'Escolha ao menos um perfil.';
+            if (!valido || !perfis.length) return;
+
+            const nome = document.getElementById('admin-usuario-nome').value.trim();
+            const botao = document.getElementById('admin-usuario-salvar');
+            botao.disabled = true;
+            try {
+                await apiRequest(novo
+                    ? { url: USUARIOS_URL, method: 'POST', body: {
+                        nome, email: document.getElementById('admin-usuario-email').value.trim(),
+                        senha: senha.value, confirmarSenha: confirmar.value, perfis } }
+                    : { url: `${USUARIOS_URL}/${usuarioEmEdicao.id}`, method: 'PUT', body: { nome, perfis } });
+                bootstrap.Modal.getInstance(document.getElementById('modal-admin-usuario')).hide();
+                mostrarAlertaAdministracao(`Usuário ${novo ? 'incluído' : 'alterado'}.`);
+                await recarregarAdministracao();
+            } catch (error) {
+                console.error(error);
+                const alerta = document.getElementById('admin-usuario-alerta');
+                alerta.textContent = error.message || 'Não foi possível salvar.';
+                show('admin-usuario-alerta');
+            } finally {
+                botao.disabled = false;
+            }
+        }
+
+        async function alterarStatusUsuario(id) {
+            const usuario = administracao?.usuarios.find(u => u.id === id);
+            if (!usuario || id === idUsuarioLogado()) return;
+            if (usuario.ativo && !confirm(`Desativar ${usuario.nome}? Ele não conseguirá mais entrar no sistema.`)) return;
+
+            try {
+                await apiRequest({ url: `${USUARIOS_URL}/${id}/alterar-status`, method: 'PUT' });
+                mostrarAlertaAdministracao(`${usuario.nome} ${usuario.ativo ? 'desativado' : 'ativado'}.`);
+            } catch (error) {
+                console.error(error);
+                mostrarAlertaAdministracao(error.message || 'Não foi possível alterar a situação.', 'danger');
+            }
+            await recarregarAdministracao();
+        }
+
+        document.getElementById('btn-admin-novo-usuario').addEventListener('click', () => abrirUsuario());
+        document.getElementById('form-admin-usuario').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            await salvarUsuarioAdministracao();
+        });
+        document.getElementById('admin-usuario-perfis').addEventListener('change', function() {
+            if (this.querySelector('input:checked')) document.getElementById('admin-usuario-perfis-erro').textContent = '';
+        });
+        document.getElementById('tab-administracao').addEventListener('click', function(event) {
+            const status = event.target.closest('[data-admin-status]');
+            if (status) {
+                alterarStatusUsuario(status.dataset.adminStatus);
+                return;
+            }
+            const pagina = event.target.closest('[data-pagina-usuarios]');
+            if (pagina) {
+                recarregarAdministracao(Number(pagina.dataset.paginaUsuarios));
+                return;
+            }
+            const linha = event.target.closest('[data-admin-editar]');
+            if (linha) abrirUsuario(linha.dataset.adminEditar);
         });
 
         // ============================================
