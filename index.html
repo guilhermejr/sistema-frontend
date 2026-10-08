@@ -1895,6 +1895,23 @@
             document.getElementById(id).classList.add('hidden');
         }
 
+        // Mensagem de confirmação (alert-success) some sozinha depois de alguns segundos;
+        // erro fica até a próxima ação. Chamar sempre depois de mostrar o alerta: uma
+        // mensagem nova cancela o sumiço agendado para a anterior.
+        const TEMPO_ALERTA_SUCESSO_MS = 5000;
+        const sumicoAlertas = new WeakMap();
+
+        function sumirSeSucesso(alerta) {
+            clearTimeout(sumicoAlertas.get(alerta));
+            sumicoAlertas.delete(alerta);
+            if (!alerta.classList.contains('alert-success')) return;
+            sumicoAlertas.set(alerta, setTimeout(() => {
+                sumicoAlertas.delete(alerta);
+                alerta.classList.add('hidden');
+                alerta.textContent = '';
+            }, TEMPO_ALERTA_SUCESSO_MS));
+        }
+
         function setLoginError(message) {
             const alert = document.getElementById('login-alert');
             alert.textContent = message;
@@ -3801,6 +3818,7 @@
             alerta.className = `alert alert-${tipo}`;
             alerta.textContent = mensagem;
             show('energia-alerta');
+            sumirSeSucesso(alerta);
         }
 
         function esconderAlertaEnergia() {
@@ -4070,6 +4088,7 @@
             alerta.className = `alert alert-${tipo}`;
             alerta.textContent = mensagem;
             show('salario-alerta');
+            sumirSeSucesso(alerta);
         }
 
         function esconderAlertaSalario() {
@@ -4844,6 +4863,7 @@
             alerta.className = `alert alert-${tipo}`;
             alerta.textContent = mensagem;
             show('remedios-alerta');
+            sumirSeSucesso(alerta);
         }
 
         function esconderAlertaRemedios() {
@@ -5458,6 +5478,7 @@
             const alerta = document.getElementById(`dois-fatores-${tipo}`);
             alerta.textContent = mensagem;
             alerta.classList.remove('hidden');
+            sumirSeSucesso(alerta);
         }
 
         async function abrirDoisFatores() {
@@ -5631,6 +5652,7 @@
             alerta.className = `alert alert-${tipo}`;
             alerta.textContent = mensagem;
             show('gastos-alerta');
+            sumirSeSucesso(alerta);
         }
 
         function esconderAlertaGastos() {
@@ -5645,6 +5667,7 @@
             alerta.textContent = mensagem;
             alerta.classList.remove('hidden');
             alerta.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            sumirSeSucesso(alerta);
         }
 
         function esconderAlertaModalGastos(id) {
