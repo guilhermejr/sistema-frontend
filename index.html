@@ -6075,7 +6075,7 @@
             esconderAlertaModalGastos('gl-alerta');
 
             tipo = lancamento?.tipo || tipo;
-            gastosLancamento = { tipo, edicao: lancamento, retorno, realizadoManual: false, mesesFatura: 0, chaveFatura: null };
+            gastosLancamento = { tipo, edicao: lancamento, retorno, realizadoManual: false, mesesFatura: 0, chaveFatura: null, anteriorPaga: {} };
 
             const nome = tipo === 'D' ? 'despesa' : 'receita';
             document.getElementById('gl-titulo').textContent = `${lancamento ? 'Editar' : 'Nova'} ${nome}`;
@@ -6206,7 +6206,22 @@
             const natural = faturaNaturalGastos(cartao, data);
             const destino = somarMeses(natural.ano, natural.mes, gastosLancamento.mesesFatura);
             const vencimento = Math.min(cartao.diaVencimento, new Date(destino.ano, destino.mes, 0).getDate());
-            return { ...destino, natural, vencimento, meses: gastosLancamento.mesesFatura };
+            return { ...destino, natural, vencimento, meses: gastosLancamento.mesesFatura, cartaoId: cartao.id };
+        }
+
+        // Se a fatura anterior à natural já foi paga (true/false), ou undefined enquanto
+        // não se sabe — pergunta ao serviço uma vez por cartão e mês ao abrir o modal.
+        function anteriorPagaGastos(fatura) {
+            const chave = `${fatura.cartaoId}|${fatura.natural.ano}-${fatura.natural.mes}`;
+            const cache = gastosLancamento.anteriorPaga;
+            if (!(chave in cache)) {
+                cache[chave] = undefined;
+                apiRequest({ url: `${GASTOS_URL}/cartoes/${fatura.cartaoId}/faturas/${fatura.natural.ano}/${fatura.natural.mes}` })
+                    .then(resposta => { cache[chave] = Boolean(resposta.anteriorPaga); })
+                    .catch(error => console.error(error)) // sem a resposta o botão fica livre; o serviço confere
+                    .finally(() => { if (gastosLancamento?.anteriorPaga === cache) atualizarFormLancamentoGastos(); });
+            }
+            return cache[chave];
         }
 
         function atualizarFaturaLancamentoGastos(repeticao) {
@@ -6223,20 +6238,24 @@
 
             document.getElementById('gl-fatura-mes').textContent = nomeMes(fatura.ano, fatura.mes);
             document.getElementById('gl-fatura-vencimento').textContent = `· vence ${doisDigitos(fatura.vencimento)}/${doisDigitos(fatura.mes)}`;
-            // O serviço aceita até a fatura anterior à natural, nunca antes.
-            document.getElementById('gl-fatura-anterior').disabled = fatura.meses <= -1;
+            // O serviço aceita até a fatura anterior à natural, nunca antes, e só se ela
+            // ainda não foi paga.
+            const anteriorPaga = anteriorPagaGastos(fatura) === true;
+            document.getElementById('gl-fatura-anterior').disabled = fatura.meses <= -1 || (fatura.meses === 0 && anteriorPaga);
             document.getElementById('gl-fatura-proxima').disabled = false;
 
             const serie = repeticao === 'PARCELADA' ? ' As demais parcelas seguem mês a mês.'
                 : repeticao === 'FIXA' ? ' Vale só para a primeira.' : '';
+            const anterior = somarMeses(fatura.natural.ano, fatura.natural.mes, -1);
             document.getElementById('gl-fatura-dica').textContent = fatura.meses === 0
-                ? `Pela data da compra.${serie}`
+                ? (anteriorPaga ? `A fatura de ${nomeMes(anterior.ano, anterior.mes)} já foi paga.` : `Pela data da compra.${serie}`)
                 : `Pela data seria ${nomeMes(fatura.natural.ano, fatura.natural.mes)}.${serie}`;
         }
 
         function mudarFaturaLancamentoGastos(delta) {
             if (!faturaEscolhidaGastos()) return;
-            gastosLancamento.mesesFatura = Math.max(-1, gastosLancamento.mesesFatura + delta);
+            const minimo = anteriorPagaGastos(faturaEscolhidaGastos()) === true ? 0 : -1;
+            gastosLancamento.mesesFatura = Math.max(minimo, gastosLancamento.mesesFatura + delta);
             atualizarFormLancamentoGastos();
         }
 
@@ -6422,9 +6441,11 @@
             document.getElementById('gf-mes').textContent = nomeMes(ano, mes);
 
             // Compra ainda não paga pode ir para a próxima fatura ou voltar uma — o serviço
-            // aceita até a fatura anterior à natural da compra, nunca antes.
+            // aceita até a fatura anterior à natural da compra, nunca antes, e nunca para
+            // uma fatura que já recebeu pagamento.
             const cartaoFatura = gastosDados?.cartoes.find(c => c.id === fatura.cartao.id);
             const podeVoltar = l => {
+                if (fatura.anteriorPaga) return false;
                 if (!cartaoFatura) return l.faturaTransferida;
                 const [a, m, d] = l.data.split('-').map(Number);
                 const natural = faturaNaturalGastos(cartaoFatura, new Date(a, m - 1, d));
