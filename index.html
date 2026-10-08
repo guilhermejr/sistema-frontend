@@ -1347,13 +1347,25 @@
                     <div class="row g-3 mb-4">
                         <div class="col-6">
                             <label for="acompanhamento-inicio" class="form-label">Início</label>
-                            <input type="text" class="form-control" id="acompanhamento-inicio" name="inicio" data-tipo="data" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10" autocomplete="off">
-                            <div class="invalid-feedback"></div>
+                            <div class="campo-data">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="acompanhamento-inicio" name="inicio" data-tipo="data" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10" autocomplete="off">
+                                    <button type="button" class="btn btn-outline-secondary botao-calendario" data-calendario aria-label="Abrir calendário" aria-expanded="false"></button>
+                                </div>
+                                <div class="mini-calendario hidden" role="dialog" aria-label="Escolher data"></div>
+                                <div class="invalid-feedback"></div>
+                            </div>
                         </div>
                         <div class="col-6">
                             <label for="acompanhamento-fim" class="form-label">Fim</label>
-                            <input type="text" class="form-control" id="acompanhamento-fim" name="fim" data-tipo="data" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10" autocomplete="off">
-                            <div class="invalid-feedback"></div>
+                            <div class="campo-data">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="acompanhamento-fim" name="fim" data-tipo="data" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10" autocomplete="off">
+                                    <button type="button" class="btn btn-outline-secondary botao-calendario" data-calendario aria-label="Abrir calendário" aria-expanded="false"></button>
+                                </div>
+                                <div class="mini-calendario hidden" role="dialog" aria-label="Escolher data"></div>
+                                <div class="invalid-feedback"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -6010,28 +6022,31 @@
 
         const DIAS_SEMANA = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
+        // Calendário dos campos .campo-data (Gastos e Energia): o botão [data-calendario]
+        // abre o .mini-calendario do mesmo campo. Os eventos ficam no document, então basta
+        // a marcação para um campo novo ganhar o calendário.
         // { campo, texto, painel, ano, mes } do calendário aberto; só um por vez.
         let calendarioAberto = null;
 
-        function abrirCalendarioGastos(botao) {
+        function abrirCalendario(botao) {
             const campo = botao.closest('.campo-data');
             if (calendarioAberto?.campo === campo) {
-                fecharCalendarioGastos();
+                fecharCalendario();
                 return;
             }
-            fecharCalendarioGastos();
+            fecharCalendario();
 
             const texto = campo.querySelector('input[data-tipo="data"]');
             const base = parseDataBR(texto.value.trim()) || new Date();
             calendarioAberto = { campo, texto, painel: campo.querySelector('.mini-calendario'), ano: base.getFullYear(), mes: base.getMonth() + 1 };
 
-            renderizarCalendarioGastos();
+            renderizarCalendario();
             calendarioAberto.painel.classList.remove('hidden');
-            posicionarCalendarioGastos();
+            posicionarCalendario();
             botao.setAttribute('aria-expanded', 'true');
         }
 
-        function fecharCalendarioGastos() {
+        function fecharCalendario() {
             if (!calendarioAberto) return;
             calendarioAberto.painel.classList.add('hidden');
             calendarioAberto.campo.querySelector('[data-calendario]').setAttribute('aria-expanded', 'false');
@@ -6039,7 +6054,7 @@
         }
 
         // Abaixo do campo, alinhado à direita (no botão); acima quando não cabe embaixo.
-        function posicionarCalendarioGastos() {
+        function posicionarCalendario() {
             const { campo, painel } = calendarioAberto;
             const grupo = campo.querySelector('.input-group').getBoundingClientRect();
             const largura = painel.offsetWidth;
@@ -6051,7 +6066,7 @@
             painel.style.top = `${cabeAbaixo ? grupo.bottom + 4 : Math.max(8, grupo.top - 4 - altura)}px`;
         }
 
-        function renderizarCalendarioGastos() {
+        function renderizarCalendario() {
             const { painel, texto, ano, mes } = calendarioAberto;
             const selecionada = parseDataBR(texto.value.trim());
             const hoje = new Date();
@@ -6079,11 +6094,11 @@
                 </div>`;
         }
 
-        function escolherDataGastos(data) {
+        function escolherDataCalendario(data) {
             const { texto } = calendarioAberto;
             texto.value = `${doisDigitos(data.getDate())}/${doisDigitos(data.getMonth() + 1)}/${data.getFullYear()}`;
             marcarCampo(texto, validarCampo(texto));
-            fecharCalendarioGastos();
+            fecharCalendario();
             texto.dispatchEvent(new Event('change', { bubbles: true }));
             texto.focus();
         }
@@ -6907,7 +6922,7 @@
         document.addEventListener('click', function(event) {
             const botao = event.target.closest('[data-calendario]');
             if (botao) {
-                abrirCalendarioGastos(botao);
+                abrirCalendario(botao);
                 return;
             }
             if (!calendarioAberto || !calendarioAberto.painel.contains(event.target)) return;
@@ -6917,19 +6932,19 @@
             if (navegar) {
                 const { ano, mes } = somarMeses(calendarioAberto.ano, calendarioAberto.mes, Number(navegar.dataset.calNavegar));
                 Object.assign(calendarioAberto, { ano, mes });
-                renderizarCalendarioGastos();
-                posicionarCalendarioGastos();
+                renderizarCalendario();
+                posicionarCalendario();
             } else if (dia) {
-                escolherDataGastos(new Date(calendarioAberto.ano, calendarioAberto.mes - 1, Number(dia.dataset.calDia)));
+                escolherDataCalendario(new Date(calendarioAberto.ano, calendarioAberto.mes - 1, Number(dia.dataset.calDia)));
             } else if (event.target.closest('[data-cal-hoje]')) {
-                escolherDataGastos(new Date());
+                escolherDataCalendario(new Date());
             }
         });
 
         // Clique fora fecha. O próprio botão do calendário fica de fora: o click dele alterna.
         document.addEventListener('pointerdown', function(event) {
             if (calendarioAberto && !calendarioAberto.painel.contains(event.target) && !event.target.closest('[data-calendario]')) {
-                fecharCalendarioGastos();
+                fecharCalendario();
             }
         });
 
@@ -6938,14 +6953,14 @@
             if (event.key === 'Escape' && calendarioAberto) {
                 event.stopPropagation();
                 const texto = calendarioAberto.texto;
-                fecharCalendarioGastos();
+                fecharCalendario();
                 texto.focus();
             }
         }, true);
 
-        document.addEventListener('hide.bs.modal', fecharCalendarioGastos);
-        window.addEventListener('resize', () => calendarioAberto && posicionarCalendarioGastos());
-        document.addEventListener('scroll', () => calendarioAberto && posicionarCalendarioGastos(), true);
+        document.addEventListener('hide.bs.modal', fecharCalendario);
+        window.addEventListener('resize', () => calendarioAberto && posicionarCalendario());
+        document.addEventListener('scroll', () => calendarioAberto && posicionarCalendario(), true);
 
         document.getElementById('tab-gastos').addEventListener('click', function(event) {
             const alvo = event.target.closest('[data-ocultar], [data-novo-lancamento], [data-fatura-cartao], [data-efetivar-lancamento], [data-efetivar-fatura], [data-agenda-mais], [data-agenda-lancamento], [data-agenda-fatura]');
