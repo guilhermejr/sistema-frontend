@@ -947,7 +947,7 @@
                     </div>
                 </div>
 
-                <div class="row row-cols-2 row-cols-md-3 row-cols-xl-5 g-3 mb-4">
+                <div class="row row-cols-2 row-cols-lg-4 g-3 mb-4">
                     <div class="col">
                         <div class="card card-resumo text-center h-100">
                             <div class="card-body">
@@ -981,18 +981,6 @@
                                 </div>
                                 <div id="gastos-card-saldoGeral" class="fs-4 fw-bold ">--</div>
                                 <div id="gastos-card-saldoGeral-detalhe" class="small-muted mt-1">&nbsp;</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="card card-resumo text-center h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-center align-items-center gap-2">
-                                    <h6 class="text-muted mb-0">Saldo Total</h6>
-                                    <button type="button" class="btn btn-link btn-sm p-0 botao-olho" data-ocultar="saldoTotal" aria-label="Mostrar ou ocultar saldo total"></button>
-                                </div>
-                                <div id="gastos-card-saldoTotal" class="fs-4 fw-bold ">--</div>
-                                <div id="gastos-card-saldoTotal-detalhe" class="small-muted mt-1">&nbsp;</div>
                             </div>
                         </div>
                     </div>
@@ -1875,6 +1863,7 @@
                                 <table class="table table-sm align-middle">
                                     <thead><tr><th>Nome</th><th class="text-end">Saldo</th><th>Saldo Geral</th><th></th></tr></thead>
                                     <tbody id="gc-contas-lista"></tbody>
+                                    <tfoot id="gc-contas-total"></tfoot>
                                 </table>
                             </div>
                         </div>
@@ -6120,7 +6109,7 @@
         function limparAbaGastos() {
             gastosDados = null;
             quantidadeAgendaGastos = { pagar: ITENS_AGENDA_GASTOS, receber: ITENS_AGENDA_GASTOS };
-            ['receitas', 'despesas', 'saldoGeral', 'saldoTotal', 'faturas'].forEach(chave => {
+            ['receitas', 'despesas', 'saldoGeral', 'faturas'].forEach(chave => {
                 document.getElementById(`gastos-card-${chave}`).textContent = '--';
                 document.getElementById(`gastos-card-${chave}-detalhe`).innerHTML = '&nbsp;';
             });
@@ -6150,7 +6139,6 @@
                 receitas: [dashboard.receitas.total, `Recebido ${formatarMoedaBR(dashboard.receitas.realizado)}`],
                 despesas: [dashboard.despesas.total, `Pago ${formatarMoedaBR(dashboard.despesas.realizado)}`],
                 saldoGeral: [dashboard.saldoGeral, `${dashboard.contas.length} conta${dashboard.contas.length === 1 ? '' : 's'}`],
-                saldoTotal: [dashboard.saldoTotal, 'Todas as contas ativas'],
                 faturas: [dashboard.faturas, `${dashboard.cartoes.length} cart${dashboard.cartoes.length === 1 ? 'ão' : 'ões'}`]
             };
             Object.entries(cards).forEach(([chave, [valor, texto]]) => {
@@ -7114,6 +7102,15 @@
                     <td>${c.somaSaldoGeral ? 'Sim' : 'Não'}</td>
                     <td class="text-end text-nowrap">${botaoEditarGastos('conta', c)} ${botaoAtivoGastos('conta', c)}</td>
                 </tr>`).join('') : vazio(4);
+
+            // Saldo Total vem do dashboard (soma das contas ativas, calculada no service).
+            const saldoTotal = gastosDados.dashboard?.saldoTotal;
+            document.getElementById('gc-contas-total').innerHTML = contas.length && saldoTotal != null ? `
+                <tr class="fw-semibold">
+                    <td class="text-nowrap" title="Soma das contas ativas">Total<span class="small-muted fw-normal d-none d-sm-inline"> (contas ativas)</span></td>
+                    <td class="text-end text-nowrap ${saldoTotal < 0 ? 'valor-despesa' : ''}">${formatarMoedaBR(saldoTotal)}</td>
+                    <td colspan="2"></td>
+                </tr>` : '';
 
             document.getElementById('gc-cartoes-lista').innerHTML = cartoes.length ? cartoes.map(c => `
                 <tr class="${c.ativo ? '' : 'text-muted'}">
