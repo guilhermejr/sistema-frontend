@@ -434,6 +434,7 @@
 
                 <div class="d-flex align-items-center gap-2 cabecalho-usuario">
                     <span id="usuario-logado" class="badge text-bg-secondary p-2">Usuário</span>
+                    <button class="btn btn-outline-secondary" onclick="abrirTrocaSenha()" title="Trocar a sua senha">Senha</button>
                     <button class="btn btn-outline-secondary" onclick="abrirDoisFatores()" title="Autenticação em dois fatores">2FA</button>
                     <button class="btn btn-outline-danger" onclick="logout()">Sair</button>
                 </div>
@@ -1343,6 +1344,41 @@
     </div>
 
     <!-- MODAL NOVO ACOMPANHAMENTO DE ENERGIA -->
+    <div class="modal fade" id="modal-troca-senha" tabindex="-1" aria-labelledby="modal-troca-senha-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <form class="modal-content form-validado" id="form-troca-senha" novalidate>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-troca-senha-label">Trocar senha</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="troca-senha-alerta" class="alert hidden" role="alert"></div>
+                    <input type="text" class="d-none" autocomplete="username" id="troca-senha-usuario" tabindex="-1" aria-hidden="true">
+                    <div class="mb-2">
+                        <label for="troca-senha-atual" class="form-label">Senha atual</label>
+                        <input type="password" class="form-control" id="troca-senha-atual" data-tipo="texto" autocomplete="current-password">
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="mb-2">
+                        <label for="troca-senha-nova" class="form-label">Nova senha</label>
+                        <input type="password" class="form-control" id="troca-senha-nova" data-tipo="senha" autocomplete="new-password">
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="mb-2">
+                        <label for="troca-senha-confirmar" class="form-label">Confirmar nova senha</label>
+                        <input type="password" class="form-control" id="troca-senha-confirmar" data-tipo="senha" autocomplete="new-password">
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="small-muted">Mínimo de 8 caracteres, com letra maiúscula, minúscula, número e um destes símbolos: @ $ ! % * ? &amp;</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="troca-senha-salvar">Trocar senha</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="modal fade" id="modal-dois-fatores" tabindex="-1" aria-labelledby="modal-dois-fatores-label" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -1930,6 +1966,7 @@
         const REFRESH_URL = `${API_BASE}/autenticacao-service/refresh-token`;
         const LOGIN_DOIS_FATORES_URL = `${API_BASE}/autenticacao-service/login/dois-fatores`;
         const DOIS_FATORES_URL = `${API_BASE}/autenticacao-service/dois-fatores`;
+        const TROCAR_SENHA_URL = `${API_BASE}/autenticacao-service/usuarios/trocar-senha`;
 
         const ENERGIA_BASE_URL = `${API_BASE}/energia-service/acompanhamentos/`;
         const ENERGIA_TOTAL_URL = `${API_BASE}/energia-service/total`;
@@ -2032,11 +2069,12 @@
 
         // Mensagem de confirmação (alert-success) some sozinha depois de alguns segundos;
         // erro fica até a próxima ação. Chamar sempre depois de mostrar o alerta: uma
-        // mensagem nova cancela o sumiço agendado para a anterior.
+        // mensagem nova cancela o sumiço agendado para a anterior. aoSumir roda quando
+        // ela some (ex.: fechar o modal da troca de senha).
         const TEMPO_ALERTA_SUCESSO_MS = 5000;
         const sumicoAlertas = new WeakMap();
 
-        function sumirSeSucesso(alerta) {
+        function sumirSeSucesso(alerta, aoSumir = null) {
             clearTimeout(sumicoAlertas.get(alerta));
             sumicoAlertas.delete(alerta);
             if (!alerta.classList.contains('alert-success')) return;
@@ -2044,6 +2082,7 @@
                 sumicoAlertas.delete(alerta);
                 alerta.classList.add('hidden');
                 alerta.textContent = '';
+                aoSumir?.();
             }, TEMPO_ALERTA_SUCESSO_MS));
         }
 
@@ -5502,7 +5541,7 @@
         });
 
         // Máscaras e validação campo a campo valem para todos os formulários de cadastro.
-        ['form-novo-acompanhamento', 'form-nova-folha', 'form-admin-usuario', ...FORMULARIOS_GASTOS].forEach(idFormulario => {
+        ['form-novo-acompanhamento', 'form-nova-folha', 'form-admin-usuario', 'form-troca-senha', ...FORMULARIOS_GASTOS].forEach(idFormulario => {
             const form = document.getElementById(idFormulario);
 
             form.addEventListener('input', function(event) {
@@ -5680,6 +5719,71 @@
             alerta.classList.remove('hidden');
             sumirSeSucesso(alerta);
         }
+
+        // ---------- trocar a própria senha (PUT usuarios/trocar-senha, qualquer usuário logado)
+
+        function abrirTrocaSenha() {
+            const form = document.getElementById('form-troca-senha');
+            limparCamposGastos(form);
+            // Cancela o fechamento agendado por uma troca anterior: sem isso, reabrir o
+            // modal antes dos 5 s faria ele fechar sozinho.
+            const alerta = document.getElementById('troca-senha-alerta');
+            alerta.className = 'alert hidden';
+            sumirSeSucesso(alerta);
+            // Para o gerenciador de senhas saber de qual conta é a senha nova.
+            document.getElementById('troca-senha-usuario').value = parseJwt(obterAccessToken() || '')?.email || '';
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-troca-senha')).show();
+        }
+
+        async function trocarSenha() {
+            const form = document.getElementById('form-troca-senha');
+            const alerta = document.getElementById('troca-senha-alerta');
+            hide('troca-senha-alerta');
+            if (!validarFormularioGastos(form)) return;
+
+            const atual = document.getElementById('troca-senha-atual');
+            const nova = document.getElementById('troca-senha-nova');
+            const confirmar = document.getElementById('troca-senha-confirmar');
+            if (nova.value !== confirmar.value) {
+                marcarCampo(confirmar, 'As senhas não conferem.');
+                confirmar.focus();
+                return;
+            }
+            if (nova.value === atual.value) {
+                marcarCampo(nova, 'A nova senha precisa ser diferente da atual.');
+                nova.focus();
+                return;
+            }
+
+            const botao = document.getElementById('troca-senha-salvar');
+            botao.disabled = true;
+            try {
+                await apiRequest({
+                    url: TROCAR_SENHA_URL,
+                    method: 'PUT',
+                    body: { senhaAtual: atual.value, senhaNova: nova.value, senhaNovaConfirmar: confirmar.value }
+                });
+                limparCamposGastos(form);
+                alerta.className = 'alert alert-success';
+                alerta.textContent = 'Senha trocada. Use a nova senha no próximo login.';
+                show('troca-senha-alerta');
+                // A mensagem fica os 5 s de sempre e o modal fecha junto com ela.
+                sumirSeSucesso(alerta, () => bootstrap.Modal.getInstance(document.getElementById('modal-troca-senha'))?.hide());
+            } catch (error) {
+                console.error(error);
+                if (sessaoExpirouGastos(error)) return;
+                alerta.className = 'alert alert-danger';
+                alerta.textContent = error.message || 'Não foi possível trocar a senha.';
+                show('troca-senha-alerta');
+            } finally {
+                botao.disabled = false;
+            }
+        }
+
+        document.getElementById('form-troca-senha').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            await trocarSenha();
+        });
 
         async function abrirDoisFatores() {
             alertaDoisFatores();
