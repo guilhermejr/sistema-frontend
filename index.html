@@ -1228,17 +1228,23 @@
                     <div id="folha-alerta" class="alert alert-danger hidden" role="alert"></div>
 
                     <div class="row g-3 mb-2">
-                        <div class="col-6 col-md-3">
+                        <div class="col-6 col-lg-3">
                             <label for="folha-dataPagamento" class="form-label">Data de pagamento</label>
-                            <input type="text" class="form-control" id="folha-dataPagamento" data-tipo="data" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10" autocomplete="off">
-                            <div class="invalid-feedback"></div>
+                            <div class="campo-data">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="folha-dataPagamento" data-tipo="data" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10" autocomplete="off">
+                                    <button type="button" class="btn btn-outline-secondary botao-calendario" data-calendario aria-label="Abrir calendário" aria-expanded="false"></button>
+                                </div>
+                                <div class="mini-calendario hidden" role="dialog" aria-label="Escolher data"></div>
+                                <div class="invalid-feedback"></div>
+                            </div>
                         </div>
-                        <div class="col-6 col-md-4">
+                        <div class="col-6 col-lg-4">
                             <label for="folha-tipoFolha" class="form-label">Tipo de folha</label>
                             <select class="form-select" id="folha-tipoFolha" data-tipo="obrigatorio"></select>
                             <div class="invalid-feedback"></div>
                         </div>
-                        <div class="col-12 col-md-5 d-flex align-items-center">
+                        <div class="col-12 col-lg-5 d-flex align-items-center">
                             <div id="folha-itens-origem" class="small-muted"></div>
                         </div>
                     </div>
@@ -6022,7 +6028,7 @@
 
         const DIAS_SEMANA = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
-        // Calendário dos campos .campo-data (Gastos e Energia): o botão [data-calendario]
+        // Calendário dos campos .campo-data (Gastos, Energia e Salário): o botão [data-calendario]
         // abre o .mini-calendario do mesmo campo. Os eventos ficam no document, então basta
         // a marcação para um campo novo ganhar o calendário.
         // { campo, texto, painel, ano, mes } do calendário aberto; só um por vez.
