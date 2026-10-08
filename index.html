@@ -1938,11 +1938,16 @@
                                     <input type="text" class="form-control" id="gc-configuracao-dia" data-tipo="inteiro" data-minimo="1" data-maximo="28" inputmode="numeric" maxlength="2" autocomplete="off">
                                     <div class="invalid-feedback"></div>
                                 </div>
-                                <div class="col-6 col-md-3 pt-4">
-                                    <button type="submit" class="btn btn-primary w-100 mt-1" id="gc-configuracao-salvar">Salvar</button>
-                                </div>
                                 <div class="col-12">
-                                    <div class="small-muted" id="gc-configuracao-exemplo"></div>
+                                    <div class="small-muted mb-3" id="gc-configuracao-exemplo"></div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label for="gc-configuracao-despesa" class="form-label">Despesa nova já vem em</label>
+                                    <select class="form-select" id="gc-configuracao-despesa"></select>
+                                    <div class="small-muted mt-1">Dá para trocar na hora de lançar. Receita nova continua na primeira conta ativa.</div>
+                                </div>
+                                <div class="col-12 mt-3">
+                                    <button type="submit" class="btn btn-primary px-4" id="gc-configuracao-salvar">Salvar</button>
                                 </div>
                             </form>
                         </div>
@@ -6314,6 +6319,12 @@
         // primeiro da lista); receita, na primeira conta ativa. Sem cartão, a despesa
         // também vai para a conta.
         function destinoPadraoGastos(tipo) {
+            // Escolhido em Cadastros › Configurações; vale enquanto estiver ativo.
+            if (tipo === 'D') {
+                const { despesaContaId, despesaCartaoId } = gastosDados.configuracoes;
+                if (gastosDados.cartoes.some(c => c.id === despesaCartaoId && c.ativo)) return `cartao:${despesaCartaoId}`;
+                if (gastosDados.contas.some(c => c.id === despesaContaId && c.ativo)) return `conta:${despesaContaId}`;
+            }
             const cartao = gastosDados.cartoes.find(c => c.ativo);
             const conta = gastosDados.contas.find(c => c.ativo);
             if (tipo === 'D' && cartao) return `cartao:${cartao.id}`;
@@ -7282,6 +7293,20 @@
             limparCamposGastos(form);
             document.getElementById('gc-configuracao-dia').value = gastosDados.configuracoes.diaInicioCiclo;
             atualizarExemploConfiguracaoGastos();
+
+            // Só o que está ativo pode ser escolhido; um padrão que foi desativado aparece
+            // marcado como tal, para a pessoa ver por que a despesa não vem mais nele.
+            const { despesaContaId, despesaCartaoId } = gastosDados.configuracoes;
+            const opcoes = (lista, tipo, escolhidoId) => lista
+                .filter(i => i.ativo || i.id === escolhidoId)
+                .map(i => `<option value="${tipo}:${i.id}">${escapeHtml(i.nome)}${i.ativo ? '' : ' (desativado)'}</option>`).join('');
+            const cartoes = opcoes(gastosDados.cartoes, 'cartao', despesaCartaoId);
+            const contas = opcoes(gastosDados.contas, 'conta', despesaContaId);
+            const select = document.getElementById('gc-configuracao-despesa');
+            select.innerHTML = '<option value="">Automático (primeiro cartão ativo, senão a primeira conta)</option>'
+                + (cartoes ? `<optgroup label="Cartões">${cartoes}</optgroup>` : '')
+                + (contas ? `<optgroup label="Contas">${contas}</optgroup>` : '');
+            select.value = despesaCartaoId ? `cartao:${despesaCartaoId}` : despesaContaId ? `conta:${despesaContaId}` : '';
         }
 
         function atualizarExemploConfiguracaoGastos() {
@@ -7306,13 +7331,18 @@
             const form = document.getElementById('form-gastos-configuracao');
             if (!validarFormularioGastos(form)) return;
 
+            const despesa = document.getElementById('gc-configuracao-despesa').value;
             const botao = document.getElementById('gc-configuracao-salvar');
             botao.disabled = true;
             try {
                 await apiRequest({
                     url: `${GASTOS_URL}/configuracoes`,
                     method: 'PUT',
-                    body: { diaInicioCiclo: Number(document.getElementById('gc-configuracao-dia').value) }
+                    body: {
+                        diaInicioCiclo: Number(document.getElementById('gc-configuracao-dia').value),
+                        despesaContaId: despesa.startsWith('conta:') ? Number(despesa.slice(6)) : null,
+                        despesaCartaoId: despesa.startsWith('cartao:') ? Number(despesa.slice(7)) : null
+                    }
                 });
                 mostrarAlertaModalGastos('gc-alerta', 'Configurações salvas.', 'success');
                 await recarregarGastos();
