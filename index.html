@@ -390,8 +390,18 @@
 </head>
 <body>
 
+    <!-- CARREGANDO: visível até o init() decidir entre o login e o dashboard. Com um
+         refresh token guardado, renovar a sessão leva alguns segundos; sem esta tela o
+         formulário de login apareceria nesse meio-tempo e convidaria a digitar à toa. -->
+    <div id="inicio-section" class="login-wrapper container" role="status">
+        <div class="text-center text-muted">
+            <div class="spinner-border text-primary mb-3" aria-hidden="true"></div>
+            <div>Carregando...</div>
+        </div>
+    </div>
+
     <!-- LOGIN -->
-    <div id="login-section" class="login-wrapper container">
+    <div id="login-section" class="login-wrapper container hidden">
         <div class="card login-card p-4">
             <div class="card-body">
                 <h2 class="text-center mb-2">Entrar</h2>
@@ -2132,11 +2142,13 @@
 
         function mostrarLogin() {
             voltarParaSenha();
+            hide('inicio-section');
             show('login-section');
             hide('dashboard-section');
         }
 
         function mostrarDashboard() {
+            hide('inicio-section');
             hide('login-section');
             show('dashboard-section');
             document.getElementById('usuario-logado').textContent = obterNomeUsuario();
