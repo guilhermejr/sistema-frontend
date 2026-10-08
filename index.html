@@ -130,6 +130,18 @@
             display: none !important;
         }
 
+        /* Mensagem de confirmação apagando antes de sumir (ver sumirSeSucesso). */
+        .alerta-sumindo {
+            opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .alerta-sumindo {
+                transition: none;
+            }
+        }
+
         .codigo-dois-fatores {
             font-size: 1.5rem;
             letter-spacing: 0.4em;
@@ -2080,22 +2092,28 @@
             document.getElementById(id).classList.add('hidden');
         }
 
-        // Mensagem de confirmação (alert-success) some sozinha depois de alguns segundos;
-        // erro fica até a próxima ação. Chamar sempre depois de mostrar o alerta: uma
-        // mensagem nova cancela o sumiço agendado para a anterior. aoSumir roda quando
-        // ela some (ex.: fechar o modal da troca de senha).
+        // Mensagem de confirmação (alert-success) vai apagando depois de alguns segundos
+        // e some; erro fica até a próxima ação. Chamar sempre depois de mostrar o alerta:
+        // uma mensagem nova cancela o sumiço agendado para a anterior, mesmo no meio do
+        // apagar. aoSumir roda quando ela some (ex.: fechar o modal da troca de senha).
         const TEMPO_ALERTA_SUCESSO_MS = 5000;
+        const TEMPO_ALERTA_APAGANDO_MS = 600; // igual à transição de .alerta-sumindo
         const sumicoAlertas = new WeakMap();
 
         function sumirSeSucesso(alerta, aoSumir = null) {
             clearTimeout(sumicoAlertas.get(alerta));
             sumicoAlertas.delete(alerta);
+            alerta.classList.remove('alerta-sumindo');
             if (!alerta.classList.contains('alert-success')) return;
             sumicoAlertas.set(alerta, setTimeout(() => {
-                sumicoAlertas.delete(alerta);
-                alerta.classList.add('hidden');
-                alerta.textContent = '';
-                aoSumir?.();
+                alerta.classList.add('alerta-sumindo');
+                sumicoAlertas.set(alerta, setTimeout(() => {
+                    sumicoAlertas.delete(alerta);
+                    alerta.classList.add('hidden');
+                    alerta.classList.remove('alerta-sumindo');
+                    alerta.textContent = '';
+                    aoSumir?.();
+                }, TEMPO_ALERTA_APAGANDO_MS));
             }, TEMPO_ALERTA_SUCESSO_MS));
         }
 
