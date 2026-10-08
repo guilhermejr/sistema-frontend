@@ -452,43 +452,47 @@
         <!-- Abas -->
         <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
           <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="gastos-tab" data-bs-toggle="tab" data-bs-target="#tab-gastos" type="button" role="tab">
+            <button class="nav-link active" id="gastos-tab" data-perfil="ROLE_GASTOS" data-bs-toggle="tab" data-bs-target="#tab-gastos" type="button" role="tab">
                 Gastos
             </button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" id="saude-tab" data-bs-toggle="tab" data-bs-target="#tab-saude" type="button" role="tab">
+            <button class="nav-link" id="saude-tab" data-perfil="ROLE_SAUDE" data-bs-toggle="tab" data-bs-target="#tab-saude" type="button" role="tab">
                 Saúde
             </button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" id="energia-tab" data-bs-toggle="tab" data-bs-target="#tab-energia" type="button" role="tab">
+            <button class="nav-link" id="energia-tab" data-perfil="ROLE_ENERGIA" data-bs-toggle="tab" data-bs-target="#tab-energia" type="button" role="tab">
                 Energia
             </button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" id="remedios-tab" data-bs-toggle="tab" data-bs-target="#tab-remedios" type="button" role="tab">
+            <button class="nav-link" id="remedios-tab" data-perfil="ROLE_REMEDIOS" data-bs-toggle="tab" data-bs-target="#tab-remedios" type="button" role="tab">
                 Remédios
             </button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" id="salario-tab" data-bs-toggle="tab" data-bs-target="#tab-salario" type="button" role="tab">
+            <button class="nav-link" id="salario-tab" data-perfil="ROLE_SALARIO" data-bs-toggle="tab" data-bs-target="#tab-salario" type="button" role="tab">
                 Salário
             </button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" id="supermercado-tab" data-bs-toggle="tab" data-bs-target="#tab-supermercado" type="button" role="tab">
+            <button class="nav-link" id="supermercado-tab" data-perfil="ROLE_SUPERMERCADO" data-bs-toggle="tab" data-bs-target="#tab-supermercado" type="button" role="tab">
                 Supermercado
             </button>
           </li>
-          <li class="nav-item hidden" role="presentation" id="administracao-tab-item">
-            <button class="nav-link" id="administracao-tab" data-bs-toggle="tab" data-bs-target="#tab-administracao" type="button" role="tab">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="administracao-tab" data-perfil="ROLE_ADMIN" data-bs-toggle="tab" data-bs-target="#tab-administracao" type="button" role="tab">
                 Administração
             </button>
           </li>
         </ul>
 
-        <div class="tab-content">
+        <div id="sem-modulos" class="alert alert-light border text-muted hidden" role="status">
+            Seu usuário não tem acesso a nenhum módulo. Peça a um administrador para liberar.
+        </div>
+
+        <div class="tab-content" id="dashboard-abas-conteudo">
             <!-- ABA ENERGIA -->
             <div class="tab-pane fade" id="tab-energia" role="tabpanel" aria-labelledby="energia-tab">
 
@@ -2088,7 +2092,7 @@
             hide('login-section');
             show('dashboard-section');
             document.getElementById('usuario-logado').textContent = obterNomeUsuario();
-            mostrarAbaAdministracao();
+            mostrarAbasPermitidas();
         }
 
         function limparTabelaSalario() {
@@ -3811,6 +3815,54 @@
 
         const abasCarregadas = new Set();
 
+        // A claim "perfis" do token é a lista separada por vírgula (JwtProvider do
+        // autenticacao-service). Cada botão de aba diz o perfil que exige em data-perfil.
+        // Esconder é só conveniência — quem barra é o @PreAuthorize de cada serviço —
+        // mas a aba ativa precisa ser permitida: o apiRequest trata o 403 como sessão
+        // expirada e derrubaria o login.
+        function perfisDoUsuario() {
+            const token = obterAccessToken();
+            return new Set(String((token && parseJwt(token)?.perfis) || '').split(',').filter(Boolean));
+        }
+
+        function abasPermitidas() {
+            const perfis = perfisDoUsuario();
+            return [...document.querySelectorAll('#dashboardTabs [data-perfil]')].filter(botao => perfis.has(botao.dataset.perfil));
+        }
+
+        // Mostra só as abas do usuário e, se a ativa não é uma delas, ativa a primeira que for.
+        function mostrarAbasPermitidas() {
+            const permitidas = abasPermitidas();
+            document.querySelectorAll('#dashboardTabs [data-perfil]').forEach(botao => {
+                botao.closest('.nav-item').classList.toggle('hidden', !permitidas.includes(botao));
+            });
+
+            const nenhuma = !permitidas.length;
+            document.getElementById('sem-modulos').classList.toggle('hidden', !nenhuma);
+            document.getElementById('dashboardTabs').classList.toggle('hidden', nenhuma);
+            document.getElementById('dashboard-abas-conteudo').classList.toggle('hidden', nenhuma);
+
+            const ativa = document.querySelector('#dashboardTabs .nav-link.active');
+            if (permitidas.length && !permitidas.includes(ativa)) {
+                ativarAbaSemCarregar(ativa, permitidas[0]);
+            }
+        }
+
+        // Troca as classes à mão em vez de bootstrap.Tab.show(): o show dispara o
+        // 'shown.bs.tab', que carregaria a aba junto com o carregarDashboard() logo em
+        // seguida — duas cargas simultâneas recriam os mesmos gráficos ("Canvas is already in use").
+        function ativarAbaSemCarregar(atual, nova) {
+            const painel = botao => document.querySelector(botao.dataset.bsTarget);
+            if (atual) {
+                atual.classList.remove('active');
+                atual.setAttribute('aria-selected', 'false');
+                painel(atual).classList.remove('show', 'active');
+            }
+            nova.classList.add('active');
+            nova.setAttribute('aria-selected', 'true');
+            painel(nova).classList.add('show', 'active');
+        }
+
         function idAbaDoBotao(botao) {
             return botao.getAttribute('data-bs-target').slice(1);
         }
@@ -3849,6 +3901,7 @@
 
         async function carregarDashboard() {
             abasCarregadas.clear();
+            if (!abasPermitidas().includes(document.querySelector('#dashboardTabs .nav-link.active'))) return;
             await carregarAba(idAbaAtiva());
         }
 
@@ -7361,26 +7414,10 @@
             return NOMES_PERFIS[descricao] || descricao.replace(/^ROLE_/, '');
         }
 
-        // A claim "perfis" do token é a lista separada por vírgula (JwtProvider do
-        // autenticacao-service). Esconder a aba é só conveniência: quem barra é o
-        // @PreAuthorize("hasAnyRole('ADMIN')") de /usuarios e /perfis.
-        function usuarioEhAdmin() {
-            const token = obterAccessToken();
-            return String((token && parseJwt(token)?.perfis) || '').split(',').includes(PERFIL_ADMIN);
-        }
 
         function idUsuarioLogado() {
             const token = obterAccessToken();
             return token ? parseJwt(token)?.sub : null;
-        }
-
-        function mostrarAbaAdministracao() {
-            const admin = usuarioEhAdmin();
-            document.getElementById('administracao-tab-item').classList.toggle('hidden', !admin);
-            // Sem o perfil, a aba não pode ficar ativa: o apiRequest trataria o 403 como sessão expirada.
-            if (!admin && document.getElementById('administracao-tab').classList.contains('active')) {
-                bootstrap.Tab.getOrCreateInstance(document.getElementById('gastos-tab')).show();
-            }
         }
 
         function mostrarAlertaAdministracao(mensagem, tipo = 'success') {
