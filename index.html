@@ -1660,11 +1660,12 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="d-flex justify-content-center align-items-center gap-2 mb-3">
+                    <div class="d-flex justify-content-center align-items-center gap-2 mb-1">
                         <button type="button" class="btn btn-outline-secondary navegacao-mes-botao" data-relatorio-navegar="-1" aria-label="Mês anterior">&lsaquo;</button>
                         <div class="navegacao-mes" id="gr-mes">--</div>
                         <button type="button" class="btn btn-outline-secondary navegacao-mes-botao" data-relatorio-navegar="1" aria-label="Próximo mês">&rsaquo;</button>
                     </div>
+                    <div class="small-muted text-center mb-3 hidden" id="gr-periodo"></div>
                     <div id="gr-alerta" class="alert alert-danger hidden" role="alert"></div>
                     <div id="gr-conteudo"></div>
                 </div>
@@ -1677,7 +1678,7 @@
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="gc-titulo">Contas, cartões e categorias</h5>
+                    <h5 class="modal-title" id="gc-titulo">Cadastros</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
                 <div class="modal-body">
@@ -1690,6 +1691,9 @@
                         </li>
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" data-bs-toggle="tab" data-bs-target="#gc-pane-categorias" type="button" role="tab">Categorias</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#gc-pane-configuracoes" type="button" role="tab">Configurações</button>
                         </li>
                     </ul>
                     <div id="gc-alerta" class="alert hidden" role="alert"></div>
@@ -1788,6 +1792,22 @@
                                 </table>
                             </div>
                         </div>
+
+                        <div class="tab-pane fade" id="gc-pane-configuracoes" role="tabpanel">
+                            <form class="form-validado row g-2 align-items-start" id="form-gastos-configuracao" novalidate>
+                                <div class="col-6 col-md-3">
+                                    <label for="gc-configuracao-dia" class="form-label">O mês começa no dia</label>
+                                    <input type="text" class="form-control" id="gc-configuracao-dia" data-tipo="inteiro" data-minimo="1" data-maximo="28" inputmode="numeric" maxlength="2" autocomplete="off">
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="col-6 col-md-3 pt-4">
+                                    <button type="submit" class="btn btn-primary w-100 mt-1" id="gc-configuracao-salvar">Salvar</button>
+                                </div>
+                                <div class="col-12">
+                                    <div class="small-muted" id="gc-configuracao-exemplo"></div>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1843,7 +1863,7 @@
         const GASTOS_URL = `${API_BASE}/gastos-service`;
         // Formulários da aba Gastos que usam as máscaras e a validação compartilhadas.
         const FORMULARIOS_GASTOS = ['form-gastos-lancamento', 'form-gastos-movimentacao', 'form-gastos-pagamento',
-            'form-gastos-conta', 'form-gastos-cartao', 'form-gastos-categoria'];
+            'form-gastos-conta', 'form-gastos-cartao', 'form-gastos-categoria', 'form-gastos-configuracao'];
 
         // Próximos a pagar e a receber: cada lista mostra 5 e "Mostrar mais" pede mais 5,
         // sempre desde o início (o serviço aceita até 100). O tamanho sobrevive às recargas
@@ -5611,6 +5631,24 @@
             return `${MESES[mes - 1]} de ${ano}`;
         }
 
+        // "05/10 a 04/11" quando o ciclo do dashboard ou do relatório não é o mês do
+        // calendário (o dia de início configurado não é 1); senão vazio.
+        function periodoCicloGastos({ inicio, fim }) {
+            if (!inicio || !fim || inicio.endsWith('-01')) return '';
+            const diaMes = iso => iso.slice(8, 10) + '/' + iso.slice(5, 7);
+            return `${diaMes(inicio)} a ${diaMes(fim)}`;
+        }
+
+        // Mesma regra de Ciclo no gastos-service, só para o exemplo da aba Configurações:
+        // até o dia 15 o ciclo leva o nome do mês em que começa, do 16 em diante o do seguinte.
+        function cicloDaDataGastos(data, dia) {
+            const comeca = new Date(data.getFullYear(), data.getMonth() - (data.getDate() >= dia ? 0 : 1), dia);
+            const fim = new Date(comeca.getFullYear(), comeca.getMonth() + 1, dia - 1);
+            const nome = somarMeses(comeca.getFullYear(), comeca.getMonth() + 1, dia >= 16 ? 1 : 0);
+            const diaMes = d => `${doisDigitos(d.getDate())}/${doisDigitos(d.getMonth() + 1)}`;
+            return { ...nome, inicio: diaMes(comeca), fim: diaMes(fim) };
+        }
+
         function somarMeses(ano, mes, delta) {
             const data = new Date(ano, mes - 1 + delta, 1);
             return { ano: data.getFullYear(), mes: data.getMonth() + 1 };
@@ -5759,11 +5797,12 @@
             // Lista já expandida com "Mostrar mais" volta com o mesmo tamanho: o dashboard
             // só traz 5, então ela vem do endpoint da agenda.
             const ladosExpandidos = Object.keys(AGENDA_GASTOS).filter(lado => quantidadeAgendaGastos[lado] > ITENS_AGENDA_GASTOS);
-            const [dashboard, contas, cartoes, categorias, ...agendas] = await Promise.all([
+            const [dashboard, contas, cartoes, categorias, configuracoes, ...agendas] = await Promise.all([
                 apiRequest({ url: `${GASTOS_URL}/dashboard` }),
                 apiRequest({ url: `${GASTOS_URL}/contas` }),
                 apiRequest({ url: `${GASTOS_URL}/cartoes` }),
                 apiRequest({ url: `${GASTOS_URL}/categorias` }),
+                apiRequest({ url: `${GASTOS_URL}/configuracoes` }),
                 ...ladosExpandidos.map(buscarAgendaGastos)
             ]);
             ladosExpandidos.forEach((lado, i) => { dashboard[AGENDA_GASTOS[lado].chave] = agendas[i]; });
@@ -5772,7 +5811,8 @@
                 dashboard,
                 contas: Array.isArray(contas) ? contas : [],
                 cartoes: Array.isArray(cartoes) ? cartoes : [],
-                categorias: Array.isArray(categorias) ? categorias : []
+                categorias: Array.isArray(categorias) ? categorias : [],
+                configuracoes: configuracoes || { diaInicioCiclo: 1 }
             };
 
             renderizarGastosDashboard();
@@ -5815,7 +5855,9 @@
             const moeda = (valor, chave) => ocultos.has(chave) ? 'R$ ••••' : formatarMoedaBR(valor);
             const detalhe = (chave, texto) => ocultos.has(chave) ? '&nbsp;' : texto;
 
-            document.getElementById('gastos-titulo-mes').textContent = nomeMes(dashboard.ano, dashboard.mes);
+            const periodo = periodoCicloGastos(dashboard);
+            document.getElementById('gastos-titulo-mes').innerHTML = `${escapeHtml(nomeMes(dashboard.ano, dashboard.mes))}${periodo
+                ? ` <span class="small-muted fw-normal fs-6 text-nowrap">${periodo}</span>` : ''}`;
 
             const cards = {
                 receitas: [dashboard.receitas.total, `Recebido ${formatarMoedaBR(dashboard.receitas.realizado)}`],
@@ -6635,9 +6677,14 @@
         async function carregarRelatorioGastos() {
             const { ano, mes } = gastosRelatorio;
             document.getElementById('gr-mes').textContent = nomeMes(ano, mes);
+            document.getElementById('gr-periodo').classList.add('hidden');
 
             try {
-                renderizarRelatorioGastos(await apiRequest({ url: `${GASTOS_URL}/relatorios/${ano}/${mes}` }));
+                const relatorio = await apiRequest({ url: `${GASTOS_URL}/relatorios/${ano}/${mes}` });
+                const periodo = document.getElementById('gr-periodo');
+                periodo.textContent = periodoCicloGastos(relatorio);
+                periodo.classList.toggle('hidden', !periodo.textContent);
+                renderizarRelatorioGastos(relatorio);
             } catch (error) {
                 console.error(error);
                 if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gr-alerta', error.message || 'Não foi possível carregar o relatório.');
@@ -6750,6 +6797,7 @@
             if (!gastosDados) return;
             ['conta', 'cartao', 'categoria'].forEach(cancelarEdicaoCadastroGastos);
             esconderAlertaModalGastos('gc-alerta');
+            preencherConfiguracaoGastos();
             renderizarCadastrosGastos();
             await trocarModalGastos('modal-gastos-cadastros');
         }
@@ -6893,6 +6941,56 @@
                 mostrarAlertaModalGastos('gc-alerta', `${config.nome} ${edicao ? 'alterad' : 'cadastrad'}${tipo === 'cartao' ? 'o' : 'a'}.`, 'success');
                 await recarregarGastos();
                 renderizarCadastrosGastos();
+            } catch (error) {
+                console.error(error);
+                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gc-alerta', error.message || 'Não foi possível salvar.', 'danger');
+            } finally {
+                botao.disabled = false;
+            }
+        }
+
+        // ---------- configurações
+
+        function preencherConfiguracaoGastos() {
+            const form = document.getElementById('form-gastos-configuracao');
+            limparCamposGastos(form);
+            document.getElementById('gc-configuracao-dia').value = gastosDados.configuracoes.diaInicioCiclo;
+            atualizarExemploConfiguracaoGastos();
+        }
+
+        function atualizarExemploConfiguracaoGastos() {
+            const valor = document.getElementById('gc-configuracao-dia').value.trim();
+            const dia = Number(valor);
+            const exemplo = document.getElementById('gc-configuracao-exemplo');
+            if (!/^\d+$/.test(valor) || dia < 1 || dia > 28) {
+                exemplo.textContent = 'De 1 a 28, para o mês começar no mesmo dia em todos os meses, fevereiro inclusive.';
+                return;
+            }
+            if (dia === 1) {
+                exemplo.textContent = 'O dashboard e o relatório mostram cada mês do dia 1 ao último dia.';
+                return;
+            }
+            const ciclo = cicloDaDataGastos(new Date(), dia);
+            exemplo.textContent = `O mês atual seria ${nomeMes(ciclo.ano, ciclo.mes)}, de ${ciclo.inicio} a ${ciclo.fim}. `
+                + `Cada ciclo leva o nome do mês em que tem mais dias: ${dia <= 15 ? 'o mês em que começa' : 'o mês seguinte ao do início'}.`;
+        }
+
+        async function salvarConfiguracaoGastos() {
+            esconderAlertaModalGastos('gc-alerta');
+            const form = document.getElementById('form-gastos-configuracao');
+            if (!validarFormularioGastos(form)) return;
+
+            const botao = document.getElementById('gc-configuracao-salvar');
+            botao.disabled = true;
+            try {
+                await apiRequest({
+                    url: `${GASTOS_URL}/configuracoes`,
+                    method: 'PUT',
+                    body: { diaInicioCiclo: Number(document.getElementById('gc-configuracao-dia').value) }
+                });
+                mostrarAlertaModalGastos('gc-alerta', 'Configurações salvas.', 'success');
+                await recarregarGastos();
+                preencherConfiguracaoGastos();
             } catch (error) {
                 console.error(error);
                 if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gc-alerta', error.message || 'Não foi possível salvar.', 'danger');
@@ -7118,6 +7216,11 @@
             });
             document.getElementById(`gc-${tipo}-cancelar`).addEventListener('click', () => cancelarEdicaoCadastroGastos(tipo));
         });
+        document.getElementById('form-gastos-configuracao').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            await salvarConfiguracaoGastos();
+        });
+        document.getElementById('gc-configuracao-dia').addEventListener('input', atualizarExemploConfiguracaoGastos);
         document.getElementById('modal-gastos-cadastros').addEventListener('click', function(event) {
             const botao = event.target.closest('[data-cadastro-acao]');
             if (!botao) return;
