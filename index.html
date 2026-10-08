@@ -1465,6 +1465,19 @@
                             <div class="invalid-feedback"></div>
                         </div>
 
+                        <div class="col-12 hidden" id="gl-fatura-grupo">
+                            <div class="form-label mb-1">Fatura</div>
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="button" class="btn btn-outline-secondary" id="gl-fatura-anterior" aria-label="Fatura anterior" title="Fatura anterior">&lsaquo;</button>
+                                <div class="flex-grow-1 text-center" aria-live="polite">
+                                    <strong id="gl-fatura-mes"></strong>
+                                    <span class="small-muted text-nowrap" id="gl-fatura-vencimento"></span>
+                                </div>
+                                <button type="button" class="btn btn-outline-secondary" id="gl-fatura-proxima" aria-label="Próxima fatura" title="Próxima fatura">&rsaquo;</button>
+                            </div>
+                            <div class="item-dica" id="gl-fatura-dica">&nbsp;</div>
+                        </div>
+
                         <div class="col-12" id="gl-repeticao-grupo">
                             <div class="form-label mb-1">Repetição</div>
                             <div class="btn-group w-100" role="group" aria-label="Repetição">
@@ -6062,7 +6075,7 @@
             esconderAlertaModalGastos('gl-alerta');
 
             tipo = lancamento?.tipo || tipo;
-            gastosLancamento = { tipo, edicao: lancamento, retorno, realizadoManual: false };
+            gastosLancamento = { tipo, edicao: lancamento, retorno, realizadoManual: false, mesesFatura: 0, chaveFatura: null };
 
             const nome = tipo === 'D' ? 'despesa' : 'receita';
             document.getElementById('gl-titulo').textContent = `${lancamento ? 'Editar' : 'Nova'} ${nome}`;
@@ -6157,6 +6170,74 @@
             } else {
                 dica.innerHTML = '&nbsp;';
             }
+
+            atualizarFaturaLancamentoGastos(repeticao);
+        }
+
+        // Mesma regra de CalendarioUtil.vencimentoDaCompra: a compra entra na primeira
+        // fatura cujo fechamento (vencimento − diasFechamento) ainda é depois dela. Só para
+        // mostrar; quem decide é o serviço. Devolve { ano, mes } do vencimento.
+        function faturaNaturalGastos(cartao, data) {
+            let { ano, mes } = { ano: data.getFullYear(), mes: data.getMonth() + 1 };
+            for (;;) {
+                const vencimento = Math.min(cartao.diaVencimento, new Date(ano, mes, 0).getDate());
+                if (data < new Date(ano, mes - 1, vencimento - cartao.diasFechamento)) return { ano, mes };
+                ({ ano, mes } = somarMeses(ano, mes, 1));
+            }
+        }
+
+        function cartaoDoLancamentoGastos() {
+            const [tipoDestino, idDestino] = document.getElementById('gl-destino').value.split(':');
+            return tipoDestino === 'cartao' ? gastosDados.cartoes.find(c => String(c.id) === idDestino) : null;
+        }
+
+        // Fatura em que a compra nova vai entrar, a partir da natural da data. Trocar a data
+        // ou o cartão volta para a natural. Devolve null fora da inclusão em cartão.
+        function faturaEscolhidaGastos() {
+            const cartao = gastosLancamento?.edicao ? null : cartaoDoLancamentoGastos();
+            const data = parseDataBR(document.getElementById('gl-data').value.trim());
+            if (!cartao || !data) return null;
+
+            const chave = `${cartao.id}|${data.getTime()}`;
+            if (gastosLancamento.chaveFatura !== chave) {
+                gastosLancamento.chaveFatura = chave;
+                gastosLancamento.mesesFatura = 0;
+            }
+            const natural = faturaNaturalGastos(cartao, data);
+            const destino = somarMeses(natural.ano, natural.mes, gastosLancamento.mesesFatura);
+            const vencimento = Math.min(cartao.diaVencimento, new Date(destino.ano, destino.mes, 0).getDate());
+            return { ...destino, natural, vencimento, meses: gastosLancamento.mesesFatura };
+        }
+
+        function atualizarFaturaLancamentoGastos(repeticao) {
+            const fatura = faturaEscolhidaGastos();
+            document.getElementById('gl-fatura-grupo').classList.toggle('hidden', Boolean(gastosLancamento?.edicao) || !cartaoDoLancamentoGastos());
+            if (!fatura) {
+                document.getElementById('gl-fatura-mes').textContent = '—';
+                document.getElementById('gl-fatura-vencimento').textContent = '';
+                document.getElementById('gl-fatura-dica').textContent = 'Informe a data para ver a fatura.';
+                document.getElementById('gl-fatura-anterior').disabled = true;
+                document.getElementById('gl-fatura-proxima').disabled = true;
+                return;
+            }
+
+            document.getElementById('gl-fatura-mes').textContent = nomeMes(fatura.ano, fatura.mes);
+            document.getElementById('gl-fatura-vencimento').textContent = `· vence ${doisDigitos(fatura.vencimento)}/${doisDigitos(fatura.mes)}`;
+            // O serviço aceita até a fatura anterior à natural, nunca antes.
+            document.getElementById('gl-fatura-anterior').disabled = fatura.meses <= -1;
+            document.getElementById('gl-fatura-proxima').disabled = false;
+
+            const serie = repeticao === 'PARCELADA' ? ' As demais parcelas seguem mês a mês.'
+                : repeticao === 'FIXA' ? ' Vale só para a primeira.' : '';
+            document.getElementById('gl-fatura-dica').textContent = fatura.meses === 0
+                ? `Pela data da compra.${serie}`
+                : `Pela data seria ${nomeMes(fatura.natural.ano, fatura.natural.mes)}.${serie}`;
+        }
+
+        function mudarFaturaLancamentoGastos(delta) {
+            if (!faturaEscolhidaGastos()) return;
+            gastosLancamento.mesesFatura = Math.max(-1, gastosLancamento.mesesFatura + delta);
+            atualizarFormLancamentoGastos();
         }
 
         async function salvarLancamentoGastos() {
@@ -6167,6 +6248,7 @@
             const { tipo, edicao } = gastosLancamento;
             const [tipoDestino, idDestino] = document.getElementById('gl-destino').value.split(':');
             const repeticao = edicao ? 'UNICA' : repeticaoGastos();
+            const fatura = faturaEscolhidaGastos();
 
             const corpo = {
                 tipo,
@@ -6178,7 +6260,9 @@
                 cartaoId: tipoDestino === 'cartao' ? Number(idDestino) : null,
                 realizado: document.getElementById('gl-realizado').checked,
                 repeticao,
-                parcelas: repeticao === 'PARCELADA' ? Number(document.getElementById('gl-parcelas').value) : null
+                parcelas: repeticao === 'PARCELADA' ? Number(document.getElementById('gl-parcelas').value) : null,
+                // Só quando foi trocada; sem ela o serviço usa a fatura da data.
+                fatura: fatura?.meses ? { ano: fatura.ano, mes: fatura.mes } : null
             };
 
             const escopo = document.querySelector('input[name="gl-escopo"]:checked').value;
@@ -6337,18 +6421,27 @@
             document.getElementById('gf-titulo').textContent = `Fatura ${fatura.cartao.nome}`;
             document.getElementById('gf-mes').textContent = nomeMes(ano, mes);
 
-            // Compra ainda não paga pode ir para a próxima fatura; a que já foi transferida
-            // pode voltar uma (o backend recusa ir antes da fatura natural da compra).
+            // Compra ainda não paga pode ir para a próxima fatura ou voltar uma — o serviço
+            // aceita até a fatura anterior à natural da compra, nunca antes.
+            const cartaoFatura = gastosDados?.cartoes.find(c => c.id === fatura.cartao.id);
+            const podeVoltar = l => {
+                if (!cartaoFatura) return l.faturaTransferida;
+                const [a, m, d] = l.data.split('-').map(Number);
+                const natural = faturaNaturalGastos(cartaoFatura, new Date(a, m - 1, d));
+                const limite = somarMeses(natural.ano, natural.mes, -1);
+                return ano * 12 + mes > limite.ano * 12 + limite.mes;
+            };
             const acoesFatura = l => l.realizado
                 ? '<span class="badge text-bg-success">Paga</span>'
-                : `${l.faturaTransferida ? `<button type="button" class="btn btn-sm btn-outline-secondary" data-mover-fatura="${l.id}" data-delta="-1" title="Voltar para a fatura anterior">&lsaquo; Anterior</button>` : ''}
-                   <button type="button" class="btn btn-sm btn-outline-secondary" data-mover-fatura="${l.id}" data-delta="1" title="Transferir para a próxima fatura">Próxima &rsaquo;</button>`;
+                : `${podeVoltar(l) ? `<button type="button" class="btn btn-sm btn-outline-secondary" data-mover-fatura="${l.id}" data-delta="-1" title="Levar para a fatura anterior" aria-label="Levar para a fatura anterior">&lsaquo;<span class="d-none d-sm-inline"> Anterior</span></button>` : ''}
+                   <button type="button" class="btn btn-sm btn-outline-secondary" data-mover-fatura="${l.id}" data-delta="1" title="Levar para a próxima fatura" aria-label="Levar para a próxima fatura"><span class="d-none d-sm-inline">Próxima </span>&rsaquo;</button>`;
 
+            // No celular a data perde o ano e a categoria some, para as setas caberem na tela.
             const linhas = fatura.lancamentos.map(l => `
                 <tr class="item-clicavel" data-editar-lancamento="${l.id}">
-                    <td>${formatarDataISO(l.data)}</td>
+                    <td class="text-nowrap"><span class="d-sm-none">${formatarDataISO(l.data).slice(0, 5)}</span><span class="d-none d-sm-inline">${formatarDataISO(l.data)}</span></td>
                     <td>${descricaoComParcela(l)}${marcaFixa(l)}${l.faturaTransferida ? ' <span class="badge text-bg-light border">transferida</span>' : ''}</td>
-                    <td>${escapeHtml(l.categoria?.descricao || '')}</td>
+                    <td class="d-none d-sm-table-cell">${escapeHtml(l.categoria?.descricao || '')}</td>
                     <td class="text-end text-nowrap ${l.tipo === 'R' ? 'valor-receita' : ''}">${l.tipo === 'R' ? '−' : ''}${formatarMoedaBR(l.valor)}</td>
                     <td class="text-end text-nowrap">${acoesFatura(l)}</td>
                 </tr>`).join('');
@@ -6374,7 +6467,7 @@
                 ${linhas ? `
                 <div class="table-responsive">
                     <table class="table table-sm align-middle">
-                        <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th class="text-end">Valor</th><th></th></tr></thead>
+                        <thead><tr><th>Data</th><th>Descrição</th><th class="d-none d-sm-table-cell">Categoria</th><th class="text-end">Valor</th><th></th></tr></thead>
                         <tbody>${linhas}</tbody>
                     </table>
                 </div>` : '<p class="text-muted text-center">Nenhuma compra nesta fatura.</p>'}
@@ -6852,6 +6945,8 @@
             if (['gl-valor', 'gl-parcelas', 'gl-data'].includes(event.target.id)) atualizarFormLancamentoGastos();
         });
         document.getElementById('gl-excluir').addEventListener('click', excluirLancamentoGastos);
+        document.getElementById('gl-fatura-anterior').addEventListener('click', () => mudarFaturaLancamentoGastos(-1));
+        document.getElementById('gl-fatura-proxima').addEventListener('click', () => mudarFaturaLancamentoGastos(1));
         // Ao escolher Parcelada o campo já vem com o mínimo, para só ajustar nas setas. Só
         // na troca da opção: se fosse a cada atualização, apagar para digitar "12" voltaria o 2.
         document.getElementById('gl-repeticao-parcelada').addEventListener('change', function() {
