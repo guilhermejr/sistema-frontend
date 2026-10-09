@@ -6288,7 +6288,7 @@
                     <li class="list-group-item d-flex justify-content-between align-items-center gap-2 item-clicavel" ${alvo}>
                         <div>
                             <div>${escapeHtml(item.descricao)}</div>
-                            <div class="small-muted">${formatarDataISO(item.data)}${item.atrasado ? ' <span class="badge text-bg-danger">Atrasado</span>' : ''}</div>
+                            <div class="small-muted">${formatarDataISO(item.data)}${seloVencimentoAgendaGastos(item)}</div>
                         </div>
                         <div class="d-flex align-items-center gap-2 flex-shrink-0">
                             <span class="fw-semibold">${formatarMoedaBR(item.valor)}</span>
@@ -6296,6 +6296,19 @@
                         </div>
                     </li>`;
             }).join('');
+        }
+
+        // Atrasado vem do service; Hoje e Amanhã comparam a data do item com a do aparelho.
+        function seloVencimentoAgendaGastos(item) {
+            if (item.atrasado) return ' <span class="badge text-bg-danger">Atrasado</span>';
+            const dia = deslocamento => {
+                const data = new Date();
+                data.setDate(data.getDate() + deslocamento);
+                return `${data.getFullYear()}-${doisDigitos(data.getMonth() + 1)}-${doisDigitos(data.getDate())}`;
+            };
+            if (item.data === dia(0)) return ' <span class="badge text-bg-warning">Hoje</span>';
+            if (item.data === dia(1)) return ' <span class="badge text-bg-info">Amanhã</span>';
+            return '';
         }
 
         // Fatura: paga hoje pela conta padrão do cartão. Sem conta padrão ativa não há
