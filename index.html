@@ -6301,11 +6301,11 @@
                     <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
                         <div>
                             <div>${escapeHtml(fatura.cartaoNome)}</div>
-                            <div class="small-muted">Vence ${formatarDataISO(fatura.vencimento)} <span class="badge ${status.classe}">${status.texto}</span></div>
+                            <div class="small-muted">Fecha ${formatarDataISO(fatura.fechamento)} · Vence ${formatarDataISO(fatura.vencimento)} <span class="badge ${status.classe}">${status.texto}</span></div>
                         </div>
                         <div class="text-end">
                             <div class="fw-semibold">${moeda(fatura.total, 'faturas')}</div>
-                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" data-fatura-cartao="${fatura.cartaoId}">Ver fatura</button>
+                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-nowrap" data-fatura-cartao="${fatura.cartaoId}">Ver fatura</button>
                         </div>
                     </li>`;
                 }).join('')
