@@ -7076,8 +7076,8 @@
             };
             const acoesFatura = l => l.realizado
                 ? '<span class="badge text-bg-success">Paga</span>'
-                : `${podeVoltar(l) ? `<button type="button" class="btn btn-sm btn-outline-secondary" data-mover-fatura="${l.id}" data-delta="-1" title="Levar para a fatura anterior" aria-label="Levar para a fatura anterior">&lsaquo;<span class="d-none d-sm-inline"> Anterior</span></button>` : ''}
-                   <button type="button" class="btn btn-sm btn-outline-secondary" data-mover-fatura="${l.id}" data-delta="1" title="Levar para a próxima fatura" aria-label="Levar para a próxima fatura"><span class="d-none d-sm-inline">Próxima </span>&rsaquo;</button>`;
+                : `${podeVoltar(l) ? `<button type="button" class="btn btn-sm btn-outline-secondary" data-mover-fatura="${l.id}" data-delta="-1" title="Levar para a fatura anterior" aria-label="Levar para a fatura anterior">&lsaquo;</button>` : ''}
+                   <button type="button" class="btn btn-sm btn-outline-secondary" data-mover-fatura="${l.id}" data-delta="1" title="Levar para a próxima fatura" aria-label="Levar para a próxima fatura">&rsaquo;</button>`;
 
             // No celular a data perde o ano e a categoria some, para as setas caberem na tela.
             const linhas = fatura.lancamentos.map(l => `
