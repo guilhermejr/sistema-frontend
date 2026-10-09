@@ -1924,20 +1924,24 @@
                     <div class="tab-content">
                         <div class="tab-pane fade show active" id="gc-pane-contas" role="tabpanel">
                             <form class="form-validado row g-2 align-items-start mb-3" id="form-gastos-conta" novalidate>
-                                <div class="col-12 col-md-4">
+                                <div class="col-12 col-md-3">
                                     <label for="gc-conta-nome" class="form-label">Nome</label>
                                     <input type="text" class="form-control" id="gc-conta-nome" data-tipo="texto" maxlength="255" autocomplete="off">
                                     <div class="invalid-feedback"></div>
                                 </div>
-                                <div class="col-6 col-md-3">
+                                <div class="col-6 col-md-2">
                                     <label for="gc-conta-saldo" class="form-label">Saldo inicial</label>
                                     <input type="text" class="form-control" id="gc-conta-saldo" data-tipo="moeda-sinal" placeholder="0,00" autocomplete="off">
                                     <div class="invalid-feedback"></div>
                                 </div>
-                                <div class="col-6 col-md-2 pt-md-4">
+                                <div class="col-6 col-md-4 pt-md-4">
                                     <div class="form-check mt-md-2">
                                         <input class="form-check-input" type="checkbox" id="gc-conta-geral" checked>
                                         <label class="form-check-label" for="gc-conta-geral">Entra no Saldo</label>
+                                    </div>
+                                    <div class="form-check" title="Mostra na lista de contas o saldo previsto para o fim do ciclo">
+                                        <input class="form-check-input" type="checkbox" id="gc-conta-previsto" checked>
+                                        <label class="form-check-label" for="gc-conta-previsto">Mostrar fim do ciclo</label>
                                     </div>
                                 </div>
                                 <div class="col-12 col-md-3 pt-md-4 d-flex gap-2">
@@ -1947,7 +1951,7 @@
                             </form>
                             <div class="table-responsive">
                                 <table class="table table-sm align-middle">
-                                    <thead><tr><th>Nome</th><th class="text-end">Saldo</th><th>Entra no Saldo</th><th></th></tr></thead>
+                                    <thead><tr><th>Nome</th><th class="text-end">Saldo</th><th class="d-none d-sm-table-cell">Entra no Saldo</th><th class="d-none d-sm-table-cell">Mostra fim do ciclo</th><th></th></tr></thead>
                                     <tbody id="gc-contas-lista"></tbody>
                                     <tfoot id="gc-contas-total"></tfoot>
                                 </table>
@@ -6283,7 +6287,10 @@
                 ? dashboard.contas.map(conta => `
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         <span>${escapeHtml(conta.nome)}</span>
-                        <span class="fw-semibold ${conta.saldo < 0 ? 'valor-despesa' : ''}">${moeda(conta.saldo, 'saldoGeral')}</span>
+                        <span class="text-end">
+                            <span class="fw-semibold ${conta.saldo < 0 ? 'valor-despesa' : ''}">${moeda(conta.saldo, 'saldoGeral')}</span>
+                            ${conta.saldoPrevisto == null ? '' : `<div class="small-muted">Fim do ciclo <span class="${conta.saldoPrevisto < 0 ? 'valor-despesa' : ''}">${moeda(conta.saldoPrevisto, 'saldoGeral')}</span></div>`}
+                        </span>
                     </li>`).join('')
                 : itemVazioGastos('Nenhuma conta entra no Saldo. Marque "Entra no Saldo" numa conta em "Cadastros".');
 
@@ -7302,17 +7309,24 @@
             return `<span class="text-nowrap me-1">${seta('subir', '&uarr;', 'Subir', indice === 0)}${seta('descer', '&darr;', 'Descer', indice === total - 1)}</span>`;
         }
 
+        // No celular as colunas Sim/Não somem e as marcações vão para baixo do nome.
+        function marcacoesContaGastos(conta) {
+            if (!conta.somaSaldoGeral) return 'Fora do Saldo';
+            return conta.mostraSaldoPrevisto === false ? 'No Saldo' : 'No Saldo · fim do ciclo';
+        }
+
         function renderizarCadastrosGastos() {
             const { contas, cartoes, categorias } = gastosDados;
             const vazio = colunas => `<tr><td colspan="${colunas}" class="text-muted">Nenhum cadastro.</td></tr>`;
 
             document.getElementById('gc-contas-lista').innerHTML = contas.length ? contas.map((c, i) => `
                 <tr class="${c.ativo ? '' : 'text-muted'}">
-                    <td>${setasOrdemGastos('conta', c, i, contas.length)}${nomeComSituacao(c.nome, c.ativo)}</td>
+                    <td>${setasOrdemGastos('conta', c, i, contas.length)}${nomeComSituacao(c.nome, c.ativo)}<div class="small-muted d-sm-none">${marcacoesContaGastos(c)}</div></td>
                     <td class="text-end text-nowrap ${c.saldo < 0 ? 'valor-despesa' : ''}">${formatarMoedaBR(c.saldo)}</td>
-                    <td>${c.somaSaldoGeral ? 'Sim' : 'Não'}</td>
+                    <td class="d-none d-sm-table-cell">${c.somaSaldoGeral ? 'Sim' : 'Não'}</td>
+                    <td class="d-none d-sm-table-cell" ${c.somaSaldoGeral ? '' : 'title="Só aparece no card de Contas a conta que entra no Saldo"'}>${!c.somaSaldoGeral ? '—' : c.mostraSaldoPrevisto === false ? 'Não' : 'Sim'}</td>
                     <td class="text-end text-nowrap">${botaoEditarGastos('conta', c)} ${botaoAtivoGastos('conta', c)}</td>
-                </tr>`).join('') : vazio(4);
+                </tr>`).join('') : vazio(5);
 
             // Saldo Total vem do dashboard (soma das contas ativas, calculada no service).
             const saldoTotal = gastosDados.dashboard?.saldoTotal;
@@ -7320,7 +7334,8 @@
                 <tr class="fw-semibold">
                     <td class="text-nowrap" title="Soma das contas ativas">Total<span class="small-muted fw-normal d-none d-sm-inline"> (contas ativas)</span></td>
                     <td class="text-end text-nowrap ${saldoTotal < 0 ? 'valor-despesa' : ''}">${formatarMoedaBR(saldoTotal)}</td>
-                    <td colspan="2"></td>
+                    <td class="d-none d-sm-table-cell" colspan="2"></td>
+                    <td></td>
                 </tr>` : '';
 
             document.getElementById('gc-cartoes-lista').innerHTML = cartoes.length ? cartoes.map((c, i) => `
@@ -7378,6 +7393,7 @@
                 document.getElementById('gc-conta-nome').value = item.nome;
                 document.getElementById('gc-conta-saldo').value = numeroParaMoedaBR(item.saldoInicial);
                 document.getElementById('gc-conta-geral').checked = item.somaSaldoGeral;
+                document.getElementById('gc-conta-previsto').checked = item.mostraSaldoPrevisto !== false;
             } else if (tipo === 'cartao') {
                 document.getElementById('gc-cartao-nome').value = item.nome;
                 document.getElementById('gc-cartao-vencimento').value = item.diaVencimento;
@@ -7400,7 +7416,8 @@
                 return {
                     nome: document.getElementById('gc-conta-nome').value.trim(),
                     saldoInicial: document.getElementById('gc-conta-saldo').value.trim(),
-                    somaSaldoGeral: document.getElementById('gc-conta-geral').checked
+                    somaSaldoGeral: document.getElementById('gc-conta-geral').checked,
+                    mostraSaldoPrevisto: document.getElementById('gc-conta-previsto').checked
                 };
             }
             if (tipo === 'cartao') {
