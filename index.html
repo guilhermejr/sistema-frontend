@@ -7080,7 +7080,8 @@
                    <button type="button" class="btn btn-sm btn-outline-secondary" data-mover-fatura="${l.id}" data-delta="1" title="Levar para a próxima fatura" aria-label="Levar para a próxima fatura">&rsaquo;</button>`;
 
             // No celular a data perde o ano e a categoria some, para as setas caberem na tela.
-            const linhas = fatura.lancamentos.map(l => `
+            // O service manda da compra mais antiga para a mais recente; a tela mostra ao contrário.
+            const linhas = [...fatura.lancamentos].reverse().map(l => `
                 <tr class="item-clicavel" data-editar-lancamento="${l.id}">
                     <td class="text-nowrap"><span class="d-sm-none">${formatarDataISO(l.data).slice(0, 5)}</span><span class="d-none d-sm-inline">${formatarDataISO(l.data)}</span></td>
                     <td>${descricaoComParcela(l)}${marcaFixa(l)}${l.faturaTransferida ? ' <span class="badge text-bg-light border">transferida</span>' : ''}</td>
@@ -7409,7 +7410,9 @@
             const todas = [...linhasLancamentos, ...linhasFaturas];
             const linhas = todas
                 .filter(linha => filtro === 'todos' || linha.situacao === filtro)
+                // Mais recente primeiro; no mesmo dia, o último lançado em cima.
                 .sort((a, b) => a.data.localeCompare(b.data))
+                .reverse()
                 .map(linha => linha.html)
                 .join('');
 
@@ -7454,7 +7457,7 @@
                 <div class="table-responsive">
                     <table class="table table-sm align-middle">
                         <thead><tr><th>Data</th><th>Contas</th><th class="d-none d-md-table-cell">Descrição</th><th class="text-end">Valor</th><th></th></tr></thead>
-                        <tbody>${transferencias.map(t => `
+                        <tbody>${[...transferencias].reverse().map(t => `
                             <tr data-transferencia-resumo="${escapeHtml(`${formatarMoedaBR(t.valor)} de ${t.contaOrigem?.nome || ''} para ${t.contaDestino?.nome || ''} em ${formatarDataISO(t.data)}`)}">
                                 <td class="text-nowrap"><span class="d-none d-sm-inline">${formatarDataISO(t.data)}</span><span class="d-sm-none">${formatarDataISO(t.data).slice(0, 5)}</span></td>
                                 <td>${escapeHtml(t.contaOrigem?.nome || '')} <span class="text-muted">→</span> ${escapeHtml(t.contaDestino?.nome || '')}</td>
