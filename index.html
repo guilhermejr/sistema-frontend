@@ -95,18 +95,16 @@
             }
         }
 
-        /* Título, nome e Sair numa linha só. Quem cede espaço é o nome, que
-           ganha reticências; título e botão não encolhem. */
+        /* Título e menu do usuário numa linha só. Quem cede espaço é o nome,
+           que ganha reticências; o título não encolhe. */
         .dashboard-header h2 {
             white-space: nowrap;
         }
 
-        .cabecalho-usuario {
+        .cabecalho-usuario,
+        .cabecalho-usuario > .btn {
             min-width: 0;
-        }
-
-        .cabecalho-usuario .btn {
-            flex-shrink: 0;
+            max-width: 100%;
         }
 
         #usuario-logado {
@@ -463,11 +461,16 @@
                     <h2 class="mb-0">Dashboard</h2>
                 </div>
 
-                <div class="d-flex align-items-center gap-2 cabecalho-usuario">
-                    <span id="usuario-logado" class="badge text-bg-secondary p-2">Usuário</span>
-                    <button class="btn btn-outline-secondary" onclick="abrirTrocaSenha()" title="Trocar a sua senha">Senha</button>
-                    <button class="btn btn-outline-secondary" onclick="abrirDoisFatores()" title="Autenticação em dois fatores">2FA</button>
-                    <button class="btn btn-outline-danger" onclick="logout()">Sair</button>
+                <div class="dropdown cabecalho-usuario">
+                    <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Opções da conta">
+                        <span id="usuario-logado">Usuário</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><button class="dropdown-item" type="button" onclick="abrirTrocaSenha()">Trocar senha</button></li>
+                        <li><button class="dropdown-item" type="button" onclick="abrirDoisFatores()">Autenticação em dois fatores</button></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><button class="dropdown-item text-danger" type="button" onclick="logout()">Sair</button></li>
+                    </ul>
                 </div>
             </div>
         </div>
