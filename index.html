@@ -954,9 +954,14 @@
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
                     <h5 class="mb-0" id="gastos-titulo-mes">Mês atual</h5>
                     <div class="d-flex flex-wrap gap-2 gastos-acoes">
-                        <button type="button" class="btn btn-danger" data-novo-lancamento="D">Despesa</button>
-                        <button type="button" class="btn btn-success" data-novo-lancamento="R">Receita</button>
-                        <button type="button" class="btn btn-outline-primary" id="btn-gastos-transferencia">Transferência</button>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-danger" data-novo-lancamento="D">Despesa</button>
+                            <button type="button" class="btn btn-danger dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Outros lançamentos"></button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><button type="button" class="dropdown-item" data-novo-lancamento="R">Receita</button></li>
+                                <li><button type="button" class="dropdown-item" id="btn-gastos-transferencia">Transferência</button></li>
+                            </ul>
+                        </div>
                         <button type="button" class="btn btn-outline-secondary" id="btn-gastos-relatorio">Relatório</button>
                         <button type="button" class="btn btn-outline-secondary" id="btn-gastos-cadastros">Cadastros</button>
                     </div>
