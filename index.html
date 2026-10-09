@@ -469,7 +469,7 @@
                         <li><button class="dropdown-item" type="button" onclick="abrirTrocaSenha()">Trocar senha</button></li>
                         <li><button class="dropdown-item" type="button" onclick="abrirDoisFatores()">Autenticação em dois fatores</button></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><button class="dropdown-item text-danger" type="button" onclick="logout()">Sair</button></li>
+                        <li><button class="dropdown-item text-danger" type="button" onclick="sair()">Sair</button></li>
                     </ul>
                 </div>
             </div>
@@ -2481,6 +2481,12 @@
             }
 
             return accessToken;
+        }
+
+        // Sair pelo menu pede confirmação; logout() continua direto para quem não deve perguntar.
+        function sair() {
+            if (!confirm('Deseja sair do sistema?')) return;
+            logout();
         }
 
         function logout() {
