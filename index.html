@@ -421,9 +421,10 @@
 
         /* No celular os botões descem para baixo do título; centralizados ficam alinhados com os cards. */
         @media (max-width: 767.98px) {
-            #gastos-titulo-mes {
+            .gastos-cabecalho-mes {
                 width: 100%;
                 text-align: center;
+                margin-bottom: 0.25rem;
             }
 
             .gastos-acoes {
@@ -994,7 +995,10 @@
                 <div id="gastos-alerta" class="alert hidden" role="alert"></div>
 
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-                    <h5 class="mb-0" id="gastos-titulo-mes">Mês atual</h5>
+                    <div class="gastos-cabecalho-mes">
+                        <h5 class="mb-0" id="gastos-titulo-mes">Mês atual</h5>
+                        <div class="small-muted hidden" id="gastos-ciclo"></div>
+                    </div>
                     <div class="d-flex flex-wrap gap-2 gastos-acoes">
                         <div class="btn-group">
                             <button type="button" class="btn btn-danger" data-novo-lancamento="D"><svg class="icone-botao" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/><path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8"/></svg>Despesa</button>
@@ -6022,6 +6026,20 @@
             return `${diaMes(inicio)} a ${diaMes(fim)}`;
         }
 
+        // Linha sob o título do dashboard: "Ciclo de 25 set a 24 out · faltam 15 dias". Aparece
+        // também quando o ciclo é o mês do calendário, pelos dias que faltam.
+        function linhaCicloGastos({ inicio, fim }) {
+            if (!inicio || !fim) return '';
+            const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+            const diaMes = iso => `${Number(iso.slice(8, 10))} ${meses[Number(iso.slice(5, 7)) - 1]}`;
+            const [ano, mes, dia] = fim.split('-').map(Number);
+            const agora = new Date();
+            // round: a diferença entre meias-noites pode ter uma hora a mais ou a menos no horário de verão.
+            const restam = Math.round((new Date(ano, mes - 1, dia) - new Date(agora.getFullYear(), agora.getMonth(), agora.getDate())) / 86400000);
+            const faltam = restam <= 0 ? 'último dia' : restam === 1 ? 'falta 1 dia' : `faltam ${restam} dias`;
+            return `${ICONE_CALENDARIO.replace('<svg ', '<svg class="icone-botao" ')}Ciclo de ${diaMes(inicio)} a ${diaMes(fim)} · ${faltam}`;
+        }
+
         // Mesma regra de Ciclo no gastos-service, só para o exemplo da aba Configurações:
         // até o dia 15 o ciclo leva o nome do mês em que começa, do 16 em diante o do seguinte.
         function cicloDaDataGastos(data, dia) {
@@ -6238,9 +6256,10 @@
             const moeda = (valor, chave) => ocultos.has(chave) ? 'R$ ••••' : formatarMoedaBR(valor);
             const detalhe = (chave, texto) => ocultos.has(chave) ? '&nbsp;' : texto;
 
-            const periodo = periodoCicloGastos(dashboard);
-            document.getElementById('gastos-titulo-mes').innerHTML = `${escapeHtml(nomeMes(dashboard.ano, dashboard.mes))}${periodo
-                ? ` <span class="small-muted fw-normal fs-6 text-nowrap">${periodo}</span>` : ''}`;
+            document.getElementById('gastos-titulo-mes').textContent = nomeMes(dashboard.ano, dashboard.mes);
+            const ciclo = document.getElementById('gastos-ciclo');
+            ciclo.innerHTML = linhaCicloGastos(dashboard);
+            ciclo.classList.toggle('hidden', !ciclo.innerHTML);
 
             const cards = {
                 receitas: [dashboard.receitas.total, [`Recebido ${formatarMoedaBR(dashboard.receitas.realizado)}`, `A receber ${formatarMoedaBR(dashboard.receitas.pendente)}`]],
