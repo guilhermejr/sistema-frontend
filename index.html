@@ -7056,10 +7056,10 @@
                 const situacao = l.tipo === 'R' ? (l.realizado ? 'recebidos' : 'a-receber') : (l.realizado ? 'pagos' : 'a-pagar');
                 return { data: l.data, situacao, html: `
                 <tr class="item-clicavel" data-editar-lancamento="${l.id}">
-                    <td>${formatarDataISO(l.data)}</td>
-                    <td>${descricaoComParcela(l)}${marcaFixa(l)}</td>
-                    <td>${escapeHtml(l.categoria?.descricao || '')}</td>
-                    <td>${escapeHtml(l.conta?.nome || '')}</td>
+                    <td class="text-nowrap"><span class="d-sm-none">${formatarDataISO(l.data).slice(0, 5)}</span><span class="d-none d-sm-inline">${formatarDataISO(l.data)}</span></td>
+                    <td>${descricaoComParcela(l)}${marcaFixa(l)}<div class="small text-muted d-sm-none">${escapeHtml(l.conta?.nome || '')}</div></td>
+                    <td class="d-none d-sm-table-cell">${escapeHtml(l.categoria?.descricao || '')}</td>
+                    <td class="d-none d-sm-table-cell">${escapeHtml(l.conta?.nome || '')}</td>
                     <td class="text-end text-nowrap ${l.tipo === 'R' ? 'valor-receita' : 'valor-despesa'}">${l.tipo === 'R' ? '+' : '−'} ${formatarMoedaBR(l.valor)}</td>
                     <td class="text-center">
                         <div class="form-check form-switch d-inline-block mb-0">
@@ -7076,10 +7076,10 @@
                 // Fatura com algo pendente continua a pagar, mesmo que parte já tenha sido paga.
                 return { data: f.vencimento, situacao: f.pendente > 0 ? 'a-pagar' : 'pagos', html: `
                 <tr class="item-clicavel" data-relatorio-fatura="${f.cartaoId}" title="Ver a fatura">
-                    <td>${formatarDataISO(f.vencimento)}</td>
-                    <td>Fatura ${escapeHtml(f.cartaoNome)} <span class="badge ${status.classe}">${status.texto}</span></td>
-                    <td class="text-muted">Cartão de crédito</td>
-                    <td>${escapeHtml(f.cartaoNome)}</td>
+                    <td class="text-nowrap"><span class="d-sm-none">${formatarDataISO(f.vencimento).slice(0, 5)}</span><span class="d-none d-sm-inline">${formatarDataISO(f.vencimento)}</span></td>
+                    <td>Fatura ${escapeHtml(f.cartaoNome)} <span class="badge ${status.classe}">${status.texto}</span><div class="small text-muted d-sm-none">${escapeHtml(f.cartaoNome)}</div></td>
+                    <td class="text-muted d-none d-sm-table-cell">Cartão de crédito</td>
+                    <td class="d-none d-sm-table-cell">${escapeHtml(f.cartaoNome)}</td>
                     <td class="text-end text-nowrap valor-despesa">− ${formatarMoedaBR(f.total)}</td>
                     <td class="text-center">
                         <div class="form-check form-switch d-inline-block mb-0" title="A fatura é dada como paga pelo pagamento dela">
@@ -7120,7 +7120,7 @@
                 ${linhas ? `
                 <div class="table-responsive">
                     <table class="table table-sm align-middle">
-                        <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Conta/Cartão</th><th class="text-end">Valor</th><th class="text-center">Realizado</th></tr></thead>
+                        <thead><tr><th>Data</th><th>Descrição</th><th class="d-none d-sm-table-cell">Categoria</th><th class="d-none d-sm-table-cell">Conta/Cartão</th><th class="text-end">Valor</th><th class="text-center">Realizado</th></tr></thead>
                         <tbody>${linhas}</tbody>
                     </table>
                 </div>` : `<p class="text-muted text-center">${todas.length ? 'Nenhum lançamento neste filtro.' : 'Nenhum lançamento neste mês.'}</p>`}
