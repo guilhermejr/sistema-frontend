@@ -7230,9 +7230,12 @@
             const { contas, cartoes, categorias } = gastosDados;
             const vazio = colunas => `<tr><td colspan="${colunas}" class="text-muted">Nenhum cadastro.</td></tr>`;
 
-            document.getElementById('gc-contas-lista').innerHTML = contas.length ? contas.map(c => `
+            // As contas já vêm na ordem escolhida; as setas trocam com a vizinha.
+            const seta = (c, acao, texto, rotulo, desabilitada) => `<button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1"
+                data-cadastro-acao="${acao}" data-cadastro-tipo="conta" data-id="${c.id}" title="${rotulo}" aria-label="${rotulo} ${escapeHtml(c.nome)}" ${desabilitada ? 'disabled' : ''}>${texto}</button>`;
+            document.getElementById('gc-contas-lista').innerHTML = contas.length ? contas.map((c, i) => `
                 <tr class="${c.ativo ? '' : 'text-muted'}">
-                    <td>${nomeComSituacao(c.nome, c.ativo)}</td>
+                    <td><span class="text-nowrap me-1">${seta(c, 'subir', '&uarr;', 'Subir', i === 0)}${seta(c, 'descer', '&darr;', 'Descer', i === contas.length - 1)}</span>${nomeComSituacao(c.nome, c.ativo)}</td>
                     <td class="text-end text-nowrap ${c.saldo < 0 ? 'valor-despesa' : ''}">${formatarMoedaBR(c.saldo)}</td>
                     <td>${c.somaSaldoGeral ? 'Sim' : 'Não'}</td>
                     <td class="text-end text-nowrap">${botaoEditarGastos('conta', c)} ${botaoAtivoGastos('conta', c)}</td>
