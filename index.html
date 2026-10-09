@@ -1018,8 +1018,8 @@
                         <div class="card card-resumo text-center h-100">
                             <div class="card-body">
                                 <div class="d-flex justify-content-center align-items-center gap-2">
-                                    <h6 class="text-muted mb-0">Saldo Geral</h6>
-                                    <button type="button" class="btn btn-link btn-sm p-0 botao-olho" data-ocultar="saldoGeral" aria-label="Mostrar ou ocultar saldo geral"></button>
+                                    <h6 class="text-muted mb-0">Saldo</h6>
+                                    <button type="button" class="btn btn-link btn-sm p-0 botao-olho" data-ocultar="saldoGeral" aria-label="Mostrar ou ocultar saldo"></button>
                                 </div>
                                 <div id="gastos-card-saldoGeral" class="fs-4 fw-bold ">--</div>
                                 <div id="gastos-card-saldoGeral-detalhe" class="small-muted mt-1">&nbsp;</div>
@@ -1069,7 +1069,7 @@
                         <div class="card table-card">
                             <div class="card-body">
                                 <h5 class="mb-1">Contas</h5>
-                                <div class="item-dica mb-2">Contas que somam no Saldo Geral.</div>
+                                <div class="item-dica mb-2">Contas que entram no Saldo.</div>
                                 <ul id="gastos-contas" class="list-group list-group-flush lista-gastos"></ul>
                             </div>
                         </div>
@@ -1937,7 +1937,7 @@
                                 <div class="col-6 col-md-2 pt-md-4">
                                     <div class="form-check mt-md-2">
                                         <input class="form-check-input" type="checkbox" id="gc-conta-geral" checked>
-                                        <label class="form-check-label" for="gc-conta-geral">Saldo Geral</label>
+                                        <label class="form-check-label" for="gc-conta-geral">Entra no Saldo</label>
                                     </div>
                                 </div>
                                 <div class="col-12 col-md-3 pt-md-4 d-flex gap-2">
@@ -1947,7 +1947,7 @@
                             </form>
                             <div class="table-responsive">
                                 <table class="table table-sm align-middle">
-                                    <thead><tr><th>Nome</th><th class="text-end">Saldo</th><th>Saldo Geral</th><th></th></tr></thead>
+                                    <thead><tr><th>Nome</th><th class="text-end">Saldo</th><th>Entra no Saldo</th><th></th></tr></thead>
                                     <tbody id="gc-contas-lista"></tbody>
                                     <tfoot id="gc-contas-total"></tfoot>
                                 </table>
@@ -6285,7 +6285,7 @@
                         <span>${escapeHtml(conta.nome)}</span>
                         <span class="fw-semibold ${conta.saldo < 0 ? 'valor-despesa' : ''}">${moeda(conta.saldo, 'saldoGeral')}</span>
                     </li>`).join('')
-                : itemVazioGastos('Nenhuma conta no Saldo Geral. Inclua uma em "Cadastros".');
+                : itemVazioGastos('Nenhuma conta entra no Saldo. Marque "Entra no Saldo" numa conta em "Cadastros".');
 
             document.getElementById('gastos-cartoes').innerHTML = dashboard.cartoes.length
                 ? dashboard.cartoes.map(fatura => {
