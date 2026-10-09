@@ -6168,14 +6168,14 @@
                 ? ` <span class="small-muted fw-normal fs-6 text-nowrap">${periodo}</span>` : ''}`;
 
             const cards = {
-                receitas: [dashboard.receitas.total, `Recebido ${formatarMoedaBR(dashboard.receitas.realizado)}`],
-                despesas: [dashboard.despesas.total, `Pago ${formatarMoedaBR(dashboard.despesas.realizado)}`],
-                saldoGeral: [dashboard.saldoGeral, `${dashboard.contas.length} conta${dashboard.contas.length === 1 ? '' : 's'}`],
+                receitas: [dashboard.receitas.total, [`Recebido ${formatarMoedaBR(dashboard.receitas.realizado)}`, `A receber ${formatarMoedaBR(dashboard.receitas.pendente)}`]],
+                despesas: [dashboard.despesas.total, [`Pago ${formatarMoedaBR(dashboard.despesas.realizado)}`, `A pagar ${formatarMoedaBR(dashboard.despesas.pendente)}`]],
+                saldoGeral: [dashboard.saldoGeral, [`${dashboard.contas.length} conta${dashboard.contas.length === 1 ? '' : 's'}`, ...(dashboard.saldoGeralPrevisto == null ? [] : [`Fim do ciclo ${formatarMoedaBR(dashboard.saldoGeralPrevisto)}`])]],
                 faturas: [dashboard.faturas, `${dashboard.cartoes.length} cart${dashboard.cartoes.length === 1 ? 'ão' : 'ões'}`]
             };
             Object.entries(cards).forEach(([chave, [valor, texto]]) => {
                 document.getElementById(`gastos-card-${chave}`).textContent = moeda(valor, chave);
-                document.getElementById(`gastos-card-${chave}-detalhe`).innerHTML = detalhe(chave, escapeHtml(texto));
+                document.getElementById(`gastos-card-${chave}-detalhe`).innerHTML = detalhe(chave, [texto].flat().map(escapeHtml).join('<br>'));
             });
 
             document.querySelectorAll('[data-ocultar]').forEach(botao => {
