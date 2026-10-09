@@ -7077,7 +7077,7 @@
                 return { data: f.vencimento, situacao: f.pendente > 0 ? 'a-pagar' : 'pagos', html: `
                 <tr class="item-clicavel" data-relatorio-fatura="${f.cartaoId}" title="Ver a fatura">
                     <td class="text-nowrap"><span class="d-sm-none">${formatarDataISO(f.vencimento).slice(0, 5)}</span><span class="d-none d-sm-inline">${formatarDataISO(f.vencimento)}</span></td>
-                    <td>Fatura ${escapeHtml(f.cartaoNome)} <span class="badge ${status.classe}">${status.texto}</span><div class="small text-muted d-sm-none">${escapeHtml(f.cartaoNome)}</div></td>
+                    <td>Fatura ${escapeHtml(f.cartaoNome)} <span class="badge ${status.classe}">${status.texto}</span></td>
                     <td class="text-muted d-none d-sm-table-cell">Cartão de crédito</td>
                     <td class="d-none d-sm-table-cell">${escapeHtml(f.cartaoNome)}</td>
                     <td class="text-end text-nowrap valor-despesa">− ${formatarMoedaBR(f.total)}</td>
