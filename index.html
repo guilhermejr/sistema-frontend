@@ -443,6 +443,15 @@
             flex-shrink: 0;
         }
 
+        /* Despesa com a seta tem no mínimo a largura do menu (os 10rem do Bootstrap), para os dois alinharem. */
+        .gastos-acoes > .btn-group {
+            min-width: 10rem;
+        }
+
+        .gastos-acoes > .btn-group > .btn:first-child {
+            flex-grow: 1;
+        }
+
         .navegacao-mes {
             min-width: 10rem;
             text-align: center;
@@ -472,10 +481,6 @@
                 width: 100%;
                 display: grid !important;
                 grid-template-columns: 1fr 1fr;
-            }
-
-            .gastos-acoes > .btn-group > .btn:first-child {
-                flex-grow: 1;
             }
 
             /* Menu de Receita e Transferência na largura do botão Despesa, com itens da altura dele. */
