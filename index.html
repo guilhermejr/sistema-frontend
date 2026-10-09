@@ -224,11 +224,11 @@
             flex-shrink: 0;
         }
 
-        /* Cinco abas somam mais que a largura de um celular. Em vez de quebrar
-           em duas fileiras, a barra rola na horizontal; a borda inferior do
-           <ul> sai porque o overflow cortaria o encaixe da aba ativa nela. */
+        /* As abas do topo e as de Cadastros somam mais que a largura de um celular.
+           Em vez de quebrar em duas fileiras, a barra rola na horizontal; a borda
+           inferior do <ul> sai porque o overflow cortaria o encaixe da aba ativa nela. */
         @media (max-width: 992px) {
-            #dashboardTabs {
+            .abas-celular {
                 flex-wrap: nowrap;
                 overflow-x: auto;
                 overflow-y: hidden;
@@ -237,16 +237,33 @@
                 border-bottom: 0;
             }
 
-            #dashboardTabs::-webkit-scrollbar {
+            .abas-celular::-webkit-scrollbar {
                 display: none;
             }
 
-            #dashboardTabs .nav-item {
+            .abas-celular .nav-item {
                 flex: 0 0 auto;
             }
 
-            #dashboardTabs .nav-link {
+            .abas-celular .nav-link {
                 white-space: nowrap;
+            }
+        }
+
+        /* No celular as abas crescem para ficar fáceis de tocar. */
+        @media (max-width: 767.98px) {
+            .abas-celular .nav-link {
+                display: flex;
+                align-items: center;
+                min-height: 52px;
+                padding: 0.75rem 1.1rem;
+                font-size: 1.1rem;
+            }
+
+            .abas-celular .nav-link svg {
+                width: 1.25em;
+                height: 1.25em;
+                margin-right: 0.5rem;
             }
         }
 
@@ -437,7 +454,16 @@
             .gastos-cabecalho-mes {
                 width: 100%;
                 text-align: center;
-                margin-bottom: 0.25rem;
+                /* Com o gap da linha, deixa o mesmo respiro acima (até as abas) e abaixo (até os botões). */
+                margin-bottom: 1.15rem;
+            }
+
+            #gastos-titulo-mes {
+                font-size: 1.85rem;
+            }
+
+            #gastos-ciclo {
+                font-size: 1rem;
             }
 
             /* Grade 2 × 2 de mesma largura: com quebra livre, a largura do aparelho decide
@@ -560,7 +586,7 @@
         </div>
 
         <!-- Abas -->
-        <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
+        <ul class="nav nav-tabs mb-4 abas-celular" id="dashboardTabs" role="tablist">
           <li class="nav-item" role="presentation">
             <button class="nav-link active" id="gastos-tab" data-perfil="ROLE_GASTOS" data-bs-toggle="tab" data-bs-target="#tab-gastos" type="button" role="tab">
                 <svg class="icone-aba" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.136.326A1.5 1.5 0 0 1 14 1.78V3h.5A1.5 1.5 0 0 1 16 4.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 13.5v-9a1.5 1.5 0 0 1 1.432-1.499zM5.562 3H13V1.78a.5.5 0 0 0-.621-.484zM1.5 4a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5z"/></svg>Gastos
@@ -1980,7 +2006,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
                 <div class="modal-body">
-                    <ul class="nav nav-tabs mb-3" role="tablist">
+                    <ul class="nav nav-tabs mb-3 abas-celular" role="tablist">
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#gc-pane-contas" type="button" role="tab"><svg class="icone-botao" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="m8 0 6.61 3h.89a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5H15v7a.5.5 0 0 1 .485.38l.5 2a.498.498 0 0 1-.485.62H.5a.498.498 0 0 1-.485-.62l.5-2A.5.5 0 0 1 1 13V6H.5a.5.5 0 0 1-.5-.5v-2A.5.5 0 0 1 .5 3h.89zM3.777 3h8.447L8 1zM2 6v7h1V6zm2 0v7h2.5V6zm3.5 0v7h1V6zm2 0v7H12V6zM13 6v7h1V6zm2-1V4H1v1zm-.39 9H1.39l-.25 1h13.72z"/></svg>Contas</button>
                         </li>
