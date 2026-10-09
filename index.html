@@ -451,6 +451,18 @@
             .gastos-acoes > .btn-group > .btn:first-child {
                 flex-grow: 1;
             }
+
+            /* Menu de Receita e Transferência na largura do botão Despesa, com itens da altura dele. */
+            .gastos-acoes > .btn-group > .dropdown-menu {
+                min-width: 0;
+                width: 100%;
+            }
+
+            .gastos-acoes > .btn-group > .dropdown-menu .dropdown-item {
+                display: flex;
+                align-items: center;
+                min-height: 44px;
+            }
         }
 
         @media (pointer: coarse) {
