@@ -5948,8 +5948,16 @@
         let gastosLancamento = null;
         // { cartaoId, ano, mes, dados }
         let gastosFatura = null;
-        // { ano, mes }
+        // { ano, mes, filtro (chave de FILTROS_RELATORIO_GASTOS), dados (o último relatório carregado) }
         let gastosRelatorio = null;
+        // Situação de cada linha do relatório, para os botões de filtro.
+        const FILTROS_RELATORIO_GASTOS = {
+            todos: 'Todos',
+            'a-pagar': 'A pagar',
+            'a-receber': 'A receber',
+            pagos: 'Pagos',
+            recebidos: 'Recebidos'
+        };
         // Registro em edição em cada aba do modal de cadastros.
         const gastosEdicaoCadastro = { conta: null, cartao: null, categoria: null };
 
@@ -6996,7 +7004,10 @@
             const hoje = new Date();
             gastosRelatorio = {
                 ano: ano ?? atual?.ano ?? hoje.getFullYear(),
-                mes: mes ?? atual?.mes ?? hoje.getMonth() + 1
+                mes: mes ?? atual?.mes ?? hoje.getMonth() + 1,
+                // Pelo botão abre em Todos; voltando de uma edição ou fatura, mantém o filtro.
+                filtro: ano === null ? 'todos' : (gastosRelatorio?.filtro ?? 'todos'),
+                dados: null
             };
             document.getElementById('gr-conteudo').innerHTML = '<p class="text-muted text-center my-3">Carregando...</p>';
             esconderAlertaModalGastos('gr-alerta');
@@ -7038,8 +7049,12 @@
         // Lançamentos em conta pela data de cada um; cartão só pelo total da fatura que
         // vence no mês (o service já separa as duas listas e soma as faturas nos totais).
         function renderizarRelatorioGastos(relatorio) {
+            gastosRelatorio.dados = relatorio;
+            const filtro = gastosRelatorio.filtro;
+
             const linhasLancamentos = relatorio.lancamentos.map(l => {
-                return { data: l.data, html: `
+                const situacao = l.tipo === 'R' ? (l.realizado ? 'recebidos' : 'a-receber') : (l.realizado ? 'pagos' : 'a-pagar');
+                return { data: l.data, situacao, html: `
                 <tr class="item-clicavel" data-editar-lancamento="${l.id}">
                     <td>${formatarDataISO(l.data)}</td>
                     <td>${descricaoComParcela(l)}${marcaFixa(l)}</td>
@@ -7058,7 +7073,8 @@
             const linhasFaturas = (relatorio.faturas || []).map(f => {
                 const status = STATUS_FATURA[f.status] || { texto: f.status, classe: 'text-bg-secondary' };
                 const quitada = f.pendente <= 0 && f.total > 0;
-                return { data: f.vencimento, html: `
+                // Fatura com algo pendente continua a pagar, mesmo que parte já tenha sido paga.
+                return { data: f.vencimento, situacao: f.pendente > 0 ? 'a-pagar' : 'pagos', html: `
                 <tr class="item-clicavel" data-relatorio-fatura="${f.cartaoId}" title="Ver a fatura">
                     <td>${formatarDataISO(f.vencimento)}</td>
                     <td>Fatura ${escapeHtml(f.cartaoNome)} <span class="badge ${status.classe}">${status.texto}</span></td>
@@ -7073,7 +7089,9 @@
                 </tr>` };
             });
 
-            const linhas = [...linhasLancamentos, ...linhasFaturas]
+            const todas = [...linhasLancamentos, ...linhasFaturas];
+            const linhas = todas
+                .filter(linha => filtro === 'todos' || linha.situacao === filtro)
                 .sort((a, b) => a.data.localeCompare(b.data))
                 .map(linha => linha.html)
                 .join('');
@@ -7093,14 +7111,20 @@
                         </div>
                     </div>
                 </div>
+                ${todas.length ? `
+                <div class="d-flex flex-wrap justify-content-center gap-1 mb-3" role="group" aria-label="Filtrar lançamentos">
+                    ${Object.entries(FILTROS_RELATORIO_GASTOS).map(([chave, texto]) => `
+                    <button type="button" class="btn btn-sm ${chave === filtro ? 'btn-secondary' : 'btn-outline-secondary'}"
+                        data-relatorio-filtro="${chave}" aria-pressed="${chave === filtro}">${texto}</button>`).join('')}
+                </div>` : ''}
                 ${linhas ? `
                 <div class="table-responsive">
                     <table class="table table-sm align-middle">
                         <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Conta/Cartão</th><th class="text-end">Valor</th><th class="text-center">Realizado</th></tr></thead>
                         <tbody>${linhas}</tbody>
                     </table>
-                </div>` : '<p class="text-muted text-center">Nenhum lançamento neste mês.</p>'}
-                ${secaoTransferenciasRelatorio(relatorio.transferencias || [])}`;
+                </div>` : `<p class="text-muted text-center">${todas.length ? 'Nenhum lançamento neste filtro.' : 'Nenhum lançamento neste mês.'}</p>`}
+                ${filtro === 'todos' ? secaoTransferenciasRelatorio(relatorio.transferencias || []) : ''}`;
         }
 
         // Transferências do ciclo, só para consulta: não entram em Entradas, Saídas nem
@@ -7585,11 +7609,18 @@
         document.getElementById('modal-gastos-relatorio').addEventListener('click', function(event) {
             const navegar = event.target.closest('[data-relatorio-navegar]');
             if (navegar && gastosRelatorio) {
-                gastosRelatorio = somarMeses(gastosRelatorio.ano, gastosRelatorio.mes, Number(navegar.dataset.relatorioNavegar));
+                gastosRelatorio = { ...gastosRelatorio, ...somarMeses(gastosRelatorio.ano, gastosRelatorio.mes, Number(navegar.dataset.relatorioNavegar)), dados: null };
                 esconderAlertaModalGastos('gr-alerta');
                 // Limpa antes de buscar: senão o mês novo aparece no topo com os lançamentos do anterior.
                 document.getElementById('gr-conteudo').innerHTML = '<p class="text-muted text-center my-3">Carregando...</p>';
                 carregarRelatorioGastos();
+                return;
+            }
+
+            const filtro = event.target.closest('[data-relatorio-filtro]');
+            if (filtro && gastosRelatorio?.dados) {
+                gastosRelatorio.filtro = filtro.dataset.relatorioFiltro;
+                renderizarRelatorioGastos(gastosRelatorio.dados);
                 return;
             }
 
