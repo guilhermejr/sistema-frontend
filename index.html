@@ -413,6 +413,19 @@
             color: var(--bs-danger);
         }
 
+        .grafico-categorias {
+            position: relative;
+            height: 260px;
+        }
+
+        .legenda-categorias .cor {
+            display: inline-block;
+            width: 0.75rem;
+            height: 0.75rem;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
         .navegacao-mes {
             min-width: 10rem;
             text-align: center;
@@ -427,9 +440,16 @@
                 margin-bottom: 0.25rem;
             }
 
+            /* Grade 2 × 2 de mesma largura: com quebra livre, a largura do aparelho decide
+               se fica 2 + 2 ou 3 + 1. (display com !important por causa do d-flex.) */
             .gastos-acoes {
                 width: 100%;
-                justify-content: center;
+                display: grid !important;
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .gastos-acoes > .btn-group > .btn:first-child {
+                flex-grow: 1;
             }
         }
 
@@ -1009,6 +1029,7 @@
                             </ul>
                         </div>
                         <button type="button" class="btn btn-outline-secondary" id="btn-gastos-relatorio"><svg class="icone-botao" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M10 13.5a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-6a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5zm-2.5.5a.5.5 0 0 1-.5-.5v-4a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5zm-3 0a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5z"/><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/></svg>Relatório</button>
+                        <button type="button" class="btn btn-outline-secondary" id="btn-gastos-graficos"><svg class="icone-botao" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M7.5 1.018a7 7 0 0 0-4.79 11.566L7.5 7.793zm1 0V7.5h6.482A7 7 0 0 0 8.5 1.018M14.982 8.5H8.207l-4.79 4.79A7 7 0 0 0 14.982 8.5M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8"/></svg>Gráficos</button>
                         <button type="button" class="btn btn-outline-secondary" id="btn-gastos-cadastros"><svg class="icone-botao" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"/><path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115z"/></svg>Cadastros</button>
                     </div>
                 </div>
@@ -1850,6 +1871,48 @@
         </div>
     </div>
 
+    <div class="modal fade" id="modal-gastos-graficos" tabindex="-1" aria-labelledby="gg-titulo" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="gg-titulo">Gráficos do mês</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-center align-items-center gap-2 mb-1">
+                        <button type="button" class="btn btn-outline-secondary navegacao-mes-botao" data-graficos-navegar="-1" aria-label="Mês anterior">&lsaquo;</button>
+                        <div class="navegacao-mes" id="gg-mes">--</div>
+                        <button type="button" class="btn btn-outline-secondary navegacao-mes-botao" data-graficos-navegar="1" aria-label="Próximo mês">&rsaquo;</button>
+                    </div>
+                    <div class="small-muted text-center mb-3 hidden" id="gg-periodo"></div>
+                    <div id="gg-alerta" class="alert alert-danger hidden" role="alert"></div>
+                    <div class="row g-3">
+                        <div class="col-12 col-lg-6">
+                            <div class="card card-resumo h-100">
+                                <div class="card-body">
+                                    <h6 class="mb-0">Despesas por categoria</h6>
+                                    <div class="small-muted mb-2" id="gg-despesas-total">&nbsp;</div>
+                                    <div class="grafico-categorias"><canvas id="gg-despesas" aria-label="Despesas por categoria" role="img"></canvas></div>
+                                    <div id="gg-despesas-legenda"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            <div class="card card-resumo h-100">
+                                <div class="card-body">
+                                    <h6 class="mb-0">Receitas por categoria</h6>
+                                    <div class="small-muted mb-2" id="gg-receitas-total">&nbsp;</div>
+                                    <div class="grafico-categorias"><canvas id="gg-receitas" aria-label="Receitas por categoria" role="img"></canvas></div>
+                                    <div id="gg-receitas-legenda"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL CADASTROS: CONTAS, CARTÕES E CATEGORIAS -->
     <div class="modal fade" id="modal-admin-usuario" tabindex="-1" aria-labelledby="admin-usuario-titulo" aria-hidden="true">
         <div class="modal-dialog modal-dialog-scrollable">
@@ -2158,6 +2221,9 @@
         let graficoSaudePassosMediosDiarios = null;
         let graficoSaudeSonoProfundoMedio = null;
         let graficoSaudeSonoTotalMedio = null;
+
+        let graficoGastosDespesas = null;
+        let graficoGastosReceitas = null;
 
         // ============================================
         // HELPERS DE UI
@@ -7085,6 +7151,126 @@
             }
         }
 
+        // ---------- gráficos do mês
+
+        // Da maior para a menor categoria; o que passar da paleta vira "Outras".
+        const CORES_CATEGORIAS_GASTOS = ['#0d6efd', '#dc3545', '#fd7e14', '#198754', '#6f42c1', '#20c997', '#ffc107', '#d63384', '#0dcaf0', '#6610f2'];
+        const COR_OUTRAS_CATEGORIAS = '#adb5bd';
+        let gastosGraficos = null;
+
+        async function abrirGraficosGastos() {
+            const atual = gastosDados?.dashboard;
+            const hoje = new Date();
+            gastosGraficos = {
+                ano: atual?.ano ?? hoje.getFullYear(),
+                mes: atual?.mes ?? hoje.getMonth() + 1
+            };
+            esconderAlertaModalGastos('gg-alerta');
+            limparGraficosGastos();
+
+            await trocarModalGastos('modal-gastos-graficos');
+            await carregarGraficosGastos();
+        }
+
+        function limparGraficosGastos() {
+            graficoGastosDespesas?.destroy();
+            graficoGastosReceitas?.destroy();
+            graficoGastosDespesas = graficoGastosReceitas = null;
+            ['despesas', 'receitas'].forEach(lado => {
+                document.getElementById(`gg-${lado}-total`).innerHTML = '&nbsp;';
+                document.getElementById(`gg-${lado}-legenda`).innerHTML = '<p class="text-muted text-center my-3">Carregando...</p>';
+            });
+        }
+
+        async function carregarGraficosGastos() {
+            const { ano, mes } = gastosGraficos;
+            document.getElementById('gg-mes').textContent = nomeMes(ano, mes);
+            document.getElementById('gg-periodo').classList.add('hidden');
+
+            try {
+                const categorias = await apiRequest({ url: `${GASTOS_URL}/relatorios/${ano}/${mes}/categorias` });
+                // Navegou de novo enquanto buscava: esta resposta já não é do mês na tela.
+                if (gastosGraficos.ano !== ano || gastosGraficos.mes !== mes) return;
+                const periodo = document.getElementById('gg-periodo');
+                periodo.textContent = periodoCicloGastos(categorias);
+                periodo.classList.toggle('hidden', !periodo.textContent);
+
+                graficoGastosDespesas = graficoCategoriasGastos('despesas', categorias.despesas,
+                    categorias.estornosCartao > 0 ? `Estornos no cartão (${formatarMoedaBR(categorias.estornosCartao)}) não descontados.` : '');
+                graficoGastosReceitas = graficoCategoriasGastos('receitas', categorias.receitas, '');
+            } catch (error) {
+                console.error(error);
+                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gg-alerta', error.message || 'Não foi possível carregar os gráficos.', 'danger');
+            }
+        }
+
+        // Desenha a pizza do lado e a lista abaixo dela (categoria, valor e %), que no
+        // celular é mais legível que a legenda do Chart.js.
+        function graficoCategoriasGastos(lado, itens, observacao) {
+            const total = itens.reduce((soma, item) => soma + Number(item.valor), 0);
+            const agrupa = itens.length > CORES_CATEGORIAS_GASTOS.length;
+            const fatias = agrupa
+                ? [...itens.slice(0, CORES_CATEGORIAS_GASTOS.length - 1),
+                    { descricao: 'Outras', valor: itens.slice(CORES_CATEGORIAS_GASTOS.length - 1).reduce((soma, item) => soma + Number(item.valor), 0) }]
+                : itens;
+            const cores = fatias.map((_, i) => agrupa && i === fatias.length - 1 ? COR_OUTRAS_CATEGORIAS : CORES_CATEGORIAS_GASTOS[i]);
+            const percentual = valor => total > 0 ? Number(valor) / total * 100 : 0;
+            const textoPercentual = valor => `${percentual(valor).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`;
+
+            document.getElementById(`gg-${lado}-total`).textContent =
+                [`Total ${formatarMoedaBR(total)}`, observacao].filter(Boolean).join(' · ');
+            const legenda = document.getElementById(`gg-${lado}-legenda`);
+            const canvas = document.getElementById(`gg-${lado}`);
+            canvas.parentElement.classList.toggle('hidden', !fatias.length);
+            if (!fatias.length) {
+                legenda.innerHTML = `<p class="text-muted text-center my-3">Nenhuma ${lado === 'despesas' ? 'despesa' : 'receita'} neste mês.</p>`;
+                return null;
+            }
+
+            legenda.innerHTML = `
+                <ul class="list-group list-group-flush legenda-categorias mt-2">
+                    ${fatias.map((item, i) => `
+                    <li class="list-group-item d-flex align-items-center gap-2 px-0">
+                        <span class="cor" style="background:${cores[i]}"></span>
+                        <span class="flex-grow-1">${escapeHtml(item.descricao)}</span>
+                        <span class="small-muted">${textoPercentual(item.valor)}</span>
+                        <span class="fw-semibold text-nowrap text-end" style="min-width:6.5rem">${formatarMoedaBR(item.valor)}</span>
+                    </li>`).join('')}
+                </ul>`;
+
+            return new Chart(canvas, {
+                type: 'pie',
+                data: {
+                    labels: fatias.map(item => item.descricao),
+                    datasets: [{
+                        data: fatias.map(item => Number(item.valor)),
+                        backgroundColor: cores,
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ` ${formatarMoedaBR(ctx.parsed)} (${textoPercentual(ctx.parsed)})`
+                            }
+                        },
+                        datalabels: {
+                            color: '#fff',
+                            font: { weight: 'bold' },
+                            // Fatia pequena demais não comporta o texto: fica só na lista.
+                            display: ctx => percentual(ctx.dataset.data[ctx.dataIndex]) >= 6,
+                            formatter: valor => textoPercentual(valor)
+                        }
+                    }
+                }
+            });
+        }
+
         // ---------- relatório do mês
 
         async function abrirRelatorioGastos(ano = null, mes = null) {
@@ -7623,6 +7809,7 @@
 
         document.getElementById('btn-gastos-transferencia').addEventListener('click', abrirMovimentacaoGastos);
         document.getElementById('btn-gastos-relatorio').addEventListener('click', () => abrirRelatorioGastos());
+        document.getElementById('btn-gastos-graficos').addEventListener('click', abrirGraficosGastos);
         document.getElementById('btn-gastos-cadastros').addEventListener('click', abrirCadastrosGastos);
 
         // Lançamento
@@ -7709,6 +7896,16 @@
         document.getElementById('form-gastos-pagamento').addEventListener('submit', async function(event) {
             event.preventDefault();
             await pagarFaturaGastos();
+        });
+
+        // Gráficos
+        document.getElementById('modal-gastos-graficos').addEventListener('click', function(event) {
+            const navegar = event.target.closest('[data-graficos-navegar]');
+            if (!navegar || !gastosGraficos) return;
+            gastosGraficos = somarMeses(gastosGraficos.ano, gastosGraficos.mes, Number(navegar.dataset.graficosNavegar));
+            esconderAlertaModalGastos('gg-alerta');
+            limparGraficosGastos();
+            carregarGraficosGastos();
         });
 
         // Relatório
