@@ -2056,7 +2056,7 @@
                                 </div>
                             </form>
                             <div class="table-responsive">
-                                <table class="table table-sm align-middle">
+                                <table class="table table-sm table-striped align-middle">
                                     <thead><tr><th>Nome</th><th class="text-end">Saldo</th><th class="d-none d-sm-table-cell">Entra no Saldo</th><th class="d-none d-sm-table-cell">Mostra fim do ciclo</th><th></th></tr></thead>
                                     <tbody id="gc-contas-lista"></tbody>
                                     <tfoot id="gc-contas-total"></tfoot>
@@ -2092,7 +2092,7 @@
                                 </div>
                             </form>
                             <div class="table-responsive">
-                                <table class="table table-sm align-middle">
+                                <table class="table table-sm table-striped align-middle">
                                     <thead><tr><th>Nome</th><th>Vencimento</th><th>Fechamento</th><th>Conta</th><th></th></tr></thead>
                                     <tbody id="gc-cartoes-lista"></tbody>
                                 </table>
@@ -2120,7 +2120,7 @@
                                 </div>
                             </form>
                             <div class="table-responsive">
-                                <table class="table table-sm align-middle">
+                                <table class="table table-sm table-striped align-middle">
                                     <thead><tr><th>Descrição</th><th>Tipo</th><th></th></tr></thead>
                                     <tbody id="gc-categorias-lista"></tbody>
                                 </table>
@@ -7110,7 +7110,7 @@
                 </div>
                 ${linhas ? `
                 <div class="table-responsive">
-                    <table class="table table-sm align-middle">
+                    <table class="table table-sm table-striped align-middle">
                         <thead><tr><th>Data</th><th>Descrição</th><th class="d-none d-sm-table-cell">Categoria</th><th class="text-end">Valor</th><th></th></tr></thead>
                         <tbody>${linhas}</tbody>
                     </table>
@@ -7439,7 +7439,7 @@
                 </div>` : ''}
                 ${linhas ? `
                 <div class="table-responsive">
-                    <table class="table table-sm align-middle">
+                    <table class="table table-sm table-striped align-middle">
                         <thead><tr><th>Data</th><th>Descrição</th><th class="d-none d-sm-table-cell">Categoria</th><th class="d-none d-sm-table-cell">Conta/Cartão</th><th class="text-end">Valor</th><th class="text-center">Realizado</th></tr></thead>
                         <tbody>${linhas}</tbody>
                     </table>
@@ -7455,7 +7455,7 @@
                 <h6 class="mt-4 mb-1">Transferências</h6>
                 <div class="item-dica mb-2">Dinheiro que só mudou de conta: não entra nas entradas, saídas nem no saldo acima.</div>
                 <div class="table-responsive">
-                    <table class="table table-sm align-middle">
+                    <table class="table table-sm table-striped align-middle">
                         <thead><tr><th>Data</th><th>Contas</th><th class="d-none d-md-table-cell">Descrição</th><th class="text-end">Valor</th><th></th></tr></thead>
                         <tbody>${[...transferencias].reverse().map(t => `
                             <tr data-transferencia-resumo="${escapeHtml(`${formatarMoedaBR(t.valor)} de ${t.contaOrigem?.nome || ''} para ${t.contaDestino?.nome || ''} em ${formatarDataISO(t.data)}`)}">
