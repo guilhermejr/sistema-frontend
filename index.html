@@ -7489,7 +7489,8 @@
                         <div class="card-body text-center">
                             <h6 class="text-muted">${titulo}</h6>
                             <div class="fs-5 fw-bold ${classe}">${formatarMoedaBR(totais.total)}</div>
-                            <div class="small-muted">${rotuloRealizado} ${formatarMoedaBR(totais.realizado)} · pendentes ${formatarMoedaBR(totais.pendente)}</div>
+                            <!-- Na tela numa linha só; no papel, um valor por linha. -->
+                            <div class="small-muted"><span class="d-print-block">${rotuloRealizado} ${formatarMoedaBR(totais.realizado)}</span><span class="d-print-none"> · </span><span class="d-print-block">pendentes ${formatarMoedaBR(totais.pendente)}</span></div>
                         </div>
                     </div>
                 </div>`;
