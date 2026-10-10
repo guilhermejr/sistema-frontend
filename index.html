@@ -456,6 +456,17 @@
             min-width: 10rem;
             text-align: center;
             font-weight: 600;
+            font-size: 2.25rem;
+            line-height: 1.2;
+            /* Respiro entre o título e as setas, além do gap da linha. */
+            margin-inline: 1rem;
+        }
+
+        /* No celular, o maior que ainda cabe entre as setas ("Fevereiro de 2026"). */
+        @media (max-width: 575.98px) {
+            .navegacao-mes {
+                font-size: 1.75rem;
+            }
         }
 
         /* No celular os botões descem para baixo do título; centralizados ficam alinhados com os cards. */
