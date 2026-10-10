@@ -1948,6 +1948,7 @@
                             </div>
                         </div>
                     </form>
+                    <div class="d-none d-print-block small-muted text-end mt-3" data-data-impressao></div>
                 </div>
             </div>
         </div>
@@ -1974,6 +1975,7 @@
                     <div class="small-muted text-center mb-3 hidden" id="gr-periodo"></div>
                     <div id="gr-alerta" class="alert alert-danger hidden" role="alert"></div>
                     <div id="gr-conteudo"></div>
+                    <div class="d-none d-print-block small-muted text-end mt-3" data-data-impressao></div>
                 </div>
             </div>
         </div>
@@ -5729,6 +5731,13 @@
             window.addEventListener('afterprint', () => { document.title = anterior; }, { once: true });
             window.print();
         }
+
+        // "Impresso em" no rodapé do relatório e da fatura, preenchido na hora de imprimir
+        // (pelo botão ou pelo Ctrl+P do navegador).
+        window.addEventListener('beforeprint', () => {
+            const agora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'short' }).replace(', ', ' às ');
+            document.querySelectorAll('[data-data-impressao]').forEach(el => { el.textContent = `Impresso em ${agora}`; });
+        });
 
         function formatarDataUTC(dataUTC) {
             const data = new Date(dataUTC + 'Z');
