@@ -2159,6 +2159,11 @@
                                     <select class="form-select" id="gc-cartao-conta" data-tipo="obrigatorio"></select>
                                     <div class="invalid-feedback"></div>
                                 </div>
+                                <div class="col-12 col-md-4 hidden" id="gc-cartao-banco-grupo">
+                                    <label for="gc-cartao-banco" class="form-label">Cartão no banco</label>
+                                    <select class="form-select" id="gc-cartao-banco"></select>
+                                    <div class="invalid-feedback"></div>
+                                </div>
                                 <div class="col-12 d-flex justify-content-end gap-2">
                                     <button type="button" class="btn btn-outline-secondary hidden" id="gc-cartao-cancelar">Cancelar</button>
                                     <button type="submit" class="btn btn-primary" id="gc-cartao-salvar">Adicionar</button>
@@ -6243,7 +6248,7 @@
         let gastosDados = null;
         // { tipo, edicao (LancamentoResponse ou null), retorno (id do modal a reabrir) }
         let gastosLancamento = null;
-        // { cartaoId, ano, mes, dados }
+        // { cartaoId, ano, mes, dados, banco (transações do banco na fatura, se o cartão estiver ligado) }
         let gastosFatura = null;
         // { ano, mes, filtro (chave de FILTROS_RELATORIO_GASTOS), dados (o último relatório carregado) }
         let gastosRelatorio = null;
@@ -6257,6 +6262,9 @@
         };
         // Registro em edição em cada aba do modal de cadastros.
         const gastosEdicaoCadastro = { conta: null, cartao: null, categoria: null };
+        // Cartões de crédito do banco (Open Finance), para ligar a um cartão. Lista vazia:
+        // a integração não existe para este usuário e o campo fica escondido.
+        let gastosCartoesBanco = null;
 
         function nomeMes(ano, mes) {
             return `${MESES[mes - 1]} de ${ano}`;
@@ -7178,16 +7186,78 @@
                 : `${GASTOS_URL}/cartoes/${cartaoId}/faturas/atual`;
 
             try {
-                renderizarFaturaGastos(await apiRequest({ url }));
+                const fatura = await apiRequest({ url });
+                // Cartão ligado ao banco: as transações do banco nesta fatura, para comparar.
+                const banco = gastosDados?.cartoes.find(c => c.id === Number(cartaoId))?.bancoContaId
+                    ? await transacoesBancoFaturaGastos(cartaoId, fatura.vencimento)
+                    : null;
+                renderizarFaturaGastos(fatura, banco);
             } catch (error) {
                 console.error(error);
                 if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gf-alerta', error.message || 'Não foi possível carregar a fatura.', 'danger');
             }
         }
 
-        function renderizarFaturaGastos(fatura) {
+        // Um erro do banco não impede de ver a fatura: a linha do banco só diz que falhou.
+        async function transacoesBancoFaturaGastos(cartaoId, vencimento) {
+            const [ano, mes] = vencimento.split('-').map(Number);
+            try {
+                return await apiRequest({ url: `${GASTOS_URL}/cartoes/${cartaoId}/faturas/${ano}/${mes}/banco` });
+            } catch (error) {
+                console.error(error);
+                return { erro: error.message || 'Não foi possível consultar o banco.' };
+            }
+        }
+
+        // Etapa 1 da conciliação: só o resumo do que o banco tem nesta fatura e o botão de
+        // buscar de novo. Compras e créditos (estornos, o pagamento da fatura anterior) à parte.
+        function secaoBancoFaturaGastos(banco, fatura) {
+            const cartao = gastosDados?.cartoes.find(c => c.id === fatura.cartao.id);
+            const botao = '<button type="button" class="btn btn-sm btn-outline-secondary" data-sincronizar-banco>Sincronizar</button>';
+            let texto;
+            if (banco.erro) {
+                texto = escapeHtml(banco.erro);
+            } else if (cartao?.bancoInicioFatura && fatura.vencimento.slice(0, 7) < cartao.bancoInicioFatura.slice(0, 7)) {
+                const [ano, mes] = cartao.bancoInicioFatura.split('-').map(Number);
+                texto = `O banco só é consultado a partir da fatura de ${nomeMes(ano, mes)}.`;
+            } else if (!banco.length) {
+                texto = 'No banco: nada nesta fatura ainda.';
+            } else {
+                const soma = lista => lista.reduce((total, t) => total + t.valor, 0);
+                const compras = banco.filter(t => t.tipo === 'D');
+                const creditos = banco.filter(t => t.tipo === 'R');
+                const pendentes = banco.filter(t => t.pendente).length;
+                texto = `No banco: ${compras.length} compra${compras.length === 1 ? '' : 's'} · ${formatarMoedaBR(soma(compras))}`
+                    + (creditos.length ? ` · ${creditos.length} crédito${creditos.length === 1 ? '' : 's'} · −${formatarMoedaBR(soma(creditos))}` : '')
+                    + (pendentes ? ` · ${pendentes} pendente${pendentes === 1 ? '' : 's'}` : '');
+            }
+            return `<div class="d-flex flex-wrap justify-content-center align-items-center gap-2 small-muted mb-3 d-print-none" id="gf-banco">
+                    <span>${texto}</span>${botao}</div>`;
+        }
+
+        async function sincronizarBancoGastos(botao) {
+            esconderAlertaModalGastos('gf-alerta');
+            botao.disabled = true;
+            try {
+                const r = await apiRequest({ url: `${GASTOS_URL}/cartoes/${gastosFatura.cartaoId}/banco/sincronizar`, method: 'POST' });
+                const partes = [`${r.novas} nova${r.novas === 1 ? '' : 's'}`, `${r.atualizadas} alterada${r.atualizadas === 1 ? '' : 's'}`];
+                if (r.removidas) partes.push(`${r.removidas} removida${r.removidas === 1 ? '' : 's'}`);
+                mostrarAlertaModalGastos('gf-alerta', `Banco consultado: ${partes.join(', ')}.`, 'success');
+                await carregarFaturaGastos();
+            } catch (error) {
+                console.error(error);
+                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gf-alerta', error.message || 'Não foi possível consultar o banco.', 'danger');
+            } finally {
+                botao.disabled = false;
+            }
+        }
+
+        function renderizarFaturaGastos(fatura, banco = null) {
             const [ano, mes] = fatura.vencimento.split('-').map(Number);
-            gastosFatura = { ...gastosFatura, ano, mes, dados: fatura };
+            // Sem consulta nova (ex.: depois de pagar), reaproveita a do banco desta mesma fatura.
+            const mesmaFatura = gastosFatura?.ano === ano && gastosFatura?.mes === mes;
+            banco = banco ?? (mesmaFatura ? gastosFatura.banco ?? null : null);
+            gastosFatura = { ...gastosFatura, ano, mes, dados: fatura, banco };
 
             const status = STATUS_FATURA[fatura.status] || { texto: fatura.status, classe: 'text-bg-secondary' };
             document.getElementById('gf-titulo').textContent = `Fatura ${fatura.cartao.nome}`;
@@ -7239,6 +7309,7 @@
                     <div class="col-4 col-sm"><div class="small-muted">Pago</div><div class="fw-bold valor-receita">${formatarMoedaBR(fatura.pago)}</div></div>
                     <div class="col-4 col-sm"><div class="small-muted">Pendente</div><div class="fw-bold valor-despesa">${formatarMoedaBR(fatura.pendente)}</div></div>
                 </div>
+                ${banco ? secaoBancoFaturaGastos(banco, fatura) : ''}
                 ${linhas ? `
                 <div class="table-responsive">
                     <table class="table table-sm table-striped align-middle">
@@ -7674,6 +7745,30 @@
             preencherConfiguracaoGastos();
             renderizarCadastrosGastos();
             await trocarModalGastos('modal-gastos-cadastros');
+            await carregarCartoesBancoGastos();
+        }
+
+        // Um erro aqui (banco fora do ar) só esconde o campo: o cadastro continua funcionando.
+        async function carregarCartoesBancoGastos() {
+            try {
+                gastosCartoesBanco = await apiRequest({ url: `${GASTOS_URL}/banco/cartoes` });
+            } catch (error) {
+                console.error(error);
+                gastosCartoesBanco = [];
+            }
+            preencherCartaoBancoGastos(gastosEdicaoCadastro.cartao);
+        }
+
+        // Cartão do banco já ligado a outro cartão aparece, mas não pode ser escolhido.
+        function preencherCartaoBancoGastos(cartao) {
+            const lista = gastosCartoesBanco || [];
+            document.getElementById('gc-cartao-banco-grupo').classList.toggle('hidden', !lista.length);
+            const select = document.getElementById('gc-cartao-banco');
+            select.innerHTML = '<option value="">Não ligado</option>' + lista.map(b => {
+                const outro = b.cartaoId && b.cartaoId !== cartao?.id ? gastosDados.cartoes.find(c => c.id === b.cartaoId) : null;
+                return `<option value="${escapeHtml(b.id)}" ${outro ? 'disabled' : ''}>${escapeHtml(b.nome)}${outro ? ` (ligado a ${escapeHtml(outro.nome)})` : ''}</option>`;
+            }).join('');
+            select.value = cartao?.bancoContaId ?? '';
         }
 
         function botaoAtivoGastos(tipo, item) {
@@ -7729,7 +7824,7 @@
 
             document.getElementById('gc-cartoes-lista').innerHTML = cartoes.length ? cartoes.map((c, i) => `
                 <tr class="${c.ativo ? '' : 'text-muted'}">
-                    <td>${setasOrdemGastos('cartao', c, i, cartoes.length)}${nomeComSituacao(c.nome, c.ativo)}</td>
+                    <td>${setasOrdemGastos('cartao', c, i, cartoes.length)}${nomeComSituacao(c.nome, c.ativo)}${c.bancoContaId ? ' <span class="badge text-bg-light border" title="Ligado ao cartão no banco">banco</span>' : ''}</td>
                     <td>Dia ${c.diaVencimento}</td>
                     <td>${c.diasFechamento} dia${c.diasFechamento === 1 ? '' : 's'} antes</td>
                     <td>${escapeHtml(c.conta?.nome || '')}</td>
@@ -7767,6 +7862,7 @@
             document.getElementById(`gc-${tipo}-cancelar`).classList.add('hidden');
             if (tipo === 'cartao') {
                 document.getElementById('gc-cartao-conta').innerHTML = opcoesContasGastos();
+                preencherCartaoBancoGastos(null);
             }
         }
 
@@ -7790,6 +7886,7 @@
                 const selectConta = document.getElementById('gc-cartao-conta');
                 selectConta.innerHTML = opcoesContasGastos(item.conta?.id);
                 selectConta.value = item.conta?.id ?? '';
+                preencherCartaoBancoGastos(item);
             } else {
                 document.getElementById('gc-categoria-descricao').value = item.descricao;
                 document.getElementById('gc-categoria-tipo').value = item.tipo;
@@ -7833,15 +7930,21 @@
             botao.disabled = true;
 
             try {
-                await apiRequest({
+                const salvo = await apiRequest({
                     url: `${GASTOS_URL}/${config.url}${edicao ? `/${edicao.id}` : ''}`,
                     method: edicao ? 'PUT' : 'POST',
                     body: corpoCadastroGastos(tipo)
                 });
+                const bancoContaId = document.getElementById('gc-cartao-banco').value;
+                if (tipo === 'cartao' && gastosCartoesBanco?.length && bancoContaId !== (edicao?.bancoContaId ?? '')) {
+                    await apiRequest({ url: `${GASTOS_URL}/cartoes/${salvo.id}/banco`, method: 'PUT', body: { bancoContaId: bancoContaId || null } });
+                    gastosCartoesBanco = null;
+                }
                 cancelarEdicaoCadastroGastos(tipo);
                 mostrarAlertaModalGastos('gc-alerta', `${config.nome} ${edicao ? 'alterad' : 'cadastrad'}${tipo === 'cartao' ? 'o' : 'a'}.`, 'success');
                 await recarregarGastos();
                 renderizarCadastrosGastos();
+                if (gastosCartoesBanco === null) await carregarCartoesBancoGastos();
             } catch (error) {
                 console.error(error);
                 if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gc-alerta', error.message || 'Não foi possível salvar.', 'danger');
@@ -8068,6 +8171,11 @@
             }
             if (event.target.closest('[data-exportar-fatura]')) {
                 if (faturaNaTela) exportarFaturaGastos(fatura);
+                return;
+            }
+            const sincronizar = event.target.closest('[data-sincronizar-banco]');
+            if (sincronizar) {
+                sincronizarBancoGastos(sincronizar);
                 return;
             }
 
