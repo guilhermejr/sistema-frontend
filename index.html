@@ -513,6 +513,46 @@
                 min-height: 44px;
             }
         }
+
+        /* Imprimir no relatório e na fatura: só o modal aberto, inteiro (sem a rolagem
+           interna) e sem botões nem formulários — o que sai é o que está na tela. */
+        @media print {
+            body:has(.modal.show) {
+                overflow: visible !important;
+            }
+
+            body:has(.modal.show) > *:not(.modal.show),
+            .modal-backdrop,
+            .modal.show .btn,
+            .modal.show .btn-close,
+            .modal.show form {
+                display: none !important;
+            }
+
+            .modal.show {
+                position: static;
+                overflow: visible;
+                /* Sem isso o navegador tira o fundo dos selos (Aberta, Paga) e do zebrado. */
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .modal.show .modal-dialog {
+                max-width: none;
+                margin: 0;
+                transform: none;
+            }
+
+            .modal.show .modal-content {
+                border: 0;
+                max-height: none;
+            }
+
+            .modal.show .modal-body,
+            .modal.show .table-responsive {
+                overflow: visible;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1862,7 +1902,11 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="gf-titulo">Fatura</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    <div class="d-flex gap-2 ms-auto me-3">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-imprimir-fatura title="Imprimir" aria-label="Imprimir"><svg class="icone-botao me-0 me-sm-1" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1"/></svg><span class="d-none d-sm-inline">Imprimir</span></button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-exportar-fatura title="Exportar CSV" aria-label="Exportar CSV"><svg class="icone-botao me-0 me-sm-1" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"/></svg><span class="d-none d-sm-inline">Exportar CSV</span></button>
+                    </div>
+                    <button type="button" class="btn-close ms-0" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
                 <div class="modal-body">
                     <div class="d-flex justify-content-center align-items-center gap-2 mb-3">
@@ -1909,7 +1953,11 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="gr-titulo">Relatório do mês</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    <div class="d-flex gap-2 ms-auto me-3">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-imprimir-relatorio title="Imprimir" aria-label="Imprimir"><svg class="icone-botao me-0 me-sm-1" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1"/></svg><span class="d-none d-sm-inline">Imprimir</span></button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-exportar-relatorio title="Exportar CSV" aria-label="Exportar CSV"><svg class="icone-botao me-0 me-sm-1" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"/></svg><span class="d-none d-sm-inline">Exportar CSV</span></button>
+                    </div>
+                    <button type="button" class="btn-close ms-0" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
                 <div class="modal-body">
                     <div class="d-flex justify-content-center align-items-center gap-2 mb-1">
@@ -5638,6 +5686,44 @@
             return `<td class="text-nowrap">${data === anterior ? '' : formatarDataISO(data).slice(0, 5)}</td>`;
         }
 
+        // Exportar CSV: no formato que o Excel em português abre direto — ";" entre as
+        // colunas, vírgula decimal e BOM para os acentos. Texto que começa com = + @ ganha
+        // um apóstrofo, para a planilha não o tratar como fórmula.
+        function celulaCsv(valor) {
+            let texto = String(valor ?? '');
+            if (/^[=+@\t\r]/.test(texto)) texto = `'${texto}`;
+            return /[";\n\r]/.test(texto) ? `"${texto.replace(/"/g, '""')}"` : texto;
+        }
+
+        function numeroCsv(valor) {
+            return Number(valor || 0).toFixed(2).replace('.', ',');
+        }
+
+        function baixarCsv(nomeArquivo, cabecalho, linhas) {
+            const texto = '\uFEFF' + [cabecalho, ...linhas].map(linha => linha.map(celulaCsv).join(';')).join('\r\n');
+            const url = URL.createObjectURL(new Blob([texto], { type: 'text/csv;charset=utf-8' }));
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = nomeArquivo;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        // "Cartão Nubank" → "cartao-nubank", para nome de arquivo.
+        function slugArquivo(texto) {
+            return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        }
+
+        // O título da página vira o nome sugerido do PDF; volta ao normal depois da impressão.
+        function imprimirComTitulo(titulo) {
+            const anterior = document.title;
+            document.title = titulo;
+            window.addEventListener('afterprint', () => { document.title = anterior; }, { once: true });
+            window.print();
+        }
+
         function formatarDataUTC(dataUTC) {
             const data = new Date(dataUTC + 'Z');
 
@@ -7381,6 +7467,21 @@
                 </div>`;
         }
 
+        // Despesa positiva e estorno negativo, como na tela; a soma dá o total da fatura.
+        function exportarFaturaGastos(fatura) {
+            const linhas = [...fatura.lancamentos].reverse().map(l => [formatarDataISO(l.data), l.descricao,
+                l.parcela ? `${l.parcela}/${l.totalParcelas}` : '', l.categoria?.descricao || '', numeroCsv(l.tipo === 'R' ? -l.valor : l.valor)]);
+            baixarCsv(`fatura-${slugArquivo(fatura.cartao.nome)}-${gastosFatura.ano}-${String(gastosFatura.mes).padStart(2, '0')}.csv`,
+                ['Data', 'Descrição', 'Parcela', 'Categoria', 'Valor'], linhas);
+        }
+
+        // Entrada positiva e saída negativa. As transferências ficam de fora, como dos totais.
+        function exportarRelatorioGastos() {
+            const { ano, mes, filtro, visiveis } = gastosRelatorio;
+            baixarCsv(`relatorio-${ano}-${String(mes).padStart(2, '0')}${filtro === 'todos' ? '' : `-${filtro}`}.csv`,
+                ['Data', 'Descrição', 'Parcela', 'Categoria', 'Conta/Cartão', 'Valor', 'Realizado'], visiveis.map(linha => linha.csv));
+        }
+
         // Lançamentos em conta pela data de cada um; cartão só pelo total da fatura que
         // vence no mês (o service já separa as duas listas e soma as faturas nos totais).
         function renderizarRelatorioGastos(relatorio) {
@@ -7389,7 +7490,9 @@
 
             const linhasLancamentos = relatorio.lancamentos.map(l => {
                 const situacao = l.tipo === 'R' ? (l.realizado ? 'recebidos' : 'a-receber') : (l.realizado ? 'pagos' : 'a-pagar');
-                return { data: l.data, situacao, html: celulaData => `
+                const csv = [formatarDataISO(l.data), l.descricao, l.parcela ? `${l.parcela}/${l.totalParcelas}` : '', l.categoria?.descricao || '',
+                    l.conta?.nome || '', numeroCsv(l.tipo === 'R' ? l.valor : -l.valor), l.realizado ? 'Sim' : 'Não'];
+                return { data: l.data, situacao, csv, html: celulaData => `
                 <tr class="item-clicavel" data-editar-lancamento="${l.id}">
                     ${celulaData}
                     <td>${descricaoComParcela(l)}${marcaFixa(l)}<div class="small text-muted d-sm-none">${escapeHtml(l.conta?.nome || '')}</div></td>
@@ -7409,7 +7512,8 @@
                 const status = STATUS_FATURA[f.status] || { texto: f.status, classe: 'text-bg-secondary' };
                 const quitada = f.pendente <= 0 && f.total > 0;
                 // Fatura com algo pendente continua a pagar, mesmo que parte já tenha sido paga.
-                return { data: f.vencimento, situacao: f.pendente > 0 ? 'a-pagar' : 'pagos', html: celulaData => `
+                const csv = [formatarDataISO(f.vencimento), `Fatura ${f.cartaoNome}`, '', 'Cartão de crédito', f.cartaoNome, numeroCsv(-f.total), quitada ? 'Sim' : 'Não'];
+                return { data: f.vencimento, situacao: f.pendente > 0 ? 'a-pagar' : 'pagos', csv, html: celulaData => `
                 <tr class="item-clicavel" data-relatorio-fatura="${f.cartaoId}" title="Ver a fatura">
                     ${celulaData}
                     <td>Fatura ${escapeHtml(f.cartaoNome)} <span class="badge ${status.classe}">${status.texto}</span></td>
@@ -7425,13 +7529,16 @@
             });
 
             const todas = [...linhasLancamentos, ...linhasFaturas];
-            const linhas = todas
+            const visiveis = todas
                 .filter(linha => filtro === 'todos' || linha.situacao === filtro)
                 // Mais recente primeiro; no mesmo dia, o último lançado em cima.
                 .sort((a, b) => a.data.localeCompare(b.data))
-                .reverse()
+                .reverse();
+            // Exportar CSV leva exatamente estas linhas, no filtro e na ordem da tela.
+            gastosRelatorio.visiveis = visiveis;
+            const linhas = visiveis
                 // A data só sai depois do filtro e da ordem, para comparar com a linha de cima de fato.
-                .map((linha, i, visiveis) => linha.html(celulaDataLista(linha.data, visiveis[i - 1]?.data)))
+                .map((linha, i) => linha.html(celulaDataLista(linha.data, visiveis[i - 1]?.data)))
                 .join('');
 
             const saldoClasse = relatorio.saldoPrevisto < 0 ? 'valor-despesa' : 'valor-receita';
@@ -7455,6 +7562,7 @@
                     <button type="button" class="btn btn-sm ${chave === filtro ? 'btn-secondary' : 'btn-outline-secondary'}"
                         data-relatorio-filtro="${chave}" aria-pressed="${chave === filtro}">${texto}</button>`).join('')}
                 </div>` : ''}
+                ${filtro !== 'todos' ? `<div class="d-none d-print-block text-center mb-2">Filtro: ${FILTROS_RELATORIO_GASTOS[filtro]}</div>` : ''}
                 ${linhas ? `
                 <div class="table-responsive">
                     <table class="table table-sm table-striped align-middle">
@@ -7920,6 +8028,18 @@
 
         // Fatura
         document.getElementById('modal-gastos-fatura').addEventListener('click', function(event) {
+            // Só com a fatura do mês mostrado já carregada (ao navegar, dados ainda é a anterior).
+            const fatura = gastosFatura?.dados;
+            const faturaNaTela = fatura && fatura.vencimento.startsWith(`${gastosFatura.ano}-${String(gastosFatura.mes).padStart(2, '0')}`);
+            if (event.target.closest('[data-imprimir-fatura]')) {
+                if (faturaNaTela) imprimirComTitulo(`Fatura ${fatura.cartao.nome} - ${nomeMes(gastosFatura.ano, gastosFatura.mes)}`);
+                return;
+            }
+            if (event.target.closest('[data-exportar-fatura]')) {
+                if (faturaNaTela) exportarFaturaGastos(fatura);
+                return;
+            }
+
             const navegar = event.target.closest('[data-fatura-navegar]');
             if (navegar && gastosFatura?.ano) {
                 const { ano, mes } = somarMeses(gastosFatura.ano, gastosFatura.mes, Number(navegar.dataset.faturaNavegar));
@@ -7974,6 +8094,15 @@
 
         // Relatório
         document.getElementById('modal-gastos-relatorio').addEventListener('click', function(event) {
+            if (event.target.closest('[data-imprimir-relatorio]')) {
+                if (gastosRelatorio?.dados) imprimirComTitulo(`Relatório - ${nomeMes(gastosRelatorio.ano, gastosRelatorio.mes)}`);
+                return;
+            }
+            if (event.target.closest('[data-exportar-relatorio]')) {
+                if (gastosRelatorio?.dados) exportarRelatorioGastos();
+                return;
+            }
+
             const navegar = event.target.closest('[data-relatorio-navegar]');
             if (navegar && gastosRelatorio) {
                 gastosRelatorio = { ...gastosRelatorio, ...somarMeses(gastosRelatorio.ano, gastosRelatorio.mes, Number(navegar.dataset.relatorioNavegar)), dados: null };
