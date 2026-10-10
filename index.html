@@ -7505,13 +7505,13 @@
                     <button type="button" class="btn btn-sm btn-outline-danger" data-estornar="${p.id}">Estornar</button>
                 </li>`).join('');
 
-            // Confirmado: o que já foi conciliado com o banco (compras menos estornos). Só no
-            // cartão ligado ao banco e com a consulta dele em mãos.
-            const ligados = Array.isArray(banco) ? new Set(banco.map(t => t.lancamentoId).filter(Boolean)) : null;
-            const confirmado = ligados && fatura.lancamentos
-                .filter(l => ligados.has(l.id))
-                .reduce((total, l) => total + (l.tipo === 'R' ? -l.valor : l.valor), 0);
-            const colunaValor = confirmado === null ? 'col-12' : 'col-6';
+            // Confirmado: o que já foi conciliado com o banco; Pendente: o que falta conciliar
+            // (os do alerta). Compras menos estornos. Só onde o alerta vale.
+            const soma = lista => lista.reduce((total, l) => total + (l.tipo === 'R' ? -l.valor : l.valor), 0);
+            const confirmado = ligadosBanco && soma(fatura.lancamentos.filter(l => !naoConciliado(l)));
+            const pendenteConciliar = ligadosBanco && soma(fatura.lancamentos.filter(naoConciliado));
+            // No celular: só o Total ocupa a linha; com os outros dois, três numa linha.
+            const colunaValor = ligadosBanco ? 'col-4' : 'col-12';
 
             document.getElementById('gf-conteudo').innerHTML = `
                 <div class="text-center mb-2">
@@ -7522,7 +7522,8 @@
                     <div class="col-6 col-sm"><div class="small-muted">Fechamento</div><div class="fw-bold">${formatarDataISO(fatura.fechamento)}</div></div>
                     <div class="col-6 col-sm"><div class="small-muted">Vencimento</div><div class="fw-bold">${formatarDataISO(fatura.vencimento)}</div></div>
                     <div class="${colunaValor} col-sm"><div class="small-muted">Total</div><div class="fw-bold">${formatarMoedaBR(fatura.total)}</div></div>
-                    ${confirmado === null ? '' : `<div class="col-6 col-sm"><div class="small-muted">Confirmado</div><div class="fw-bold valor-receita">${formatarMoedaBR(confirmado)}</div></div>`}
+                    ${ligadosBanco ? `<div class="col-4 col-sm"><div class="small-muted">Confirmado</div><div class="fw-bold valor-receita">${formatarMoedaBR(confirmado)}</div></div>
+                    <div class="col-4 col-sm"><div class="small-muted">Pendente</div><div class="fw-bold valor-despesa">${formatarMoedaBR(pendenteConciliar)}</div></div>` : ''}
                 </div>
                 ${banco ? secaoBancoFaturaGastos(banco, fatura) : ''}
                 ${linhas ? `
