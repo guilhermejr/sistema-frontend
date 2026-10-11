@@ -1997,6 +1997,12 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
                 <div class="modal-body">
+                    <!-- Só na conta: na fatura o mês vem da própria fatura. -->
+                    <div class="d-flex justify-content-center align-items-center gap-2 mb-3 hidden" id="gk-navegacao">
+                        <button type="button" class="btn btn-outline-secondary navegacao-mes-botao" data-gk-navegar="-1" aria-label="Mês anterior">&lsaquo;</button>
+                        <div class="navegacao-mes" id="gk-mes">--</div>
+                        <button type="button" class="btn btn-outline-secondary navegacao-mes-botao" data-gk-navegar="1" aria-label="Próximo mês">&rsaquo;</button>
+                    </div>
                     <div id="gk-alerta" class="alert alert-danger hidden" role="alert"></div>
                     <div id="gk-conteudo"></div>
                 </div>
@@ -2166,6 +2172,11 @@
                                         <input class="form-check-input" type="checkbox" id="gc-conta-previsto" checked>
                                         <label class="form-check-label" for="gc-conta-previsto">Mostrar fim do ciclo</label>
                                     </div>
+                                </div>
+                                <div class="col-12 col-md-3 hidden" id="gc-conta-banco-grupo">
+                                    <label for="gc-conta-banco" class="form-label">Conta no banco</label>
+                                    <select class="form-select" id="gc-conta-banco"></select>
+                                    <div class="invalid-feedback"></div>
                                 </div>
                                 <div class="col-12 col-md-3 pt-md-4 d-flex gap-2">
                                     <button type="submit" class="btn btn-primary flex-fill mt-md-1" id="gc-conta-salvar">Adicionar</button>
@@ -6309,6 +6320,7 @@
         // Cartões de crédito do banco (Open Finance), para ligar a um cartão. Lista vazia:
         // a integração não existe para este usuário e o campo fica escondido.
         let gastosCartoesBanco = null;
+        let gastosContasBanco = null;
         // { cartaoId, ano, mes, dados (ConciliacaoResponse) }
         let gastosConciliacao = null;
 
@@ -6589,7 +6601,7 @@
             document.getElementById('gastos-contas').innerHTML = dashboard.contas.length
                 ? dashboard.contas.map(conta => `
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span>${escapeHtml(conta.nome)}</span>
+                        <span>${escapeHtml(conta.nome)}${conta.bancoContaId ? `<div><button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-nowrap" data-conciliar-conta="${conta.id}">Conciliar com o banco</button></div>` : ''}</span>
                         <span class="text-end">
                             <span class="fw-semibold ${conta.saldo < 0 ? 'valor-despesa' : ''}">${moeda(conta.saldo, 'saldoGeral')}</span>
                             ${conta.saldoPrevisto == null ? '' : `<div class="small-muted">Fim do ciclo <span class="${conta.saldoPrevisto < 0 ? 'valor-despesa' : ''}">${moeda(conta.saldoPrevisto, 'saldoGeral')}</span></div>`}
@@ -7310,15 +7322,61 @@
 
         // ---------- conciliação da fatura com o banco
 
+        // A conciliação serve à fatura do cartão (o mês é o da fatura) e à conta corrente (o
+        // mês do extrato, com navegação no próprio modal). As ações têm o mesmo formato nas duas.
         async function abrirConciliacaoGastos() {
             const { cartaoId, ano, mes } = gastosFatura;
-            gastosConciliacao = { cartaoId, ano, mes, dados: null };
+            gastosConciliacao = { tipo: 'cartao', id: cartaoId, ano, mes, dados: null };
             const cartao = gastosDados?.cartoes.find(c => c.id === cartaoId);
             document.getElementById('gk-titulo').textContent = `Conciliar ${cartao?.nome || 'cartão'} · ${nomeMes(ano, mes)}`;
+            document.getElementById('gk-navegacao').classList.add('hidden');
             document.getElementById('gk-conteudo').innerHTML = '<p class="text-muted text-center my-3">Carregando...</p>';
             esconderAlertaModalGastos('gk-alerta');
             await trocarModalGastos('modal-gastos-conciliacao');
-            await acaoConciliacaoGastos({ url: `${GASTOS_URL}/cartoes/${cartaoId}/faturas/${ano}/${mes}/conciliacao` });
+            await acaoConciliacaoGastos({ url: urlConciliacaoGastos() });
+        }
+
+        // Conta ligada ao banco: abre no mês de hoje.
+        async function abrirConciliacaoContaGastos(contaId) {
+            const hoje = new Date();
+            gastosConciliacao = { tipo: 'conta', id: contaId, ano: hoje.getFullYear(), mes: hoje.getMonth() + 1, dados: null };
+            const conta = gastosDados?.contas.find(c => c.id === contaId);
+            document.getElementById('gk-titulo').textContent = `Conciliar ${conta?.nome || 'conta'}`;
+            document.getElementById('gk-navegacao').classList.remove('hidden');
+            esconderAlertaModalGastos('gk-alerta');
+            await trocarModalGastos('modal-gastos-conciliacao');
+            await carregarConciliacaoContaGastos();
+        }
+
+        async function carregarConciliacaoContaGastos() {
+            const { ano, mes } = gastosConciliacao;
+            gastosConciliacao.dados = null;
+            document.getElementById('gk-mes').textContent = nomeMes(ano, mes);
+            document.getElementById('gk-conteudo').innerHTML = '<p class="text-muted text-center my-3">Carregando...</p>';
+            await acaoConciliacaoGastos({ url: urlConciliacaoGastos() });
+        }
+
+        function urlConciliacaoGastos() {
+            const { tipo, id, ano, mes } = gastosConciliacao;
+            return tipo === 'conta'
+                ? `${GASTOS_URL}/contas/${id}/banco/${ano}/${mes}/conciliacao`
+                : `${GASTOS_URL}/cartoes/${id}/faturas/${ano}/${mes}/conciliacao`;
+        }
+
+        async function sincronizarContaBancoGastos(botao) {
+            esconderAlertaModalGastos('gk-alerta');
+            botao.disabled = true;
+            try {
+                const r = await apiRequest({ url: `${GASTOS_URL}/contas/${gastosConciliacao.id}/banco/sincronizar`, method: 'POST' });
+                const partes = [`${r.novas} nova${r.novas === 1 ? '' : 's'}`, `${r.atualizadas} alterada${r.atualizadas === 1 ? '' : 's'}`];
+                if (r.removidas) partes.push(`${r.removidas} removida${r.removidas === 1 ? '' : 's'}`);
+                await acaoConciliacaoGastos({ url: urlConciliacaoGastos() }, `Banco consultado: ${partes.join(', ')}.`);
+            } catch (error) {
+                console.error(error);
+                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gk-alerta', error.message || 'Não foi possível consultar o banco.', 'danger');
+            } finally {
+                botao.disabled = false;
+            }
         }
 
         // Toda ação devolve a conciliação da fatura atualizada, que é desenhada de novo.
@@ -7345,8 +7403,21 @@
             return `${formatarDataISO(l.data).slice(0, 5)} · ${descricaoComParcela(l)}${marcaFixa(l)}`;
         }
 
+        // Na fatura, o crédito (estorno) abate: "−". Na conta, a saída é "−" e a entrada, "+".
         function valorConciliacao(item) {
+            if (gastosConciliacao?.tipo === 'conta') return `${item.tipo === 'D' ? '−' : '+'}${formatarMoedaBR(item.valor)}`;
             return `${item.tipo === 'R' ? '−' : ''}${formatarMoedaBR(item.valor)}`;
+        }
+
+        // Com o que a transação é ligada: no cartão, sempre um lançamento; na conta, um
+        // lançamento ou uma movimentação. Vai nos data-atributos como "L12" ou "M5".
+        function refConciliacao(item) {
+            return item.movimentacaoId ? `M${item.movimentacaoId}` : `L${item.lancamentoId ?? item.id}`;
+        }
+
+        function corpoRefConciliacao(ref) {
+            const id = Number(ref.slice(1));
+            return ref.startsWith('M') ? { movimentacaoId: id } : { lancamentoId: id };
         }
 
         // Linha de duas partes: o que o banco tem em cima, o que o sistema tem embaixo.
@@ -7378,24 +7449,32 @@
         }
 
         function renderizarConciliacaoGastos() {
-            const { linhas, semPar, totalBanco, totalSistema } = gastosConciliacao.dados;
+            const conta = gastosConciliacao.tipo === 'conta';
+            const { linhas, semPar } = gastosConciliacao.dados;
             const por = tipo => linhas.filter(l => l.sugestao === tipo);
             const bateu = por('CONCILIAR'), diferente = por('VALOR_DIFERENTE'), escolher = por('ESCOLHER'),
                 criar = por('CRIAR'), ignorar = por('IGNORAR'), revisadas = linhas.filter(l => !l.sugestao);
-            const diferenca = Math.round((totalSistema - totalBanco) * 100) / 100;
             const fatura = gastosFatura?.dados;
-            const aberta = fatura && fatura.vencimento.startsWith(`${gastosConciliacao.ano}-${String(gastosConciliacao.mes).padStart(2, '0')}`) && fatura.status === 'ABERTA';
+            const aberta = !conta && fatura && fatura.vencimento.startsWith(`${gastosConciliacao.ano}-${String(gastosConciliacao.mes).padStart(2, '0')}`) && fatura.status === 'ABERTA';
             const pendentes = linhas.length - revisadas.length;
 
+            // Fatura: totais da fatura nos dois lados. Conta: saldo nos dois lados (o do banco
+            // é o da última busca, com a aplicação automática).
+            const [rotuloSistema, valorSistema, rotuloBanco, valorBanco] = conta
+                ? ['Saldo no sistema', gastosConciliacao.dados.saldoSistema, 'Saldo no banco', gastosConciliacao.dados.saldoBanco]
+                : ['Sistema', gastosConciliacao.dados.totalSistema, 'Banco', gastosConciliacao.dados.totalBanco];
+            const diferenca = valorBanco == null ? null : Math.round((valorSistema - valorBanco) * 100) / 100;
+            const cabecalhoConta = conta ? linhaBancoContaGastos() : '';
             const totais = `<div class="row g-2 text-center">
-                    <div class="col-4"><div class="small-muted">Sistema</div><div class="fw-bold">${formatarMoedaBR(totalSistema)}</div></div>
-                    <div class="col-4"><div class="small-muted">Banco</div><div class="fw-bold">${formatarMoedaBR(totalBanco)}</div></div>
-                    <div class="col-4"><div class="small-muted">Diferença</div><div class="fw-bold ${diferenca === 0 ? 'valor-receita' : 'valor-despesa'}">${formatarMoedaBR(diferenca)}</div></div>
+                    <div class="col-4"><div class="small-muted">${rotuloSistema}</div><div class="fw-bold">${formatarMoedaBR(valorSistema)}</div></div>
+                    <div class="col-4"><div class="small-muted">${rotuloBanco}</div><div class="fw-bold">${valorBanco == null ? '--' : formatarMoedaBR(valorBanco)}</div></div>
+                    <div class="col-4"><div class="small-muted">Diferença</div><div class="fw-bold ${diferenca === 0 ? 'valor-receita' : 'valor-despesa'}">${diferenca == null ? '--' : formatarMoedaBR(diferenca)}</div></div>
                 </div>
                 <div class="item-dica text-center mt-1">${pendentes ? `${pendentes} transaç${pendentes === 1 ? 'ão' : 'ões'} do banco a revisar.` : 'Tudo revisado.'}${aberta ? ' Fatura aberta: o banco ainda pode lançar compras e parcelas.' : ''}</div>`;
 
             const htmlBateu = secaoConciliacaoGastos('Bateu', bateu.length, 'text-bg-success',
-                'Mesmo valor nos dois lados (nas parcelas, o mesmo número de parcelas restantes).',
+                conta ? 'Mesmo valor e data próxima (até 10 dias). Confirmar dá os lançamentos como realizados na data do banco.'
+                    : 'Mesmo valor nos dois lados (nas parcelas, o mesmo número de parcelas restantes).',
                 `<details><summary class="small">Ver as ${bateu.length}</summary><ul class="list-group list-group-flush lista-gastos">${bateu.map(l =>
                     linhaConciliacaoGastos(l.transacao, `↔ ${textoLancamentoConciliacao(l.candidatos[0])}`)).join('')}</ul></details>`,
                 '<button type="button" class="btn btn-sm btn-success" data-gk-confirmar-todos>Confirmar todos</button>');
@@ -7405,19 +7484,20 @@
                 `<ul class="list-group list-group-flush lista-gastos">${diferente.map(l => {
                     const c = l.candidatos[0];
                     return linhaConciliacaoGastos(l.transacao, `↔ ${textoLancamentoConciliacao(c)} · ${formatarMoedaBR(c.valor)}`,
-                        `<button type="button" class="btn btn-sm btn-primary" data-gk-conciliar="${l.transacao.id}" data-lancamento="${c.id}" data-corrigir="true">Corrigir para ${formatarMoedaBR(l.transacao.valor)}</button>
-                         <button type="button" class="btn btn-sm btn-outline-secondary" data-gk-conciliar="${l.transacao.id}" data-lancamento="${c.id}" data-corrigir="false">Manter ${formatarMoedaBR(c.valor)}</button>`);
+                        `<button type="button" class="btn btn-sm btn-primary" data-gk-conciliar="${l.transacao.id}" data-item="${refConciliacao(c)}" data-corrigir="true">Corrigir para ${formatarMoedaBR(l.transacao.valor)}</button>
+                         <button type="button" class="btn btn-sm btn-outline-secondary" data-gk-conciliar="${l.transacao.id}" data-item="${refConciliacao(c)}" data-corrigir="false">Manter ${formatarMoedaBR(c.valor)}</button>`);
                 }).join('')}</ul>`);
 
             const htmlEscolher = secaoConciliacaoGastos('Escolher', escolher.length, 'text-bg-info',
-                'Mais de um lançamento com o mesmo valor: escolha qual é esta compra.',
+                conta ? 'Mais de um item com o mesmo valor: escolha qual é esta transação.' : 'Mais de um lançamento com o mesmo valor: escolha qual é esta compra.',
                 `<ul class="list-group list-group-flush lista-gastos">${escolher.map(l => linhaConciliacaoGastos(l.transacao, '',
                     `<select class="form-select form-select-sm w-auto mw-100" id="gk-escolha-${l.transacao.id}" aria-label="Lançamento">${l.candidatos.map(c =>
-                        `<option value="${c.id}">${formatarDataISO(c.data).slice(0, 5)} · ${escapeHtml(c.descricao)}${c.recorrenciaId ? ' (fixa)' : ''}</option>`).join('')}</select>
+                        `<option value="${refConciliacao(c)}">${formatarDataISO(c.data).slice(0, 5)} · ${escapeHtml(c.descricao)}${c.recorrenciaId ? ' (fixa)' : ''}</option>`).join('')}</select>
                      <button type="button" class="btn btn-sm btn-primary" data-gk-escolher="${l.transacao.id}">Ligar</button>`)).join('')}</ul>`);
 
             const htmlCriar = secaoConciliacaoGastos('Só no banco', criar.length, 'text-bg-danger',
-                'Nenhum lançamento seu combina. Crie a partir do banco (a descrição vem dele, para você editar) ou ignore.',
+                conta ? 'Nada no sistema combina. Crie um lançamento (já realizado, na data do banco) ou ignore. Se for transferência entre suas contas ou pagamento de fatura, registre a movimentação no sistema e ela aparece aqui para ligar.'
+                    : 'Nenhum lançamento seu combina. Crie a partir do banco (a descrição vem dele, para você editar) ou ignore.',
                 `<ul class="list-group list-group-flush lista-gastos">${criar.map(l => {
                     const t = l.transacao, parcelas = parcelasACriarGastos(t);
                     return linhaConciliacaoGastos(t, parcelas > 1 ? `Vai criar ${parcelas} parcelas de ${formatarMoedaBR(t.valor)}, a primeira nesta fatura.` : '',
@@ -7427,30 +7507,49 @@
                          <button type="button" class="btn btn-sm btn-outline-secondary" data-gk-ignorar="${t.id}">Ignorar</button>`);
                 }).join('')}</ul>`);
 
-            const htmlIgnorar = secaoConciliacaoGastos('Não é compra', ignorar.length, 'text-bg-secondary',
-                'O pagamento da fatura anterior: no sistema ele já é o "Pagar fatura".',
-                `<ul class="list-group list-group-flush lista-gastos">${ignorar.map(l => linhaConciliacaoGastos(l.transacao, '')).join('')}</ul>`,
+            const htmlIgnorar = secaoConciliacaoGastos(conta ? 'Aplicação automática' : 'Não é compra', ignorar.length, 'text-bg-secondary',
+                conta ? 'Aplicação e resgate da aplicação automática: o saldo do banco já soma a aplicação, então não viram lançamento. O rendimento dela aparece em Só no banco, para criar como receita.'
+                    : 'O pagamento da fatura anterior: no sistema ele já é o "Pagar fatura".',
+                // Na conta são muitas (o vaivém é diário): ficam recolhidas.
+                conta ? `<details><summary class="small">Ver as ${ignorar.length}</summary><ul class="list-group list-group-flush lista-gastos">${ignorar.map(l => linhaConciliacaoGastos(l.transacao, '')).join('')}</ul></details>`
+                    : `<ul class="list-group list-group-flush lista-gastos">${ignorar.map(l => linhaConciliacaoGastos(l.transacao, '')).join('')}</ul>`,
                 '<button type="button" class="btn btn-sm btn-outline-secondary" data-gk-ignorar-todos>Ignorar</button>');
 
             const htmlSemPar = secaoConciliacaoGastos('Só no sistema', semPar.length, 'text-bg-light border',
-                aberta ? 'Lançamentos sem nada no banco. Com a fatura aberta, pode ser algo que o banco ainda não lançou (como as fixas do fim do mês).'
+                conta ? 'Lançamentos e movimentações até hoje sem nada no banco: confira se ainda vão acontecer, se foram esquecidos ou lançados em dobro.'
+                    : aberta ? 'Lançamentos sem nada no banco. Com a fatura aberta, pode ser algo que o banco ainda não lançou (como as fixas do fim do mês).'
                     : 'Lançamentos sem nada no banco: confira se foram esquecidos, lançados em dobro ou estão na fatura errada.',
                 `<ul class="list-group list-group-flush lista-gastos">${semPar.map(l => `<li class="list-group-item d-flex justify-content-between gap-2">
                     <span class="text-break">${textoLancamentoConciliacao(l)}</span><span class="text-nowrap fw-semibold">${valorConciliacao(l)}</span></li>`).join('')}</ul>`);
 
             const SITUACOES = { CONCILIADA: 'Conciliada', IMPORTADA: 'Criada do banco', IGNORADA: 'Ignorada' };
             const htmlRevisadas = secaoConciliacaoGastos('Revisadas', revisadas.length, 'text-bg-light border',
-                'Desfazer volta a transação para revisar. Um lançamento criado a partir do banco continua existindo.',
-                `<details><summary class="small">Ver as ${revisadas.length}</summary><ul class="list-group list-group-flush lista-gastos">${revisadas.map(l =>
-                    linhaConciliacaoGastos(l.transacao, `${SITUACOES[l.transacao.situacao] || ''}${l.lancamento ? ` ↔ ${textoLancamentoConciliacao(l.lancamento)}` : ''}`,
-                        `<button type="button" class="btn btn-sm btn-outline-secondary" data-gk-desfazer="${l.transacao.id}">Desfazer</button>`)).join('')}</ul></details>`);
+                conta ? 'Desfazer volta a transação para revisar. O lançamento continua como está (realizado).'
+                    : 'Desfazer volta a transação para revisar. Um lançamento criado a partir do banco continua existindo.',
+                `<details><summary class="small">Ver as ${revisadas.length}</summary><ul class="list-group list-group-flush lista-gastos">${revisadas.map(l => {
+                    const ligado = l.lancamento ?? l.ligado;
+                    return linhaConciliacaoGastos(l.transacao, `${SITUACOES[l.transacao.situacao] || ''}${ligado ? ` ↔ ${textoLancamentoConciliacao(ligado)}` : ''}`,
+                        `<button type="button" class="btn btn-sm btn-outline-secondary" data-gk-desfazer="${l.transacao.id}">Desfazer</button>`);
+                }).join('')}</ul></details>`);
 
-            document.getElementById('gk-conteudo').innerHTML = linhas.length
+            const vazio = conta ? 'Nenhuma transação do banco neste mês.' : 'Nenhuma transação do banco nesta fatura. Use Sincronizar na fatura para buscar.';
+            document.getElementById('gk-conteudo').innerHTML = cabecalhoConta + (linhas.length
                 ? totais + htmlDiferente + htmlEscolher + htmlCriar + htmlBateu + htmlIgnorar + htmlSemPar + htmlRevisadas
-                : '<p class="text-muted text-center">Nenhuma transação do banco nesta fatura. Use Sincronizar na fatura para buscar.</p>';
+                : conta ? totais + htmlSemPar + `<p class="text-muted text-center mt-3">${vazio}</p>` : `<p class="text-muted text-center">${vazio}</p>`);
 
             // Categoria sugerida (a usada da última vez com a mesma categoria do banco).
             criar.forEach(l => { if (l.categoriaSugeridaId) document.getElementById(`gk-categoria-${l.transacao.id}`).value = l.categoriaSugeridaId; });
+        }
+
+        // Conta: quando foi a última busca e o botão de buscar de novo; antes da ligação, o aviso.
+        function linhaBancoContaGastos() {
+            const { ano, mes, dados } = gastosConciliacao;
+            const inicio = dados.inicio;
+            const texto = inicio && `${ano}-${String(mes).padStart(2, '0')}` < inicio.slice(0, 7)
+                ? `O banco só é consultado a partir de ${formatarDataISO(inicio)}.`
+                : dados.sincronizado ? `Sincronizado em ${formatarDataHoraUTC(dados.sincronizado)}` : 'Ainda não sincronizado';
+            return `<div class="d-flex flex-wrap justify-content-center align-items-center gap-2 small-muted mb-3">
+                    <span>${texto}</span><button type="button" class="btn btn-sm btn-outline-secondary" data-gk-sincronizar>Sincronizar</button></div>`;
         }
 
         function renderizarFaturaGastos(fatura, banco = null) {
@@ -7962,7 +8061,7 @@
             preencherConfiguracaoGastos();
             renderizarCadastrosGastos();
             await trocarModalGastos('modal-gastos-cadastros');
-            await carregarCartoesBancoGastos();
+            await Promise.all([carregarCartoesBancoGastos(), carregarContasBancoGastos()]);
         }
 
         // Um erro aqui (banco fora do ar) só esconde o campo: o cadastro continua funcionando.
@@ -7974,6 +8073,28 @@
                 gastosCartoesBanco = [];
             }
             preencherCartaoBancoGastos(gastosEdicaoCadastro.cartao);
+        }
+
+        async function carregarContasBancoGastos() {
+            try {
+                gastosContasBanco = await apiRequest({ url: `${GASTOS_URL}/banco/contas` });
+            } catch (error) {
+                console.error(error);
+                gastosContasBanco = [];
+            }
+            preencherContaBancoGastos(gastosEdicaoCadastro.conta);
+        }
+
+        // Conta do banco já ligada a outra conta aparece, mas não pode ser escolhida.
+        function preencherContaBancoGastos(conta) {
+            const lista = gastosContasBanco || [];
+            document.getElementById('gc-conta-banco-grupo').classList.toggle('hidden', !lista.length);
+            const select = document.getElementById('gc-conta-banco');
+            select.innerHTML = '<option value="">Não ligada</option>' + lista.map(b => {
+                const outra = b.contaId && b.contaId !== conta?.id ? gastosDados.contas.find(c => c.id === b.contaId) : null;
+                return `<option value="${escapeHtml(b.id)}" ${outra ? 'disabled' : ''}>${escapeHtml(b.nome)}${outra ? ` (ligada a ${escapeHtml(outra.nome)})` : ''}</option>`;
+            }).join('');
+            select.value = conta?.bancoContaId ?? '';
         }
 
         // Cartão do banco já ligado a outro cartão aparece, mas não pode ser escolhido.
@@ -8022,7 +8143,7 @@
 
             document.getElementById('gc-contas-lista').innerHTML = contas.length ? contas.map((c, i) => `
                 <tr class="${c.ativo ? '' : 'text-muted'}">
-                    <td>${setasOrdemGastos('conta', c, i, contas.length)}${nomeComSituacao(c.nome, c.ativo)}<div class="small-muted d-sm-none">${marcacoesContaGastos(c)}</div></td>
+                    <td>${setasOrdemGastos('conta', c, i, contas.length)}${nomeComSituacao(c.nome, c.ativo)}${c.bancoContaId ? ' <span class="badge text-bg-light border" title="Ligada à conta no banco">banco</span>' : ''}<div class="small-muted d-sm-none">${marcacoesContaGastos(c)}</div></td>
                     <td class="text-end text-nowrap ${c.saldo < 0 ? 'valor-despesa' : ''}">${formatarMoedaBR(c.saldo)}</td>
                     <td class="d-none d-sm-table-cell">${c.somaSaldoGeral ? 'Sim' : 'Não'}</td>
                     <td class="d-none d-sm-table-cell" ${c.somaSaldoGeral ? '' : 'title="Só aparece no card de Contas a conta que entra no Saldo"'}>${!c.somaSaldoGeral ? '—' : c.mostraSaldoPrevisto === false ? 'Não' : 'Sim'}</td>
@@ -8081,6 +8202,7 @@
                 document.getElementById('gc-cartao-conta').innerHTML = opcoesContasGastos();
                 preencherCartaoBancoGastos(null);
             }
+            if (tipo === 'conta') preencherContaBancoGastos(null);
         }
 
         function editarCadastroGastos(tipo, id) {
@@ -8096,6 +8218,7 @@
                 document.getElementById('gc-conta-saldo').value = numeroParaMoedaBR(item.saldoInicial);
                 document.getElementById('gc-conta-geral').checked = item.somaSaldoGeral;
                 document.getElementById('gc-conta-previsto').checked = item.mostraSaldoPrevisto !== false;
+                preencherContaBancoGastos(item);
             } else if (tipo === 'cartao') {
                 document.getElementById('gc-cartao-nome').value = item.nome;
                 document.getElementById('gc-cartao-vencimento').value = item.diaVencimento;
@@ -8157,11 +8280,17 @@
                     await apiRequest({ url: `${GASTOS_URL}/cartoes/${salvo.id}/banco`, method: 'PUT', body: { bancoContaId: bancoContaId || null } });
                     gastosCartoesBanco = null;
                 }
+                const bancoContaCorrente = document.getElementById('gc-conta-banco').value;
+                if (tipo === 'conta' && gastosContasBanco?.length && bancoContaCorrente !== (edicao?.bancoContaId ?? '')) {
+                    await apiRequest({ url: `${GASTOS_URL}/contas/${salvo.id}/banco`, method: 'PUT', body: { bancoContaId: bancoContaCorrente || null } });
+                    gastosContasBanco = null;
+                }
                 cancelarEdicaoCadastroGastos(tipo);
                 mostrarAlertaModalGastos('gc-alerta', `${config.nome} ${edicao ? 'alterad' : 'cadastrad'}${tipo === 'cartao' ? 'o' : 'a'}.`, 'success');
                 await recarregarGastos();
                 renderizarCadastrosGastos();
                 if (gastosCartoesBanco === null) await carregarCartoesBancoGastos();
+                if (gastosContasBanco === null) await carregarContasBancoGastos();
             } catch (error) {
                 console.error(error);
                 if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gc-alerta', error.message || 'Não foi possível salvar.', 'danger');
@@ -8307,7 +8436,7 @@
         document.addEventListener('scroll', () => calendarioAberto && posicionarCalendario(), true);
 
         document.getElementById('tab-gastos').addEventListener('click', function(event) {
-            const alvo = event.target.closest('[data-ocultar], [data-novo-lancamento], [data-fatura-cartao], [data-efetivar-lancamento], [data-efetivar-fatura], [data-agenda-mais], [data-agenda-lancamento], [data-agenda-fatura]');
+            const alvo = event.target.closest('[data-ocultar], [data-novo-lancamento], [data-fatura-cartao], [data-conciliar-conta], [data-efetivar-lancamento], [data-efetivar-fatura], [data-agenda-mais], [data-agenda-lancamento], [data-agenda-fatura]');
             if (!alvo) return;
 
             // O botão de efetivar fica dentro da linha; o closest() acha ele antes dela.
@@ -8322,6 +8451,8 @@
                 abrirLancamentoGastos({ tipo: alvo.dataset.novoLancamento });
             } else if (alvo.dataset.faturaCartao) {
                 abrirFaturaGastos(alvo.dataset.faturaCartao);
+            } else if (alvo.dataset.conciliarConta) {
+                abrirConciliacaoContaGastos(Number(alvo.dataset.conciliarConta));
             } else if (alvo.dataset.agendaLancamento) {
                 abrirEdicaoLancamentoGastos(alvo.dataset.agendaLancamento);
             } else if (alvo.dataset.agendaFatura) {
@@ -8439,34 +8570,44 @@
 
         // Conciliação com o banco
         document.getElementById('modal-gastos-conciliacao').addEventListener('click', function(event) {
-            if (!gastosConciliacao?.dados) return;
-            const { cartaoId, ano, mes } = gastosConciliacao;
-            const transacoes = `${GASTOS_URL}/cartoes/${cartaoId}/banco/transacoes`;
             const alvo = event.target.closest('button');
-            if (!alvo) return;
+            if (!alvo || !gastosConciliacao) return;
+            const { tipo, id } = gastosConciliacao;
 
-            if (alvo.matches('[data-gk-confirmar-todos], [data-gk-ignorar-todos]')) {
-                const tipo = alvo.matches('[data-gk-confirmar-todos]') ? 'CONCILIAR' : 'IGNORAR';
-                const itens = gastosConciliacao.dados.linhas.filter(l => l.sugestao === tipo)
-                    .map(l => ({ transacaoId: l.transacao.id, lancamentoId: tipo === 'CONCILIAR' ? l.candidatos[0].id : null }));
-                acaoConciliacaoGastos({ url: `${GASTOS_URL}/cartoes/${cartaoId}/faturas/${ano}/${mes}/conciliacao/confirmar`, method: 'POST', body: { itens } },
-                    `${itens.length} transaç${itens.length === 1 ? 'ão' : 'ões'} ${tipo === 'CONCILIAR' ? 'confirmada' : 'ignorada'}${itens.length === 1 ? '' : 's'}.`, alvo);
+            // Navegar entre os meses (só na conta) funciona mesmo enquanto o mês carrega.
+            if (alvo.dataset.gkNavegar) {
+                Object.assign(gastosConciliacao, somarMeses(gastosConciliacao.ano, gastosConciliacao.mes, Number(alvo.dataset.gkNavegar)));
+                esconderAlertaModalGastos('gk-alerta');
+                carregarConciliacaoContaGastos();
+                return;
+            }
+            if (!gastosConciliacao.dados) return;
+            const transacoes = `${GASTOS_URL}/${tipo === 'conta' ? 'contas' : 'cartoes'}/${id}/banco/transacoes`;
+
+            if (alvo.matches('[data-gk-sincronizar]')) {
+                sincronizarContaBancoGastos(alvo);
+            } else if (alvo.matches('[data-gk-confirmar-todos], [data-gk-ignorar-todos]')) {
+                const sugestao = alvo.matches('[data-gk-confirmar-todos]') ? 'CONCILIAR' : 'IGNORAR';
+                const itens = gastosConciliacao.dados.linhas.filter(l => l.sugestao === sugestao)
+                    .map(l => ({ transacaoId: l.transacao.id, ...(sugestao === 'CONCILIAR' ? corpoRefConciliacao(refConciliacao(l.candidatos[0])) : {}) }));
+                acaoConciliacaoGastos({ url: `${urlConciliacaoGastos()}/confirmar`, method: 'POST', body: { itens } },
+                    `${itens.length} transaç${itens.length === 1 ? 'ão' : 'ões'} ${sugestao === 'CONCILIAR' ? 'confirmada' : 'ignorada'}${itens.length === 1 ? '' : 's'}.`, alvo);
             } else if (alvo.dataset.gkConciliar) {
                 acaoConciliacaoGastos({ url: `${transacoes}/${alvo.dataset.gkConciliar}/conciliar`, method: 'POST',
-                    body: { lancamentoId: Number(alvo.dataset.lancamento), corrigirValor: alvo.dataset.corrigir === 'true' } },
+                    body: { ...corpoRefConciliacao(alvo.dataset.item), corrigirValor: alvo.dataset.corrigir === 'true' } },
                     alvo.dataset.corrigir === 'true' ? 'Valor corrigido e conciliado.' : 'Conciliado, mantendo o seu valor.', alvo);
             } else if (alvo.dataset.gkEscolher) {
-                const lancamentoId = Number(document.getElementById(`gk-escolha-${alvo.dataset.gkEscolher}`).value);
-                acaoConciliacaoGastos({ url: `${transacoes}/${alvo.dataset.gkEscolher}/conciliar`, method: 'POST', body: { lancamentoId } }, 'Conciliado.', alvo);
+                const ref = document.getElementById(`gk-escolha-${alvo.dataset.gkEscolher}`).value;
+                acaoConciliacaoGastos({ url: `${transacoes}/${alvo.dataset.gkEscolher}/conciliar`, method: 'POST', body: corpoRefConciliacao(ref) }, 'Conciliado.', alvo);
             } else if (alvo.dataset.gkCriar) {
-                const id = alvo.dataset.gkCriar;
-                const descricao = document.getElementById(`gk-descricao-${id}`).value.trim();
-                const categoriaId = Number(document.getElementById(`gk-categoria-${id}`).value);
+                const transacaoId = alvo.dataset.gkCriar;
+                const descricao = document.getElementById(`gk-descricao-${transacaoId}`).value.trim();
+                const categoriaId = Number(document.getElementById(`gk-categoria-${transacaoId}`).value);
                 if (!descricao || !categoriaId) {
                     mostrarAlertaModalGastos('gk-alerta', 'Informe a descrição e a categoria.', 'danger');
                     return;
                 }
-                acaoConciliacaoGastos({ url: `${transacoes}/${id}/criar`, method: 'POST', body: { descricao, categoriaId } }, 'Lançamento criado.', alvo);
+                acaoConciliacaoGastos({ url: `${transacoes}/${transacaoId}/criar`, method: 'POST', body: { descricao, categoriaId } }, 'Lançamento criado.', alvo);
             } else if (alvo.dataset.gkIgnorar) {
                 acaoConciliacaoGastos({ url: `${transacoes}/${alvo.dataset.gkIgnorar}/ignorar`, method: 'POST' }, 'Transação ignorada.', alvo);
             } else if (alvo.dataset.gkDesfazer) {
@@ -8474,13 +8615,14 @@
             }
         });
 
-        // Fechar a conciliação volta para a fatura, recarregada (pode ter lançamento novo ou valor corrigido).
+        // Fechar a conciliação recarrega os dados (pode ter lançamento novo, valor corrigido ou
+        // realizado); a da fatura volta para a fatura.
         document.getElementById('modal-gastos-conciliacao').addEventListener('hidden.bs.modal', function() {
             if (trocandoModalGastos || !gastosConciliacao || !obterAccessToken()) return;
-            const { cartaoId, ano, mes } = gastosConciliacao;
+            const { tipo, id, ano, mes } = gastosConciliacao;
             gastosConciliacao = null;
             recarregarGastos();
-            abrirFaturaGastos(cartaoId, ano, mes, gastosFatura?.retorno ?? null);
+            if (tipo === 'cartao') abrirFaturaGastos(id, ano, mes, gastosFatura?.retorno ?? null);
         });
 
         document.getElementById('form-gastos-pagamento').addEventListener('submit', async function(event) {
