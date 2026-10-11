@@ -1147,11 +1147,13 @@
             <div class="tab-pane fade show active" id="tab-gastos" role="tabpanel" aria-labelledby="gastos-tab">
 
                 <div id="gastos-alerta" class="alert hidden" role="alert"></div>
+                <div id="gastos-banco-alerta" class="alert alert-warning hidden" role="alert"></div>
 
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
                     <div class="gastos-cabecalho-mes">
                         <h5 class="mb-0" id="gastos-titulo-mes">Mês atual</h5>
                         <div class="small-muted hidden" id="gastos-ciclo"></div>
+                        <div class="small-muted hidden" id="gastos-banco"></div>
                     </div>
                     <div class="d-flex flex-wrap gap-2 gastos-acoes">
                         <div class="btn-group">
@@ -6321,6 +6323,8 @@
         // a integração não existe para este usuário e o campo fica escondido.
         let gastosCartoesBanco = null;
         let gastosContasBanco = null;
+        // Situação da conexão da Pluggy com o banco e quando foi buscada (cache de 10 minutos).
+        let gastosConexaoBanco = null;
         // { cartaoId, ano, mes, dados (ConciliacaoResponse) }
         let gastosConciliacao = null;
 
@@ -6527,6 +6531,37 @@
             };
 
             renderizarGastosDashboard();
+            carregarConexaoBancoGastos();
+        }
+
+        // Quando a Pluggy atualizou os dados do banco, e os avisos (erro, dados velhos,
+        // consentimento vencendo). Só com cartão ou conta ligados; não segura o dashboard.
+        async function carregarConexaoBancoGastos() {
+            const ligado = gastosDados.cartoes.some(c => c.bancoContaId) || gastosDados.contas.some(c => c.bancoContaId);
+            if (!ligado) {
+                gastosConexaoBanco = null;
+            } else if (!gastosConexaoBanco || Date.now() - gastosConexaoBanco.buscada > 10 * 60 * 1000) {
+                try {
+                    gastosConexaoBanco = { ...await apiRequest({ url: `${GASTOS_URL}/banco/conexao` }), buscada: Date.now() };
+                } catch (error) {
+                    console.error(error);
+                    gastosConexaoBanco = { disponivel: true, alertas: ['Não foi possível consultar a conexão com o banco.'], buscada: Date.now() };
+                }
+            }
+            renderizarConexaoBancoGastos();
+        }
+
+        function renderizarConexaoBancoGastos() {
+            const conexao = gastosConexaoBanco?.disponivel ? gastosConexaoBanco : null;
+            const linha = document.getElementById('gastos-banco');
+            // Cada parte inteira: no celular a próxima atualização desce para a linha de baixo.
+            const partes = conexao?.atualizado ? [`Banco atualizado na Pluggy em ${formatarDataHoraUTC(conexao.atualizado)}`] : [];
+            if (partes.length && conexao.proximaAtualizacao) partes.push(`próxima ${formatarDataHoraUTC(conexao.proximaAtualizacao)}`);
+            linha.innerHTML = partes.map(p => `<span class="text-nowrap">${p}</span>`).join(' · ');
+            linha.classList.toggle('hidden', !partes.length);
+            const alerta = document.getElementById('gastos-banco-alerta');
+            alerta.innerHTML = (conexao?.alertas || []).map(escapeHtml).join('<br>');
+            alerta.classList.toggle('hidden', !alerta.innerHTML);
         }
 
         // Recarrega depois de uma gravação. Erro aqui não desfaz a gravação, só avisa.
@@ -6551,6 +6586,8 @@
             ['gastos-contas', 'gastos-cartoes', 'gastos-a-pagar', 'gastos-a-receber'].forEach(id => {
                 document.getElementById(id).innerHTML = '';
             });
+            gastosConexaoBanco = null;
+            ['gastos-banco', 'gastos-banco-alerta'].forEach(id => document.getElementById(id).classList.add('hidden'));
             esconderAlertaGastos();
         }
 
