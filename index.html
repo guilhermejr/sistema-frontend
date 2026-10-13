@@ -586,6 +586,11 @@
                 flex-shrink: 0;
             }
 
+            #gf-conteudo .gf-descricao-banco {
+                font-size: 0.875em;
+            }
+
+            #gf-conteudo .gf-descricao-banco,
             #gf-conteudo .gf-descricao-linha > .gf-descricao-texto {
                 flex-shrink: 1;
                 min-width: 0;
@@ -7622,6 +7627,13 @@
             const ligadosBanco = Array.isArray(banco) && !(cartaoFatura?.bancoInicioFatura && fatura.vencimento.slice(0, 7) < cartaoFatura.bancoInicioFatura.slice(0, 7))
                 ? new Set(banco.map(t => t.lancamentoId).filter(Boolean)) : null;
             const naoConciliado = l => ligadosBanco !== null && !ligadosBanco.has(l.id);
+            // Embaixo da descrição, a que o banco deu à transação ligada — quando é outra.
+            const descricoesBanco = new Map(Array.isArray(banco) ? banco.filter(t => t.lancamentoId).map(t => [t.lancamentoId, t.descricao]) : []);
+            const descricaoBanco = l => {
+                const d = descricoesBanco.get(l.id);
+                return d && d.trim().toLowerCase() !== String(l.descricao).trim().toLowerCase()
+                    ? `<div class="small-muted gf-descricao-banco" title="Descrição no banco">${escapeHtml(d)}</div>` : '';
+            };
             const ICONE_NAO_CONCILIADO = ' <svg class="icone-realizado text-warning" viewBox="0 0 16 16" fill="currentColor" role="img" aria-label="Não conciliado"><title>Ainda não conciliado com o banco</title><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4m.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2"/></svg>';
 
             // No celular a categoria some, para as setas caberem na tela.
@@ -7629,7 +7641,7 @@
             const linhas = [...fatura.lancamentos].reverse().map((l, i, todos) => `
                 <tr class="item-clicavel" data-editar-lancamento="${l.id}">
                     ${celulaDataLista(l.data, todos[i - 1]?.data)}
-                    <td class="gf-descricao"><div class="gf-descricao-linha"><span class="gf-descricao-texto">${escapeHtml(l.descricao)}</span>${l.parcela ? ` <span class="text-muted">(${l.parcela}/${l.totalParcelas})</span>` : ''}${marcaFixa(l)}${l.faturaTransferida ? ' <span class="badge text-bg-light border">transferida</span>' : ''}${naoConciliado(l) ? ICONE_NAO_CONCILIADO : ''}</div></td>
+                    <td class="gf-descricao"><div class="gf-descricao-linha"><span class="gf-descricao-texto">${escapeHtml(l.descricao)}</span>${l.parcela ? ` <span class="text-muted">(${l.parcela}/${l.totalParcelas})</span>` : ''}${marcaFixa(l)}${l.faturaTransferida ? ' <span class="badge text-bg-light border">transferida</span>' : ''}${naoConciliado(l) ? ICONE_NAO_CONCILIADO : ''}</div>${descricaoBanco(l)}</td>
                     <td class="d-none d-sm-table-cell">${escapeHtml(l.categoria?.descricao || '')}</td>
                     <td class="text-end text-nowrap ${l.tipo === 'R' ? 'valor-receita' : ''}">${l.tipo === 'R' ? '−' : ''}${formatarMoedaBR(l.valor)}</td>
                     <td class="text-end text-nowrap">${acoesFatura(l)}</td>
