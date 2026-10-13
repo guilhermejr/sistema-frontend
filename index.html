@@ -7438,7 +7438,7 @@
         }
 
         function textoTransacaoBanco(t) {
-            return `${formatarDataISO(t.data).slice(0, 5)} · ${escapeHtml(t.descricao)}${t.parcela ? ` <span class="text-muted">(${t.parcela}/${t.totalParcelas})</span>` : ''}`;
+            return `${formatarDataISO(t.data).slice(0, 5)}${t.hora ? ` ${t.hora.slice(0, 5)}` : ''} · ${escapeHtml(t.descricao)}${t.parcela ? ` <span class="text-muted">(${t.parcela}/${t.totalParcelas})</span>` : ''}`;
         }
 
         function textoLancamentoConciliacao(l) {
