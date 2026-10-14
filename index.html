@@ -7023,10 +7023,11 @@
             const realizado = document.getElementById('gl-realizado');
             realizado.disabled = emCartao;
             if (emCartao && !pagoNaFatura) realizado.checked = false;
-            // Inclusão em conta com data de hoje já vem efetivada; acompanha a data e a
-            // conta/cartão até o usuário mexer no switch.
+            // Inclusão em conta com data de hoje ou passada já vem efetivada; futura, não.
+            // Acompanha a data e a conta/cartão até o usuário mexer no switch.
             if (!gastosLancamento?.edicao && !gastosLancamento?.realizadoManual) {
-                realizado.checked = !emCartao && document.getElementById('gl-data').value.trim() === hojeBR();
+                const dataLancamento = parseDataBR(document.getElementById('gl-data').value.trim());
+                realizado.checked = !emCartao && dataLancamento !== null && dataLancamento <= parseDataBR(hojeBR());
             }
             document.getElementById('gl-realizado-dica').classList.toggle('hidden', !emCartao);
 
