@@ -6643,7 +6643,7 @@
             document.getElementById('gastos-contas').innerHTML = dashboard.contas.length
                 ? dashboard.contas.map(conta => `
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span>${escapeHtml(conta.nome)}${conta.bancoContaId ? `<div><button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-nowrap" data-conciliar-conta="${conta.id}">Conciliar com o banco</button></div>` : ''}</span>
+                        <span>${escapeHtml(conta.nome)}${conta.bancoContaId ? `<div><button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-nowrap" data-conciliar-conta="${conta.id}"${conta.conciliacao ? ` data-ano="${conta.conciliacao.ano}" data-mes="${conta.conciliacao.mes}"` : ''}>Conciliar com o banco</button>${seloConciliarGastos(conta.conciliacao, `data-conciliar-conta="${conta.id}"`)}</div>` : ''}</span>
                         <span class="text-end">
                             <span class="fw-semibold ${conta.saldo < 0 ? 'valor-despesa' : ''}">${moeda(conta.saldo, 'saldoGeral')}</span>
                             ${conta.saldoPrevisto == null ? '' : `<div class="small-muted">Fim do ciclo <span class="${conta.saldoPrevisto < 0 ? 'valor-despesa' : ''}">${moeda(conta.saldoPrevisto, 'saldoGeral')}</span></div>`}
@@ -6661,6 +6661,7 @@
                             <div>${escapeHtml(fatura.cartaoNome)}</div>
                             <div class="small-muted">Fecha ${formatarDataISO(fatura.fechamento)} · Vence ${formatarDataISO(fatura.vencimento)} <span class="badge ${status.classe}">${status.texto}</span></div>
                             ${disponivel == null ? '' : `<div class="small-muted">Limite disponível ${moeda(disponivel, 'faturas')}</div>`}
+                            ${fatura.conciliacao ? `<div>${seloConciliarGastos(fatura.conciliacao, `data-conciliar-cartao="${fatura.cartaoId}"`)}</div>` : ''}
                         </div>
                         <div class="text-end">
                             <div class="fw-semibold">${moeda(fatura.total, 'faturas')}</div>
@@ -6671,6 +6672,13 @@
                 : itemVazioGastos('Nenhum cartão ativo.');
 
             Object.keys(AGENDA_GASTOS).forEach(renderizarListaAgendaGastos);
+        }
+
+        // Transações do banco que já dá para conciliar (até a fatura atual, no cartão; até
+        // hoje, na conta). O selo abre a conciliação no mês mais antigo com pendência.
+        function seloConciliarGastos(pendencia, atributo) {
+            if (!pendencia) return '';
+            return ` <button type="button" class="badge rounded-pill text-bg-warning border-0" ${atributo} data-ano="${pendencia.ano}" data-mes="${pendencia.mes}" title="Transações do banco a conciliar">${pendencia.quantidade} a conciliar</button>`;
         }
 
         // ---------- próximos a pagar e a receber
@@ -7378,10 +7386,17 @@
             await acaoConciliacaoGastos({ url: urlConciliacaoGastos() });
         }
 
-        // Conta ligada ao banco: abre no mês de hoje.
-        async function abrirConciliacaoContaGastos(contaId) {
+        // Direto do dashboard, pelo selo: a conciliação da fatura que tem pendência. Ao fechar,
+        // volta para essa fatura, como quando é aberta por ela.
+        async function abrirConciliacaoCartaoGastos(cartaoId, ano, mes) {
+            gastosFatura = { cartaoId, ano, mes, dados: null, retorno: null };
+            await abrirConciliacaoGastos();
+        }
+
+        // Conta ligada ao banco: abre no mês pedido (o da pendência mais antiga) ou no de hoje.
+        async function abrirConciliacaoContaGastos(contaId, ano = null, mes = null) {
             const hoje = new Date();
-            gastosConciliacao = { tipo: 'conta', id: contaId, ano: hoje.getFullYear(), mes: hoje.getMonth() + 1, dados: null };
+            gastosConciliacao = { tipo: 'conta', id: contaId, ano: ano || hoje.getFullYear(), mes: mes || hoje.getMonth() + 1, dados: null };
             const conta = gastosDados?.contas.find(c => c.id === contaId);
             document.getElementById('gk-titulo').textContent = `Conciliar ${conta?.nome || 'conta'}`;
             document.getElementById('gk-navegacao').classList.remove('hidden');
@@ -8485,7 +8500,7 @@
         document.addEventListener('scroll', () => calendarioAberto && posicionarCalendario(), true);
 
         document.getElementById('tab-gastos').addEventListener('click', function(event) {
-            const alvo = event.target.closest('[data-ocultar], [data-novo-lancamento], [data-fatura-cartao], [data-conciliar-conta], [data-efetivar-lancamento], [data-efetivar-fatura], [data-agenda-mais], [data-agenda-lancamento], [data-agenda-fatura]');
+            const alvo = event.target.closest('[data-ocultar], [data-novo-lancamento], [data-fatura-cartao], [data-conciliar-conta], [data-conciliar-cartao], [data-efetivar-lancamento], [data-efetivar-fatura], [data-agenda-mais], [data-agenda-lancamento], [data-agenda-fatura]');
             if (!alvo) return;
 
             // O botão de efetivar fica dentro da linha; o closest() acha ele antes dela.
@@ -8501,7 +8516,9 @@
             } else if (alvo.dataset.faturaCartao) {
                 abrirFaturaGastos(alvo.dataset.faturaCartao);
             } else if (alvo.dataset.conciliarConta) {
-                abrirConciliacaoContaGastos(Number(alvo.dataset.conciliarConta));
+                abrirConciliacaoContaGastos(Number(alvo.dataset.conciliarConta), Number(alvo.dataset.ano) || null, Number(alvo.dataset.mes) || null);
+            } else if (alvo.dataset.conciliarCartao) {
+                abrirConciliacaoCartaoGastos(Number(alvo.dataset.conciliarCartao), Number(alvo.dataset.ano), Number(alvo.dataset.mes));
             } else if (alvo.dataset.agendaLancamento) {
                 abrirEdicaoLancamentoGastos(alvo.dataset.agendaLancamento);
             } else if (alvo.dataset.agendaFatura) {
