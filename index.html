@@ -128,6 +128,32 @@
             display: none !important;
         }
 
+        /* Loader das abas: camada sobre todo o conteúdo da aba, com o ícone fixo no
+           meio da tela. A altura mínima garante que a camada alcance o meio da tela
+           mesmo com a aba ainda vazia. */
+        #dashboard-abas-conteudo {
+            position: relative;
+        }
+
+        #dashboard-abas-conteudo:has(> #dashboard-loading:not(.hidden)) {
+            min-height: 60vh;
+        }
+
+        #dashboard-loading {
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            background: rgba(var(--bs-body-bg-rgb), 0.75);
+        }
+
+        .dashboard-loading-icone {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
         /* Mensagem de confirmação apagando antes de sumir (ver sumirSeSucesso). */
         .alerta-sumindo {
             opacity: 0;
@@ -680,12 +706,6 @@
         <!-- Mensagens -->
         <div id="dashboard-alert" class="alert alert-danger hidden" role="alert"></div>
 
-        <!-- Loader -->
-        <div id="dashboard-loading" class="text-center my-4 hidden">
-            <div class="spinner-border text-primary" role="status"></div>
-            <div class="mt-2">Carregando dashboard...</div>
-        </div>
-
         <!-- Abas -->
         <ul class="nav nav-tabs mb-4 abas-celular" id="dashboardTabs" role="tablist">
           <li class="nav-item" role="presentation">
@@ -730,6 +750,14 @@
         </div>
 
         <div class="tab-content" id="dashboard-abas-conteudo">
+            <!-- Loader: cobre a área das abas e bloqueia os cliques enquanto carrega. -->
+            <div id="dashboard-loading" class="hidden" role="status">
+                <div class="dashboard-loading-icone">
+                    <div class="spinner-border text-primary" aria-hidden="true"></div>
+                    <div class="mt-2 text-muted">Carregando...</div>
+                </div>
+            </div>
+
             <!-- ABA ENERGIA -->
             <div class="tab-pane fade" id="tab-energia" role="tabpanel" aria-labelledby="energia-tab">
 
