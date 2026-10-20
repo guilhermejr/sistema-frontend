@@ -983,6 +983,36 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="col-12 col-lg-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Média de Proventos</h6>
+                                <div id="card-salario-media-proventos" class="fs-4 fw-bold">--</div>
+                                <div class="small text-muted card-salario-media-meses">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Média de Descontos</h6>
+                                <div id="card-salario-media-descontos" class="fs-4 fw-bold">--</div>
+                                <div class="small text-muted card-salario-media-meses">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Média de Líquido</h6>
+                                <div id="card-salario-media-liquido" class="fs-4 fw-bold">--</div>
+                                <div class="small text-muted card-salario-media-meses">--</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="row mb-4">
@@ -3349,6 +3379,10 @@
             document.getElementById('card-salario-proventos').textContent = '--';
             document.getElementById('card-salario-descontos').textContent = '--';
             document.getElementById('card-salario-liquido').textContent = '--';
+            ['proventos', 'descontos', 'liquido'].forEach(chave => {
+                document.getElementById(`card-salario-media-${chave}`).textContent = '--';
+            });
+            document.querySelectorAll('.card-salario-media-meses').forEach(el => { el.textContent = '--'; });
             renderizarCardsTiposFolhaLiquido([]);
             renderizarCardsTiposFolhaProventos([]);
             limparTabelaSalario();
@@ -4084,6 +4118,16 @@
             document.getElementById('card-salario-liquido').textContent = formatarMoedaBR(totalLiquido);
 
             const folhasPorMes = agruparFolhasPorMes(folhas);
+
+            // Média por mês com pagamento: folhas do mesmo mês (13º, férias) somam juntas
+            const meses = folhasPorMes.length;
+            const media = total => meses ? formatarMoedaBR(total / meses) : '--';
+            document.getElementById('card-salario-media-proventos').textContent = media(totalProventos);
+            document.getElementById('card-salario-media-descontos').textContent = media(totalDescontos);
+            document.getElementById('card-salario-media-liquido').textContent = media(totalLiquido);
+            document.querySelectorAll('.card-salario-media-meses').forEach(el => {
+                el.textContent = meses ? `por mês (${meses} ${meses === 1 ? 'mês' : 'meses'})` : '--';
+            });
 
             const mapaLiquido = {};
             folhasPorMes.forEach(item => {
