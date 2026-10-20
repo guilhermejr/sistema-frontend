@@ -1013,6 +1013,36 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="col-12 col-lg-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Média de Proventos - Folha mensal</h6>
+                                <div id="card-salario-media-mensal-proventos" class="fs-4 fw-bold">--</div>
+                                <div class="small text-muted card-salario-media-mensal-meses">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Média de Descontos - Folha mensal</h6>
+                                <div id="card-salario-media-mensal-descontos" class="fs-4 fw-bold">--</div>
+                                <div class="small text-muted card-salario-media-mensal-meses">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-4 mb-3">
+                        <div class="card card-resumo text-center">
+                            <div class="card-body">
+                                <h6 class="text-muted">Média de Líquido - Folha mensal</h6>
+                                <div id="card-salario-media-mensal-liquido" class="fs-4 fw-bold">--</div>
+                                <div class="small text-muted card-salario-media-mensal-meses">--</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="row mb-4">
@@ -3193,6 +3223,20 @@
             return lista;
         }
 
+        const TIPO_FOLHA_MENSAL = 'Folha mensal';
+
+        // Média por mês com pagamento: folhas do mesmo mês (13º, férias) somam juntas
+        function preencherMediasSalario(folhasPorMes, prefixo) {
+            const meses = folhasPorMes.length;
+            ['proventos', 'descontos', 'liquido'].forEach(chave => {
+                const total = folhasPorMes.reduce((acc, item) => acc + item[chave], 0);
+                document.getElementById(`${prefixo}-${chave}`).textContent = meses ? formatarMoedaBR(total / meses) : '--';
+            });
+            document.querySelectorAll(`.${prefixo}-meses`).forEach(el => {
+                el.textContent = meses ? `por mês (${meses} ${meses === 1 ? 'mês' : 'meses'})` : '--';
+            });
+        }
+
         function agruparFolhasPorTipo(folhas) {
             const mapa = {};
 
@@ -3379,10 +3423,8 @@
             document.getElementById('card-salario-proventos').textContent = '--';
             document.getElementById('card-salario-descontos').textContent = '--';
             document.getElementById('card-salario-liquido').textContent = '--';
-            ['proventos', 'descontos', 'liquido'].forEach(chave => {
-                document.getElementById(`card-salario-media-${chave}`).textContent = '--';
-            });
-            document.querySelectorAll('.card-salario-media-meses').forEach(el => { el.textContent = '--'; });
+            preencherMediasSalario([], 'card-salario-media');
+            preencherMediasSalario([], 'card-salario-media-mensal');
             renderizarCardsTiposFolhaLiquido([]);
             renderizarCardsTiposFolhaProventos([]);
             limparTabelaSalario();
@@ -4119,15 +4161,9 @@
 
             const folhasPorMes = agruparFolhasPorMes(folhas);
 
-            // Média por mês com pagamento: folhas do mesmo mês (13º, férias) somam juntas
-            const meses = folhasPorMes.length;
-            const media = total => meses ? formatarMoedaBR(total / meses) : '--';
-            document.getElementById('card-salario-media-proventos').textContent = media(totalProventos);
-            document.getElementById('card-salario-media-descontos').textContent = media(totalDescontos);
-            document.getElementById('card-salario-media-liquido').textContent = media(totalLiquido);
-            document.querySelectorAll('.card-salario-media-meses').forEach(el => {
-                el.textContent = meses ? `por mês (${meses} ${meses === 1 ? 'mês' : 'meses'})` : '--';
-            });
+            preencherMediasSalario(folhasPorMes, 'card-salario-media');
+            const folhasMensais = folhas.filter(folha => folha?.tipoFolha?.descricao === TIPO_FOLHA_MENSAL);
+            preencherMediasSalario(agruparFolhasPorMes(folhasMensais), 'card-salario-media-mensal');
 
             const mapaLiquido = {};
             folhasPorMes.forEach(item => {
