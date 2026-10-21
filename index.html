@@ -4904,15 +4904,16 @@
         }
 
         // Ao escolher o tipo de folha, repete os itens da última folha desse tipo,
-        // sem unidade nem valor, para não precisar escolher item por item. Só faz
-        // isso enquanto nenhum valor foi digitado, para não apagar o que já foi feito.
+        // com unidade e valor, para só ajustar o que mudou. Só faz isso enquanto
+        // nenhum valor foi digitado, para não apagar o que já foi feito.
         async function preencherItensDaUltimaFolha() {
             const select = document.getElementById('folha-tipoFolha');
             const tipoFolhaId = select.value;
             const origem = document.getElementById('folha-itens-origem');
 
+            // O que veio da última folha (data-preenchido) não conta como digitado.
             const algoDigitado = [...document.querySelectorAll('#form-nova-folha .folha-item input')]
-                .some(input => input.value.trim());
+                .some(input => input.value.trim() && input.value !== input.dataset.preenchido);
             if (!tipoFolhaId || algoDigitado) return;
 
             origem.textContent = 'Buscando os itens da última folha deste tipo...';
@@ -4934,8 +4935,15 @@
             });
 
             if (itens.length) {
-                itens.forEach(item => adicionarItemFolha(item.tipoItem?.tipo === 'D' ? 'D' : 'P', item.tipoItem?.id));
-                origem.textContent = `Itens da folha de ${folha.dataPagamento}. Preencha os valores e remova o que não se aplica.`;
+                itens.forEach(item => {
+                    const linha = adicionarItemFolha(item.tipoItem?.tipo === 'D' ? 'D' : 'P', item.tipoItem?.id);
+                    // A API devolve unidade vazia como "0,00": fica vazia, como foi digitada.
+                    const unidade = mascararMoedaBR(item.unidade || '');
+                    campoDaLinha(linha, 'unidade').value = unidade === '0,00' ? '' : unidade;
+                    campoDaLinha(linha, 'valor').value = mascararMoedaBR(item.valor || '');
+                    linha.querySelectorAll('input').forEach(input => { input.dataset.preenchido = input.value; });
+                });
+                origem.textContent = `Itens da folha de ${folha.dataPagamento}. Confira os valores e remova o que não se aplica.`;
             } else {
                 adicionarItemFolha('P');
                 adicionarItemFolha('D');
