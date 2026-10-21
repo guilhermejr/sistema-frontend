@@ -1328,7 +1328,7 @@
                         <div class="card table-card">
                             <div class="card-body">
                                 <h5 class="mb-1">Cartões de crédito</h5>
-                                <div class="item-dica mb-2">Fatura atual de cada cartão.</div>
+                                <div class="item-dica mb-2">Fatura de cada cartão: a fechada até ser paga, depois a atual.</div>
                                 <ul id="gastos-cartoes" class="list-group list-group-flush lista-gastos"></ul>
                             </div>
                         </div>
@@ -6773,7 +6773,7 @@
                         </div>
                         <div class="text-end">
                             <div class="fw-semibold">${moeda(fatura.total, 'faturas')}</div>
-                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-nowrap" data-fatura-cartao="${fatura.cartaoId}">Ver fatura</button>
+                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-nowrap" data-fatura-cartao="${fatura.cartaoId}" data-vencimento="${fatura.vencimento}">Ver fatura</button>
                         </div>
                     </li>`;
                 }).join('')
@@ -8623,7 +8623,8 @@
                 esconderAlertaGastos();
                 abrirLancamentoGastos({ tipo: alvo.dataset.novoLancamento });
             } else if (alvo.dataset.faturaCartao) {
-                abrirFaturaGastos(alvo.dataset.faturaCartao);
+                const [ano, mes] = alvo.dataset.vencimento.split('-').map(Number);
+                abrirFaturaGastos(alvo.dataset.faturaCartao, ano, mes);
             } else if (alvo.dataset.conciliarConta) {
                 abrirConciliacaoContaGastos(Number(alvo.dataset.conciliarConta), Number(alvo.dataset.ano) || null, Number(alvo.dataset.mes) || null);
             } else if (alvo.dataset.conciliarCartao) {
