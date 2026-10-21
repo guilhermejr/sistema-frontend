@@ -1328,7 +1328,7 @@
                         <div class="card table-card">
                             <div class="card-body">
                                 <h5 class="mb-1">Cartões de crédito</h5>
-                                <div class="item-dica mb-2">Fatura de cada cartão: a fechada até ser paga, depois a atual.</div>
+                                <div class="item-dica mb-2">Fatura de cada cartão. A fechada fica até ser paga, com a próxima abaixo.</div>
                                 <ul id="gastos-cartoes" class="list-group list-group-flush lista-gastos"></ul>
                             </div>
                         </div>
@@ -6763,18 +6763,34 @@
                 ? dashboard.cartoes.map(fatura => {
                     const status = STATUS_FATURA[fatura.status] || { texto: fatura.status, classe: 'text-bg-secondary' };
                     const disponivel = gastosDados.cartoes?.find(c => c.id === fatura.cartaoId)?.bancoLimiteDisponivel;
+                    // Fatura fechada ainda não paga: a aberta seguinte vem em "proxima", só para exibir.
+                    const proxima = fatura.proxima;
+                    const statusProxima = proxima && (STATUS_FATURA[proxima.status] || { texto: proxima.status, classe: 'text-bg-secondary' });
                     return `
-                    <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
-                        <div>
-                            <div>${escapeHtml(fatura.cartaoNome)}</div>
-                            <div class="small-muted">Fecha ${formatarDataISO(fatura.fechamento)} · Vence ${formatarDataISO(fatura.vencimento)} <span class="badge ${status.classe}">${status.texto}</span></div>
-                            ${disponivel == null ? '' : `<div class="small-muted">Limite disponível ${moeda(disponivel, 'faturas')}</div>`}
-                            ${fatura.conciliacao ? `<div>${seloConciliarGastos(fatura.conciliacao, `data-conciliar-cartao="${fatura.cartaoId}"`)}</div>` : ''}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center gap-2">
+                            <div>
+                                <div>${escapeHtml(fatura.cartaoNome)}</div>
+                                <div class="small-muted">Fecha ${formatarDataISO(fatura.fechamento)} · Vence ${formatarDataISO(fatura.vencimento)} <span class="badge ${status.classe}">${status.texto}</span></div>
+                                ${disponivel == null ? '' : `<div class="small-muted">Limite disponível ${moeda(disponivel, 'faturas')}</div>`}
+                                ${fatura.conciliacao ? `<div>${seloConciliarGastos(fatura.conciliacao, `data-conciliar-cartao="${fatura.cartaoId}"`)}</div>` : ''}
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-semibold">${moeda(fatura.total, 'faturas')}</div>
+                                <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-nowrap" data-fatura-cartao="${fatura.cartaoId}" data-vencimento="${fatura.vencimento}">Ver fatura</button>
+                            </div>
                         </div>
-                        <div class="text-end">
-                            <div class="fw-semibold">${moeda(fatura.total, 'faturas')}</div>
-                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-nowrap" data-fatura-cartao="${fatura.cartaoId}" data-vencimento="${fatura.vencimento}">Ver fatura</button>
-                        </div>
+                        ${proxima ? `
+                        <div class="d-flex justify-content-between align-items-center gap-2 mt-2 ps-2 border-start border-2">
+                            <div>
+                                <div class="small">Próxima fatura</div>
+                                <div class="small-muted">Fecha ${formatarDataISO(proxima.fechamento)} · Vence ${formatarDataISO(proxima.vencimento)} <span class="badge ${statusProxima.classe}">${statusProxima.texto}</span></div>
+                            </div>
+                            <div class="text-end">
+                                <div>${moeda(proxima.total, 'faturas')}</div>
+                                <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-nowrap" data-fatura-cartao="${fatura.cartaoId}" data-vencimento="${proxima.vencimento}">Ver fatura</button>
+                            </div>
+                        </div>` : ''}
                     </li>`;
                 }).join('')
                 : itemVazioGastos('Nenhum cartão ativo.');
