@@ -458,6 +458,18 @@
             color: var(--bs-success);
         }
 
+        /* Valores numa linha só; os cabeçalhos longos quebram. */
+        .tabela-contas-energia td {
+            white-space: nowrap;
+        }
+
+        /* .table thead th é nowrap no resto do site; aqui os cabeçalhos quebram. */
+        .tabela-contas-energia thead th {
+            white-space: normal;
+            vertical-align: bottom;
+            min-width: 4.5rem;
+        }
+
         .valor-despesa {
             color: var(--bs-danger);
         }
@@ -920,6 +932,37 @@
                 <div class="card grafico-card">
                     <div class="card-body">
                         <canvas id="valor"></canvas>
+                    </div>
+                </div>
+                <div class="card table-card">
+                    <div class="card-body">
+                        <h5 class="mb-3">Últimas 12 contas</h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped align-middle tabela-contas-energia">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Início</th>
+                                        <th>Fim</th>
+                                        <th class="text-end">Gerada (kWh)</th>
+                                        <th class="text-end">Injetada (kWh)</th>
+                                        <th class="text-end">Concessionária (kWh)</th>
+                                        <th class="text-end">Consumo total (kWh)</th>
+                                        <th class="text-end">TUSD</th>
+                                        <th class="text-end">TE</th>
+                                        <th class="text-end">Bandeira</th>
+                                        <th class="text-end">Iluminação pública</th>
+                                        <th class="text-end">Desconto</th>
+                                        <th class="text-end">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-energia-contas-body">
+                                    <tr>
+                                        <td colspan="12" class="text-center text-muted">Nenhum dado carregado.</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot id="tabela-energia-contas-total"></tfoot>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -3487,6 +3530,7 @@
             document.getElementById('card-total-pago').textContent = '--';
             document.getElementById('card-total-real').textContent = '--';
             document.getElementById('card-total-diferenca').textContent = '--';
+            renderizarContasEnergia([]);
 
 
             // Salário
@@ -4130,6 +4174,63 @@
         // ============================================
         // CARGAS DE DADOS
         // ============================================
+        // ---------- últimas 12 contas de energia
+
+        // Em kWh, unidade no cabeçalho. Gerada e consumo total podem ter meio kWh:
+        // uma casa só quando há fração.
+        function kwhContaEnergia(valor) {
+            return formatarNumero(valor, Number.isInteger(Number(valor)) ? 0 : 1);
+        }
+
+        // Resumo de cada conta; a mais recente primeiro.
+        function renderizarContasEnergia(acompanhamentos) {
+            const contas = (Array.isArray(acompanhamentos) ? acompanhamentos : [])
+                .slice()
+                .sort((a, b) => String(b.fim).localeCompare(String(a.fim)))
+                .slice(0, 12);
+
+            const tbody = document.getElementById('tabela-energia-contas-body');
+            const tfoot = document.getElementById('tabela-energia-contas-total');
+            if (!contas.length) {
+                tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted">Nenhuma conta cadastrada.</td></tr>';
+                tfoot.innerHTML = '';
+                return;
+            }
+
+            // Soma em centésimos para não acumular erro de ponto flutuante (0,1 + 0,2).
+            const soma = campo => contas.reduce((total, conta) => total + Math.round(Number(conta[campo] || 0) * 100), 0) / 100;
+            tfoot.innerHTML = `
+                <tr class="fw-bold">
+                    <td colspan="2">Total</td>
+                    <td class="text-end">${kwhContaEnergia(soma('energiaGerada'))}</td>
+                    <td class="text-end">${kwhContaEnergia(soma('energiaInjetada'))}</td>
+                    <td class="text-end">${kwhContaEnergia(soma('energiaConsumidaConcessionaria'))}</td>
+                    <td class="text-end">${kwhContaEnergia(soma('energiaConsumidaTotal'))}</td>
+                    <td class="text-end">${formatarMoedaBR(soma('tusd'))}</td>
+                    <td class="text-end">${formatarMoedaBR(soma('te'))}</td>
+                    <td class="text-end">${formatarMoedaBR(soma('bandeira'))}</td>
+                    <td class="text-end">${formatarMoedaBR(soma('iluminacaoPublica'))}</td>
+                    <td class="text-end">${formatarMoedaBR(soma('desconto'))}</td>
+                    <td class="text-end">${formatarMoedaBR(soma('valorTotal'))}</td>
+                </tr>`;
+
+            tbody.innerHTML = contas.map(conta => `
+                <tr>
+                    <td>${formatarData(conta.inicio)}</td>
+                    <td>${formatarData(conta.fim)}</td>
+                    <td class="text-end">${kwhContaEnergia(conta.energiaGerada)}</td>
+                    <td class="text-end">${kwhContaEnergia(conta.energiaInjetada)}</td>
+                    <td class="text-end">${kwhContaEnergia(conta.energiaConsumidaConcessionaria)}</td>
+                    <td class="text-end">${kwhContaEnergia(conta.energiaConsumidaTotal)}</td>
+                    <td class="text-end">${formatarMoedaBR(conta.tusd)}</td>
+                    <td class="text-end">${formatarMoedaBR(conta.te)}</td>
+                    <td class="text-end">${formatarMoedaBR(conta.bandeira)}</td>
+                    <td class="text-end">${formatarMoedaBR(conta.iluminacaoPublica)}</td>
+                    <td class="text-end">${formatarMoedaBR(conta.desconto)}</td>
+                    <td class="text-end fw-semibold">${formatarMoedaBR(conta.valorTotal)}</td>
+                </tr>`).join('');
+        }
+
         async function carregarEnergiaDashboard() {
             destruirGraficosEnergia();
 
@@ -4143,7 +4244,8 @@
                 geracaoParcial,
                 valor12Meses,
                 geracao12MesesAnteriores,
-                consumo12MesesAnteriores
+                consumo12MesesAnteriores,
+                acompanhamentos
             ] = await Promise.all([
                 apiRequest({ url: `${ENERGIA_BASE_URL}geracaoultimos30dias` }),
                 apiRequest({ url: `${ENERGIA_BASE_URL}geracaoultimos12meses` }),
@@ -4154,8 +4256,11 @@
                 apiRequest({ url: `${ENERGIA_BASE_URL}geradosdesdeultimaleitura` }),
                 apiRequest({ url: `${ENERGIA_BASE_URL}valorultimos12meses` }),
                 apiRequest({ url: `${ENERGIA_BASE_URL}geracao12mesesanteriores` }),
-                apiRequest({ url: `${ENERGIA_BASE_URL}consumo12mesesanteriores` })
+                apiRequest({ url: `${ENERGIA_BASE_URL}consumo12mesesanteriores` }),
+                apiRequest({ url: ENERGIA_ACOMPANHAMENTOS_URL })
             ]);
+
+            renderizarContasEnergia(acompanhamentos);
 
             const geracao12Ordenado = ordenarCrescente(geracao12Meses);
             const consumo12Ordenado = ordenarCrescente(consumo12Meses);
