@@ -931,21 +931,26 @@
                 <div class="card filtro-card">
                     <div class="card-body">
                         <div class="row g-3 align-items-end">
-                            <div class="col-12 col-md-4 col-lg-3">
+                            <div class="col-12 col-md-3">
                                 <label for="salario-ano" class="form-label">Ano da folha</label>
                                 <!-- Opções montadas por carregarAnosSalario() a partir do GET /ano -->
                                 <select id="salario-ano" class="form-select">
                                     <option value="" disabled>Selecione o ano</option>
                                 </select>
                             </div>
-                            <div class="col-12 col-md-4 col-lg-3">
+                            <div class="col-12 col-md-3">
                                 <button id="btn-recarregar-salario" class="btn btn-primary w-100" type="button">
                                     Atualizar salário
                                 </button>
                             </div>
-                            <div class="col-12 col-md-4 col-lg-3">
+                            <div class="col-12 col-md-3">
                                 <button id="btn-nova-folha" class="btn btn-outline-primary w-100" type="button">
                                     Nova folha
+                                </button>
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <button id="btn-itens-folha" class="btn btn-outline-secondary w-100" type="button">
+                                    Itens da folha
                                 </button>
                             </div>
                         </div>
@@ -1609,6 +1614,71 @@
     </div>
 
     <!-- MODAL NOVA FOLHA DE SALARIO -->
+    <div class="modal fade" id="modal-itens-folha" tabindex="-1" aria-labelledby="modal-itens-folha-label" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-itens-folha-label">Itens da folha</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="itens-folha-alerta" class="alert hidden" role="alert"></div>
+
+                    <form class="form-validado row g-2 align-items-start mb-3" id="form-item-folha" novalidate>
+                        <div class="col-12 col-md-4">
+                            <label for="item-folha-descricao" class="form-label">Descrição</label>
+                            <input type="text" class="form-control" id="item-folha-descricao" data-tipo="texto" maxlength="255" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-12 col-md-2">
+                            <label for="item-folha-tipo" class="form-label">Tipo</label>
+                            <select class="form-select" id="item-folha-tipo" data-tipo="obrigatorio">
+                                <option value="P">Provento</option>
+                                <option value="D">Desconto</option>
+                            </select>
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label for="item-folha-dica" class="form-label">Dica <span class="small-muted">(opcional)</span></label>
+                            <input type="text" class="form-control" id="item-folha-dica" autocomplete="off">
+                        </div>
+                        <div class="col-12 col-md-3 pt-md-4 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-fill mt-md-1" id="item-folha-salvar">Adicionar</button>
+                            <button type="button" class="btn btn-outline-secondary mt-md-1 hidden" id="item-folha-cancelar">Cancelar</button>
+                        </div>
+                    </form>
+
+                    <ul class="nav nav-tabs mb-2" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#itens-folha-pane-P" type="button" role="tab">Proventos <span class="badge text-bg-light border" id="itens-folha-qtd-P"></span></button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#itens-folha-pane-D" type="button" role="tab">Descontos <span class="badge text-bg-light border" id="itens-folha-qtd-D"></span></button>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="itens-folha-pane-P" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped align-middle">
+                                    <thead><tr><th>Descrição</th><th></th></tr></thead>
+                                    <tbody id="itens-folha-lista-P"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="itens-folha-pane-D" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped align-middle">
+                                    <thead><tr><th>Descrição</th><th></th></tr></thead>
+                                    <tbody id="itens-folha-lista-D"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="modal-nova-folha" tabindex="-1" aria-labelledby="modal-nova-folha-label" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <form class="modal-content form-validado" id="form-nova-folha" novalidate>
@@ -4953,6 +5023,135 @@
             atualizarTotaisFolha();
         }
 
+        // ---------- itens da folha (proventos e descontos)
+
+        // Todos os itens, desativados inclusive; a nova folha só oferece os ativos.
+        let itensFolha = [];
+        let itemFolhaEmEdicao = null;
+
+        function mostrarAlertaItensFolha(mensagem, tipo) {
+            const alerta = document.getElementById('itens-folha-alerta');
+            alerta.className = `alert alert-${tipo}`;
+            alerta.textContent = mensagem;
+            alerta.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            sumirSeSucesso(alerta);
+        }
+
+        function esconderAlertaItensFolha() {
+            const alerta = document.getElementById('itens-folha-alerta');
+            alerta.textContent = '';
+            alerta.classList.add('hidden');
+        }
+
+        async function carregarItensFolha() {
+            itensFolha = await apiRequest({ url: SALARIO_TIPO_ITEM_URL.replace(/\/$/, '') }) || [];
+            renderizarItensFolha();
+        }
+
+        function renderizarItensFolha() {
+            ['P', 'D'].forEach(tipo => {
+                const doTipo = itensFolha.filter(item => item.tipo === tipo)
+                    .sort((a, b) => (b.ativo - a.ativo) || String(a.descricao).localeCompare(String(b.descricao), 'pt-BR'));
+                document.getElementById(`itens-folha-qtd-${tipo}`).textContent = doTipo.filter(item => item.ativo).length;
+                document.getElementById(`itens-folha-lista-${tipo}`).innerHTML = doTipo.length ? doTipo.map(item => `
+                    <tr class="${item.ativo ? '' : 'text-muted'}">
+                        <td>${escapeHtml(item.descricao)}${item.ativo ? '' : ' <span class="badge text-bg-secondary">Desativado</span>'}
+                            ${item.dica ? `<div class="small-muted">${escapeHtml(item.dica)}</div>` : ''}</td>
+                        <td class="text-end text-nowrap">
+                            <button type="button" class="btn btn-sm btn-outline-primary" data-item-folha-acao="editar" data-id="${item.id}">Editar</button>
+                            ${item.ativo
+                                ? `<button type="button" class="btn btn-sm btn-outline-secondary" data-item-folha-acao="desativar" data-id="${item.id}">Desativar</button>`
+                                : `<button type="button" class="btn btn-sm btn-outline-success" data-item-folha-acao="ativar" data-id="${item.id}">Ativar</button>`}
+                        </td>
+                    </tr>`).join('')
+                    : `<tr><td colspan="2" class="text-muted">Nenhum ${tipo === 'P' ? 'provento' : 'desconto'} cadastrado.</td></tr>`;
+            });
+        }
+
+        function cancelarEdicaoItemFolha() {
+            itemFolhaEmEdicao = null;
+            const form = document.getElementById('form-item-folha');
+            form.reset();
+            form.querySelectorAll('[data-tipo]').forEach(campo => marcarCampo(campo, null));
+            document.getElementById('item-folha-tipo').value = document.querySelector('#modal-itens-folha .nav-link.active')?.dataset.bsTarget?.slice(-1) || 'P';
+            document.getElementById('item-folha-salvar').textContent = 'Adicionar';
+            document.getElementById('item-folha-cancelar').classList.add('hidden');
+        }
+
+        function editarItemFolha(id) {
+            const item = itensFolha.find(i => i.id === id);
+            if (!item) return;
+            cancelarEdicaoItemFolha();
+            itemFolhaEmEdicao = item;
+            document.getElementById('item-folha-descricao').value = item.descricao;
+            document.getElementById('item-folha-tipo').value = item.tipo;
+            document.getElementById('item-folha-dica').value = item.dica || '';
+            document.getElementById('item-folha-salvar').textContent = 'Salvar';
+            document.getElementById('item-folha-cancelar').classList.remove('hidden');
+            document.getElementById('item-folha-descricao').focus();
+        }
+
+        async function salvarItemFolha() {
+            esconderAlertaItensFolha();
+            const form = document.getElementById('form-item-folha');
+            if (!validarFormularioGastos(form)) return;
+
+            const edicao = itemFolhaEmEdicao;
+            const tipo = document.getElementById('item-folha-tipo').value;
+            const botao = document.getElementById('item-folha-salvar');
+            botao.disabled = true;
+            try {
+                await apiRequest({
+                    url: `${SALARIO_TIPO_ITEM_URL}${edicao ? edicao.id : ''}`.replace(/\/$/, ''),
+                    method: edicao ? 'PUT' : 'POST',
+                    body: {
+                        descricao: document.getElementById('item-folha-descricao').value.trim(),
+                        dica: document.getElementById('item-folha-dica').value.trim() || null,
+                        tipo
+                    }
+                });
+                // A nova folha relê os itens na próxima vez que abrir.
+                tiposSalario = null;
+                cancelarEdicaoItemFolha();
+                await carregarItensFolha();
+                bootstrap.Tab.getOrCreateInstance(document.querySelector(`#modal-itens-folha [data-bs-target="#itens-folha-pane-${tipo}"]`)).show();
+                mostrarAlertaItensFolha(`${tipo === 'P' ? 'Provento' : 'Desconto'} ${edicao ? 'alterado' : 'cadastrado'}.`, 'success');
+            } catch (error) {
+                console.error(error);
+                if (!sessaoExpirouGastos(error)) mostrarAlertaItensFolha(error.message || 'Não foi possível salvar.', 'danger');
+            } finally {
+                botao.disabled = false;
+            }
+        }
+
+        async function alterarAtivoItemFolha(id, acao) {
+            esconderAlertaItensFolha();
+            try {
+                await apiRequest({ url: `${SALARIO_TIPO_ITEM_URL}${id}/${acao}`, method: 'PUT' });
+                tiposSalario = null;
+                if (itemFolhaEmEdicao?.id === id) cancelarEdicaoItemFolha();
+                await carregarItensFolha();
+            } catch (error) {
+                console.error(error);
+                if (!sessaoExpirouGastos(error)) mostrarAlertaItensFolha(error.message || 'Não foi possível alterar.', 'danger');
+            }
+        }
+
+        async function abrirItensFolha() {
+            esconderAlertaSalario();
+            esconderAlertaItensFolha();
+            cancelarEdicaoItemFolha();
+            document.getElementById('itens-folha-lista-P').innerHTML = '<tr><td colspan="2" class="text-muted">Carregando...</td></tr>';
+            document.getElementById('itens-folha-lista-D').innerHTML = '';
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-itens-folha')).show();
+            try {
+                await carregarItensFolha();
+            } catch (error) {
+                console.error(error);
+                if (!sessaoExpirouGastos(error)) mostrarAlertaItensFolha(error.message || 'Não foi possível carregar os itens.', 'danger');
+            }
+        }
+
         async function abrirNovaFolha() {
             esconderAlertaSalario();
             clearDashboardError();
@@ -6081,7 +6280,7 @@
         });
 
         // Máscaras e validação campo a campo valem para todos os formulários de cadastro.
-        ['form-novo-acompanhamento', 'form-nova-folha', 'form-admin-usuario', 'form-troca-senha', ...FORMULARIOS_GASTOS].forEach(idFormulario => {
+        ['form-novo-acompanhamento', 'form-nova-folha', 'form-item-folha', 'form-admin-usuario', 'form-troca-senha', ...FORMULARIOS_GASTOS].forEach(idFormulario => {
             const form = document.getElementById(idFormulario);
 
             form.addEventListener('input', function(event) {
@@ -6114,6 +6313,33 @@
         });
 
         document.getElementById('btn-nova-folha').addEventListener('click', abrirNovaFolha);
+
+        document.getElementById('btn-itens-folha').addEventListener('click', abrirItensFolha);
+
+        document.getElementById('form-item-folha').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            await salvarItemFolha();
+        });
+
+        document.getElementById('item-folha-cancelar').addEventListener('click', cancelarEdicaoItemFolha);
+
+        document.getElementById('modal-itens-folha').addEventListener('click', function(event) {
+            const botao = event.target.closest('[data-item-folha-acao]');
+            if (!botao) return;
+            const id = Number(botao.dataset.id);
+            if (botao.dataset.itemFolhaAcao === 'editar') {
+                editarItemFolha(id);
+            } else {
+                alterarAtivoItemFolha(id, botao.dataset.itemFolhaAcao);
+            }
+        });
+
+        // Item novo nasce no tipo da aba aberta, se não houver edição em andamento.
+        document.querySelectorAll('#modal-itens-folha [data-bs-toggle="tab"]').forEach(aba => {
+            aba.addEventListener('shown.bs.tab', () => {
+                if (!itemFolhaEmEdicao) document.getElementById('item-folha-tipo').value = aba.dataset.bsTarget.slice(-1);
+            });
+        });
 
         document.getElementById('form-nova-folha').addEventListener('submit', async function(event) {
             event.preventDefault();
