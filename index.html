@@ -305,7 +305,8 @@
             .chip-sintoma,
             .remedio-card .btn,
             .botao-efetivar,
-            #supermercado-paginacao .page-link {
+            #supermercado-paginacao .page-link,
+            #tabela-supermercado-pendentes-body .btn {
                 min-height: 44px;
                 display: inline-flex;
                 align-items: center;
@@ -1156,6 +1157,36 @@
 
             <!-- ABA SUPERMERCADO -->
             <div class="tab-pane fade" id="tab-supermercado" role="tabpanel" aria-labelledby="supermercado-tab">
+                <div class="card table-card mb-4">
+                    <div class="card-body">
+                        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2 mb-3">
+                            <div>
+                                <h5 class="mb-1">Aguardando processamento</h5>
+                                <div class="item-dica">Notas enviadas que o serviço ainda não conseguiu ler na SEFAZ. Ele tenta de novo periodicamente.</div>
+                            </div>
+                            <div class="small-muted" id="supermercado-pendentes-total">0 notas</div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-striped align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="d-none d-md-table-cell">Enviada em</th>
+                                        <th>Nota fiscal</th>
+                                        <th class="d-none d-md-table-cell text-end">Tentativas</th>
+                                        <th class="text-end"><span class="visually-hidden">Ações</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-supermercado-pendentes-body">
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">Nenhum dado carregado.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card table-card">
                     <div class="card-body">
                         <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2 mb-3">
@@ -2534,6 +2565,7 @@
         const SUPERMERCADO_COMPRAS_URL = `${API_BASE}/supermercado-service/compras`;
         const SUPERMERCADO_COMPRA_DETALHE_URL = `${API_BASE}/supermercado-service/compras/`;
         const COMPRAS_POR_PAGINA = 20;
+        const SUPERMERCADO_NFE_URL = `${API_BASE}/supermercado-service/nfe`;
 
         const REMEDIOS_URL = `${API_BASE}/remedios-service/remedios`;
         const REMEDIOS_VENCENDO_URL = `${API_BASE}/remedios-service/remedios/vencendo`;
@@ -5567,6 +5599,12 @@
             document.getElementById('supermercado-total-registros').textContent = '0 registros';
             document.getElementById('supermercado-paginacao').innerHTML = '';
             document.getElementById('supermercado-pagina-info').textContent = '--';
+            document.getElementById('tabela-supermercado-pendentes-body').innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center text-muted">Nenhum dado carregado.</td>
+                </tr>
+            `;
+            document.getElementById('supermercado-pendentes-total').textContent = '0 notas';
         }
 
         // A página pode chegar no formato clássico do PageImpl (metadados na raiz) ou
@@ -5594,11 +5632,81 @@
                 sort: 'data,desc'
             });
 
-            const resposta = await apiRequest({ url: `${SUPERMERCADO_COMPRAS_URL}?${parametros}` });
+            const [resposta, pendentes] = await Promise.all([
+                apiRequest({ url: `${SUPERMERCADO_COMPRAS_URL}?${parametros}` }),
+                apiRequest({ url: SUPERMERCADO_NFE_URL })
+            ]);
             const paginaCompras = normalizarPaginaCompras(resposta);
 
+            renderizarNFEsPendentes(Array.isArray(pendentes) ? pendentes : []);
             renderizarTabelaSupermercado(paginaCompras);
             renderizarPaginacaoSupermercado(paginaCompras);
+        }
+
+        // NFEs enviadas que a tarefa agendada ainda não leu. "criado" é UTC.
+        function renderizarNFEsPendentes(nfes) {
+            const tbody = document.getElementById('tabela-supermercado-pendentes-body');
+
+            document.getElementById('supermercado-pendentes-total').textContent =
+                nfes.length === 1 ? '1 nota' : `${nfes.length} notas`;
+
+            if (!nfes.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">Nenhuma nota aguardando processamento.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // A chave de acesso vem no parâmetro "p" do QR Code, antes do primeiro "|".
+            // Em grupos de 4, como no cupom, ela quebra entre os grupos no celular.
+            tbody.innerHTML = nfes.map(nfe => {
+                const chave = String(nfe.url ?? '').split('p=')[1]?.split('|')[0];
+                const textoChave = /^\d{44}$/.test(chave ?? '') ? chave.match(/\d{4}/g).join(' ') : (nfe.url || '--');
+                const enviada = formatarDataHoraUTC(nfe.criado);
+                const tentativas = formatarNumero(nfe.tentativas, 0);
+                return `
+                    <tr>
+                        <td class="d-none d-md-table-cell text-nowrap">${enviada}</td>
+                        <td>
+                            <a class="font-monospace small text-break" href="${escapeHtml(nfe.url ?? '')}" target="_blank" rel="noopener noreferrer"
+                               title="${escapeHtml(nfe.url ?? '')}">${escapeHtml(textoChave)}</a>
+                            <div class="d-md-none small-muted mt-1">${enviada} · ${tentativas} tentativa(s)</div>
+                        </td>
+                        <td class="d-none d-md-table-cell text-end">${tentativas}</td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-sm btn-outline-danger" data-apagar-nfe="${escapeHtml(nfe.id ?? '')}">Apagar</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function apagarNFEPendente(botao) {
+            if (!confirm('Apagar esta nota fiscal? Ela deixará de ser processada.')) return;
+
+            clearDashboardError();
+            botao.disabled = true;
+
+            try {
+                await apiRequest({ url: `${SUPERMERCADO_NFE_URL}/${encodeURIComponent(botao.dataset.apagarNfe)}`, method: 'DELETE' });
+                renderizarNFEsPendentes(await apiRequest({ url: SUPERMERCADO_NFE_URL }) || []);
+            } catch (error) {
+                console.error(error);
+                botao.disabled = false;
+
+                if (
+                    String(error.message || '').includes('Sessão expirada') ||
+                    String(error.message || '').includes('autenticado')
+                ) {
+                    limparSessaoCompleta();
+                    mostrarLogin();
+                    return;
+                }
+
+                setDashboardError(error.message || 'Não foi possível apagar a nota fiscal.');
+            }
         }
 
         function renderizarTabelaSupermercado(paginaCompras) {
@@ -6518,6 +6626,13 @@
             }
 
             await abrirDetalheCompra(idCompra);
+        });
+
+        document.getElementById('tabela-supermercado-pendentes-body').addEventListener('click', async function(event) {
+            const botao = event.target.closest('button[data-apagar-nfe]');
+            if (!botao || botao.disabled) return;
+
+            await apagarNFEPendente(botao);
         });
 
         document.getElementById('supermercado-paginacao').addEventListener('click', async function(event) {
