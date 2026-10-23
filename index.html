@@ -1142,6 +1142,7 @@
                                         <th class="text-end">Proventos</th>
                                         <th class="text-end">Descontos</th>
                                         <th class="text-end">Líquido</th>
+                                        <th aria-label="Ações"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="tabela-salario-body">
@@ -2731,7 +2732,7 @@
             const tbody = document.getElementById('tabela-salario-body');
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="5" class="text-center text-muted">Nenhum dado carregado.</td>
+                    <td colspan="6" class="text-center text-muted">Nenhum dado carregado.</td>
                 </tr>
             `;
             document.getElementById('salario-total-registros').textContent = '0 registros';
@@ -2803,6 +2804,9 @@
                     <td class="text-end">${formatarMoedaBR(parseMoedaBR(folha.totalProventos))}</td>
                     <td class="text-end">${formatarMoedaBR(parseMoedaBR(folha.totalDescontos))}</td>
                     <td class="text-end">${formatarMoedaBR(parseMoedaBR(folha.totalLiquido))}</td>
+                    <td class="text-end">
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-editar-folha="${escapeHtml(folha.id ?? '')}">Editar</button>
+                    </td>
                 </tr>
             `).join('');
         }
@@ -5029,8 +5033,13 @@
         }
 
         // tipo é 'P' (provento) ou 'D' (desconto), como no TipoItem do backend.
-        function adicionarItemFolha(tipo, tipoItemId = '') {
-            const opcoes = tiposSalario[tipo]
+        // tipoItem é o da folha em edição: se foi desativado, entra só nesta linha.
+        function adicionarItemFolha(tipo, tipoItemId = '', tipoItem = null) {
+            const lista = tiposSalario[tipo];
+            const desativado = tipoItem && !lista.some(item => String(item.id) === String(tipoItem.id))
+                ? [{ ...tipoItem, descricao: `${tipoItem.descricao} (desativado)` }]
+                : [];
+            const opcoes = [...lista, ...desativado]
                 .map(item => `<option value="${item.id}" title="${escapeHtml(item.dica || '')}">${escapeHtml(item.descricao)}</option>`)
                 .join('');
 
@@ -5057,7 +5066,7 @@
                 </div>
             `;
 
-            // Um tipo que foi desativado não está na lista; o select fica vazio para escolher outro.
+            // Ao copiar a última folha, um tipo desativado não está na lista e o select fica vazio.
             linha.querySelector('[data-campo="tipoItemId"]').value = String(tipoItemId);
 
             document.getElementById(`folha-itens-${tipo}`).appendChild(linha);
@@ -5121,7 +5130,7 @@
             // O que veio da última folha (data-preenchido) não conta como digitado.
             const algoDigitado = [...document.querySelectorAll('#form-nova-folha .folha-item input')]
                 .some(input => input.value.trim() && input.value !== input.dataset.preenchido);
-            if (!tipoFolhaId || algoDigitado) return;
+            if (!tipoFolhaId || algoDigitado || folhaEmEdicao) return;
 
             origem.textContent = 'Buscando os itens da última folha deste tipo...';
 
@@ -5289,36 +5298,76 @@
             }
         }
 
+        // Folha aberta para edição ({ id, dataPagamento, ... } do GET folha/{id}); null na nova.
+        let folhaEmEdicao = null;
+
         async function abrirNovaFolha() {
+            await abrirFormularioFolha(null);
+        }
+
+        async function abrirEditarFolha(idFolha) {
+            await abrirFormularioFolha(idFolha);
+        }
+
+        async function abrirFormularioFolha(idFolha) {
             esconderAlertaSalario();
             clearDashboardError();
             toggleDashboardLoading(true);
 
+            let folha = null;
             try {
-                await carregarTiposSalario();
+                [, folha] = await Promise.all([
+                    carregarTiposSalario(),
+                    idFolha ? apiRequest({ url: `${SALARIO_DETALHE_URL}${idFolha}` }) : null
+                ]);
             } catch (error) {
                 console.error(error);
                 if (!sessaoExpirou(error)) {
-                    setDashboardError(error.message || 'Não foi possível carregar os tipos de folha.');
+                    setDashboardError(error.message || (idFolha ? 'Não foi possível carregar a folha.' : 'Não foi possível carregar os tipos de folha.'));
                 }
                 return;
             } finally {
                 toggleDashboardLoading(false);
             }
 
+            folhaEmEdicao = folha;
+
             const form = document.getElementById('form-nova-folha');
             form.reset();
             form.querySelectorAll('[data-tipo]').forEach(campo => marcarCampo(campo, null));
 
+            // Um tipo de folha desativado continua escolhível na folha que já o usa.
+            const tiposFolha = [...tiposSalario.folha];
+            if (folha?.tipoFolha && !tiposFolha.some(tipo => String(tipo.id) === String(folha.tipoFolha.id))) {
+                tiposFolha.push({ ...folha.tipoFolha, descricao: `${folha.tipoFolha.descricao} (desativado)` });
+            }
             document.getElementById('folha-tipoFolha').innerHTML =
                 '<option value="">Selecione o tipo</option>' +
-                tiposSalario.folha.map(tipo => `<option value="${tipo.id}">${escapeHtml(tipo.descricao)}</option>`).join('');
+                tiposFolha.map(tipo => `<option value="${tipo.id}">${escapeHtml(tipo.descricao)}</option>`).join('');
 
             ['P', 'D'].forEach(tipo => {
                 document.getElementById(`folha-itens-${tipo}`).innerHTML = '';
-                adicionarItemFolha(tipo);
             });
 
+            if (folha) {
+                document.getElementById('folha-dataPagamento').value = folha.dataPagamento || '';
+                document.getElementById('folha-tipoFolha').value = String(folha.tipoFolha?.id ?? '');
+
+                (folha.items || []).forEach(item => {
+                    const linha = adicionarItemFolha(item.tipoItem?.tipo === 'D' ? 'D' : 'P', item.tipoItem?.id, item.tipoItem);
+                    // A API devolve unidade vazia como "0,00": fica vazia, como foi digitada.
+                    const unidade = mascararMoedaBR(item.unidade || '');
+                    campoDaLinha(linha, 'unidade').value = unidade === '0,00' ? '' : unidade;
+                    campoDaLinha(linha, 'valor').value = mascararMoedaBR(item.valor || '');
+                });
+                ['P', 'D'].forEach(tipo => {
+                    if (!document.querySelector(`#folha-itens-${tipo} .folha-item`)) adicionarItemFolha(tipo);
+                });
+            } else {
+                ['P', 'D'].forEach(tipo => adicionarItemFolha(tipo));
+            }
+
+            document.getElementById('modal-nova-folha-label').textContent = folha ? `Editar folha #${folha.id}` : 'Nova folha';
             document.getElementById('folha-itens-origem').textContent = '';
             esconderAlertaFolha();
             atualizarTotaisFolha();
@@ -5379,23 +5428,26 @@
             botaoSalvar.disabled = true;
             botaoSalvar.textContent = 'Salvando...';
 
+            const edicao = folhaEmEdicao;
+
             try {
                 const folha = await apiRequest({
-                    url: SALARIO_FOLHA_URL,
-                    method: 'POST',
+                    url: edicao ? `${SALARIO_FOLHA_URL}/${edicao.id}` : SALARIO_FOLHA_URL,
+                    method: edicao ? 'PUT' : 'POST',
                     body: { dataPagamento, tipoFolhaId: Number(selectTipo.value), itens }
                 });
 
                 modal.hide();
 
-                // Mostra o ano da folha nova, que pode não ser o selecionado; se for um
-                // ano novo, o backend já criou o registro e ele vem no GET /ano.
+                // Mostra o ano da folha, que pode não ser o selecionado; se for um ano
+                // novo, o backend já criou o registro e ele vem no GET /ano (e, se a
+                // edição esvaziou o ano anterior, ele some da lista).
                 salvarAnoSalario(dataPagamento.slice(6));
 
                 const liquido = folha?.totalLiquido != null
                     ? formatarMoedaBR(parseMoedaBR(folha.totalLiquido))
                     : document.getElementById('folha-total-liquido').textContent;
-                mostrarAlertaSalario(`Folha de ${dataPagamento} (${tipoFolha}) cadastrada. Líquido: ${liquido}.`);
+                mostrarAlertaSalario(`Folha de ${dataPagamento} (${tipoFolha}) ${edicao ? 'alterada' : 'cadastrada'}. Líquido: ${liquido}.`);
 
                 await carregarSomenteSalario();
             } catch (error) {
@@ -6603,6 +6655,12 @@
         }
 
         document.getElementById('tabela-salario-body').addEventListener('click', async function(event) {
+            const editar = event.target.closest('[data-editar-folha]');
+            if (editar) {
+                await abrirEditarFolha(editar.dataset.editarFolha);
+                return;
+            }
+
             const linha = event.target.closest('tr[data-folha-id]');
             if (!linha) return;
 
