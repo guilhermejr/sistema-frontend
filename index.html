@@ -8164,7 +8164,7 @@
                     <div class="col-4"><div class="small-muted">${rotuloBanco}</div><div class="fw-bold">${valorBanco == null ? '--' : formatarMoedaBR(valorBanco)}</div></div>
                     <div class="col-4"><div class="small-muted">Diferença</div><div class="fw-bold ${diferenca === 0 ? 'valor-receita' : 'valor-despesa'}">${diferenca == null ? '--' : formatarMoedaBR(diferenca)}</div></div>
                 </div>
-                <div class="item-dica text-center mt-1">${pendentes ? `${pendentes} transaç${pendentes === 1 ? 'ão' : 'ões'} do banco a revisar.` : 'Tudo revisado.'}${aberta ? ' Fatura aberta: o banco ainda pode lançar compras e parcelas.' : ''}</div>`;
+                <div class="item-dica text-center mt-1">${pendentes ? `${pendentes} transaç${pendentes === 1 ? 'ão' : 'ões'} do banco a revisar.` : 'Tudo revisado.'}${aberta ? ' Fatura aberta: o banco ainda pode lançar compras e parcelas.' : ''}</div>${conta ? blocoRendimentoGastos(gastosConciliacao.dados) : ''}`;
 
             const htmlBateu = secaoConciliacaoGastos('Bateu', bateu.length, 'text-bg-success',
                 conta ? 'Mesmo valor e data próxima (até 10 dias). Confirmar dá os lançamentos como realizados na data do banco.'
@@ -8233,6 +8233,22 @@
 
             // Categoria sugerida (a usada da última vez com a mesma categoria do banco).
             criar.forEach(l => { if (l.categoriaSugeridaId) document.getElementById(`gk-categoria-${l.transacao.id}`).value = l.categoriaSugeridaId; });
+        }
+
+        // Conta com tudo conciliado e o banco acima do sistema: a diferença é o rendimento da
+        // aplicação automática (o saldo do banco já o conta, o extrato não traz). O serviço
+        // decide quando oferecer (dados.rendimento) e calcula o valor de novo ao lançar.
+        function blocoRendimentoGastos(dados) {
+            if (!(dados.rendimento > 0)) return '';
+            const sugerida = dados.categoriaRendimentoId
+                ?? gastosDados.categorias.find(c => c.tipo === 'R' && c.ativo && /^rendimento/i.test(c.descricao))?.id ?? '';
+            return `<div class="d-flex flex-wrap justify-content-center align-items-center gap-2 mt-2">
+                    <span class="small text-center">O banco está ${formatarMoedaBR(dados.rendimento)} acima: o rendimento da aplicação automática.</span>
+                    <span class="d-flex gap-2">
+                        <select class="form-select form-select-sm w-auto" id="gk-rendimento-categoria" aria-label="Categoria do rendimento">${opcoesCategoriasGastos('R')}</select>
+                        <button type="button" class="btn btn-sm btn-outline-success text-nowrap" data-gk-rendimento>Lançar como rendimento</button>
+                    </span>
+                </div>`.replace(`<option value="${sugerida}">`, `<option value="${sugerida}" selected>`);
         }
 
         // Conta: quando foi a última busca e o botão de buscar de novo; antes da ligação, o aviso.
@@ -9312,6 +9328,16 @@
                     return;
                 }
                 acaoConciliacaoGastos({ url: `${transacoes}/${transacaoId}/criar`, method: 'POST', body: { descricao, categoriaId } }, 'Lançamento criado.', alvo);
+            } else if (alvo.matches('[data-gk-rendimento]')) {
+                const categoriaId = Number(document.getElementById('gk-rendimento-categoria').value);
+                if (!categoriaId) {
+                    mostrarAlertaModalGastos('gk-alerta', 'Escolha a categoria do rendimento.', 'danger');
+                    return;
+                }
+                const valor = formatarMoedaBR(gastosConciliacao.dados.rendimento);
+                if (!confirm(`Lançar ${valor} de rendimento, realizado hoje, na conta?`)) return;
+                acaoConciliacaoGastos({ url: `${GASTOS_URL}/contas/${id}/banco/rendimento`, method: 'POST', body: { categoriaId } },
+                    `Rendimento de ${valor} lançado.`, alvo);
             } else if (alvo.dataset.gkIgnorar) {
                 acaoConciliacaoGastos({ url: `${transacoes}/${alvo.dataset.gkIgnorar}/ignorar`, method: 'POST' }, 'Transação ignorada.', alvo);
             } else if (alvo.dataset.gkDesfazer) {
