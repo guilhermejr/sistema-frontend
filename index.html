@@ -8167,7 +8167,7 @@
                 <div class="item-dica text-center mt-1">${pendentes ? `${pendentes} transaç${pendentes === 1 ? 'ão' : 'ões'} do banco a revisar.` : 'Tudo revisado.'}${aberta ? ' Fatura aberta: o banco ainda pode lançar compras e parcelas.' : ''}</div>${conta ? blocoRendimentoGastos(gastosConciliacao.dados) : ''}`;
 
             const htmlBateu = secaoConciliacaoGastos('Bateu', bateu.length, 'text-bg-success',
-                conta ? 'Mesmo valor e data próxima (até 10 dias). Confirmar dá os lançamentos como realizados na data do banco.'
+                conta ? 'Mesmo valor e data próxima (até 15 dias). Confirmar dá os lançamentos como realizados na data do banco.'
                     : 'Mesmo valor nos dois lados (nas parcelas, o mesmo número de parcelas restantes).',
                 `<details><summary class="small">Ver as ${bateu.length}</summary><ul class="list-group list-group-flush lista-gastos">${bateu.map(l =>
                     linhaConciliacaoGastos(l.transacao, `↔ ${textoLancamentoConciliacao(l.candidatos[0])}`)).join('')}</ul></details>`,
