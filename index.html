@@ -2108,6 +2108,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-danger me-auto hidden" id="gl-excluir">Excluir</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-outline-primary" id="gl-salvar-novo">Salvar e novo</button>
                     <button type="submit" class="btn btn-primary" id="gl-salvar">Salvar</button>
                 </div>
             </form>
@@ -7622,6 +7623,7 @@
                 ? 'Despesa/receita fixa: aplicar a'
                 : `Parcela ${lancamento?.parcela}/${lancamento?.totalParcelas}: aplicar a`;
             document.getElementById('gl-excluir').classList.toggle('hidden', !lancamento);
+            document.getElementById('gl-salvar-novo').classList.toggle('hidden', Boolean(lancamento));
 
             // Compra de cartão já paga na fatura: só leitura até estornar o pagamento.
             const pagoNaFatura = Boolean(lancamento?.cartao && lancamento.realizado);
@@ -7776,7 +7778,22 @@
             atualizarFormLancamentoGastos();
         }
 
-        async function salvarLancamentoGastos() {
+        // "Salvar e novo" (só na inclusão): o modal fica aberto para o próximo lançamento,
+        // com a mesma data, conta/cartão e categoria — o que costuma se repetir numa
+        // sequência — e o resto limpo.
+        function prepararProximoLancamentoGastos() {
+            ['gl-descricao', 'gl-valor', 'gl-parcelas'].forEach(id => {
+                const campo = document.getElementById(id);
+                campo.value = '';
+                marcarCampo(campo, null);
+            });
+            document.getElementById('gl-repeticao-unica').checked = true;
+            Object.assign(gastosLancamento, { realizadoManual: false, mesesFatura: 0, chaveFatura: null });
+            atualizarFormLancamentoGastos();
+            document.getElementById('gl-descricao').focus();
+        }
+
+        async function salvarLancamentoGastos(continuar = false) {
             esconderAlertaModalGastos('gl-alerta');
             const form = document.getElementById('form-gastos-lancamento');
             if (!validarFormularioGastos(form)) return;
@@ -7802,8 +7819,10 @@
             };
 
             const escopo = document.querySelector('input[name="gl-escopo"]:checked').value;
-            const botao = document.getElementById('gl-salvar');
-            botao.disabled = true;
+            const botao = document.getElementById(continuar ? 'gl-salvar-novo' : 'gl-salvar');
+            const texto = botao.textContent;
+            const botoes = [document.getElementById('gl-salvar'), document.getElementById('gl-salvar-novo')];
+            botoes.forEach(b => { b.disabled = true; });
             botao.textContent = 'Salvando...';
 
             try {
@@ -7813,16 +7832,23 @@
                     await apiRequest({ url: `${GASTOS_URL}/lancamentos`, method: 'POST', body: corpo });
                 }
 
-                fecharModalGastos('modal-gastos-lancamento');
                 const nome = tipo === 'D' ? 'Despesa' : 'Receita';
-                mostrarAlertaGastos(`${nome} "${corpo.descricao}" ${edicao ? 'alterada' : 'lançada'}.`);
+                const mensagem = `${nome} "${corpo.descricao}" ${edicao ? 'alterada' : 'lançada'}.`;
+                if (continuar) {
+                    prepararProximoLancamentoGastos();
+                    mostrarAlertaModalGastos('gl-alerta', mensagem, 'success');
+                } else {
+                    fecharModalGastos('modal-gastos-lancamento');
+                    mostrarAlertaGastos(mensagem);
+                }
                 await recarregarGastos();
             } catch (error) {
                 console.error(error);
-                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gl-alerta', error.message || 'Não foi possível salvar.');
+                // A cor sempre: depois de um "Salvar e novo" o alerta está verde.
+                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gl-alerta', error.message || 'Não foi possível salvar.', 'danger');
             } finally {
-                botao.disabled = false;
-                botao.textContent = 'Salvar';
+                botoes.forEach(b => { b.disabled = false; });
+                botao.textContent = texto;
             }
         }
 
@@ -7846,7 +7872,7 @@
                 await recarregarGastos();
             } catch (error) {
                 console.error(error);
-                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gl-alerta', error.message || 'Não foi possível excluir.');
+                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gl-alerta', error.message || 'Não foi possível excluir.', 'danger');
             }
         }
 
@@ -9216,6 +9242,7 @@
             if (['gl-valor', 'gl-parcelas', 'gl-data'].includes(event.target.id)) atualizarFormLancamentoGastos();
         });
         document.getElementById('gl-excluir').addEventListener('click', excluirLancamentoGastos);
+        document.getElementById('gl-salvar-novo').addEventListener('click', () => salvarLancamentoGastos(true));
         document.getElementById('gl-fatura-anterior').addEventListener('click', () => mudarFaturaLancamentoGastos(-1));
         document.getElementById('gl-fatura-proxima').addEventListener('click', () => mudarFaturaLancamentoGastos(1));
         // Ao escolher Parcelada o campo já vem com o mínimo, para só ajustar nas setas. Só
