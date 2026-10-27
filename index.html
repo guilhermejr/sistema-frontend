@@ -8147,7 +8147,7 @@
             const { linhas, semPar } = gastosConciliacao.dados;
             const por = tipo => linhas.filter(l => l.sugestao === tipo);
             const bateu = por('CONCILIAR'), diferente = por('VALOR_DIFERENTE'), escolher = por('ESCOLHER'),
-                criar = por('CRIAR'), ignorar = por('IGNORAR'), revisadas = linhas.filter(l => !l.sugestao);
+                criar = por('CRIAR'), ignorar = por('IGNORAR'), pagarFatura = por('PAGAR_FATURA'), revisadas = linhas.filter(l => !l.sugestao);
             const fatura = gastosFatura?.dados;
             const aberta = !conta && fatura && fatura.vencimento.startsWith(`${gastosConciliacao.ano}-${String(gastosConciliacao.mes).padStart(2, '0')}`) && fatura.status === 'ABERTA';
             const pendentes = linhas.length - revisadas.length;
@@ -8201,6 +8201,22 @@
                          <button type="button" class="btn btn-sm btn-outline-secondary" data-gk-ignorar="${t.id}">Ignorar</button>`);
                 }).join('')}</ul>`);
 
+            // Só na conta: a saída tem o valor pendente exato de uma fatura não paga. Pagar a
+            // fatura cria o pagamento (na data e com o valor do banco) e o liga à transação.
+            const htmlPagarFatura = secaoConciliacaoGastos('Pagar fatura', pagarFatura.length, 'text-bg-primary',
+                'O valor é o que falta pagar numa fatura. Pagar registra o pagamento da fatura, saindo desta conta na data do banco, e já liga os dois.',
+                `<ul class="list-group list-group-flush lista-gastos">${pagarFatura.map(l => {
+                    const t = l.transacao, unica = l.faturas.length === 1;
+                    const nomeFatura = f => `${escapeHtml(f.cartaoNome)} · vence ${formatarDataISO(f.vencimento)}`;
+                    const valorFatura = f => `${f.cartaoId}:${f.vencimento}`;
+                    return linhaConciliacaoGastos(t, unica ? `Fatura ${nomeFatura(l.faturas[0])}` : '',
+                        `${unica ? `<input type="hidden" id="gk-fatura-${t.id}" value="${valorFatura(l.faturas[0])}">`
+                            : `<select class="form-select form-select-sm w-auto mw-100" id="gk-fatura-${t.id}" aria-label="Fatura">${l.faturas.map(f =>
+                                `<option value="${valorFatura(f)}">${nomeFatura(f)}</option>`).join('')}</select>`}
+                         <button type="button" class="btn btn-sm btn-primary" data-gk-pagar-fatura="${t.id}">Pagar fatura</button>
+                         <button type="button" class="btn btn-sm btn-outline-secondary" data-gk-ignorar="${t.id}">Ignorar</button>`);
+                }).join('')}</ul>`);
+
             const htmlIgnorar = secaoConciliacaoGastos(conta ? 'Aplicação automática' : 'Não é compra', ignorar.length, 'text-bg-secondary',
                 conta ? 'Aplicação e resgate da aplicação automática: o saldo do banco já soma a aplicação, então não viram lançamento. O rendimento dela aparece em Só no banco, para criar como receita.'
                     : 'O pagamento da fatura anterior: no sistema ele já é o "Pagar fatura".',
@@ -8228,7 +8244,7 @@
 
             const vazio = conta ? 'Nenhuma transação do banco neste mês.' : 'Nenhuma transação do banco nesta fatura. Use Sincronizar na fatura para buscar.';
             document.getElementById('gk-conteudo').innerHTML = cabecalhoConta + (linhas.length
-                ? totais + htmlDiferente + htmlEscolher + htmlCriar + htmlBateu + htmlIgnorar + htmlSemPar + htmlRevisadas
+                ? totais + htmlDiferente + htmlEscolher + htmlPagarFatura + htmlCriar + htmlBateu + htmlIgnorar + htmlSemPar + htmlRevisadas
                 : conta ? totais + htmlSemPar + `<p class="text-muted text-center mt-3">${vazio}</p>` : `<p class="text-muted text-center">${vazio}</p>`);
 
             // Categoria sugerida (a usada da última vez com a mesma categoria do banco).
@@ -9328,6 +9344,12 @@
                     return;
                 }
                 acaoConciliacaoGastos({ url: `${transacoes}/${transacaoId}/criar`, method: 'POST', body: { descricao, categoriaId } }, 'Lançamento criado.', alvo);
+            } else if (alvo.dataset.gkPagarFatura) {
+                const transacaoId = alvo.dataset.gkPagarFatura;
+                const [cartaoId, vencimento] = document.getElementById(`gk-fatura-${transacaoId}`).value.split(':');
+                const [ano, mes] = vencimento.split('-').map(Number);
+                acaoConciliacaoGastos({ url: `${transacoes}/${transacaoId}/pagar-fatura`, method: 'POST', body: { cartaoId: Number(cartaoId), ano, mes } },
+                    'Fatura paga e conciliada.', alvo);
             } else if (alvo.matches('[data-gk-rendimento]')) {
                 const categoriaId = Number(document.getElementById('gk-rendimento-categoria').value);
                 if (!categoriaId) {
