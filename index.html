@@ -8667,7 +8667,7 @@
                 const situacao = l.tipo === 'R' ? (l.realizado ? 'recebidos' : 'a-receber') : (l.realizado ? 'pagos' : 'a-pagar');
                 const csv = [formatarDataISO(l.data), l.descricao, l.parcela ? `${l.parcela}/${l.totalParcelas}` : '', l.categoria?.descricao || '',
                     l.conta?.nome || '', numeroCsv(l.tipo === 'R' ? l.valor : -l.valor), l.realizado ? 'Sim' : 'Não'];
-                return { data: l.data, situacao, csv, html: celulaData => `
+                return { data: l.data, situacao, csv, valor: l.tipo === 'R' ? l.valor : -l.valor, html: celulaData => `
                 <tr class="item-clicavel" data-editar-lancamento="${l.id}">
                     ${celulaData}
                     <td>${descricaoComParcela(l)}${marcaFixa(l)}<div class="small text-muted d-sm-none">${escapeHtml(l.conta?.nome || '')}</div></td>
@@ -8689,7 +8689,7 @@
                 const quitada = f.pendente <= 0 && f.total > 0;
                 // Fatura com algo pendente continua a pagar, mesmo que parte já tenha sido paga.
                 const csv = [formatarDataISO(f.vencimento), `Fatura ${f.cartaoNome}`, '', 'Cartão de crédito', f.cartaoNome, numeroCsv(-f.total), quitada ? 'Sim' : 'Não'];
-                return { data: f.vencimento, situacao: f.pendente > 0 ? 'a-pagar' : 'pagos', csv, html: celulaData => `
+                return { data: f.vencimento, situacao: f.pendente > 0 ? 'a-pagar' : 'pagos', csv, valor: -f.total, html: celulaData => `
                 <tr class="item-clicavel" data-relatorio-fatura="${f.cartaoId}" title="Ver a fatura">
                     ${celulaData}
                     <td>Fatura ${escapeHtml(f.cartaoNome)} <span class="badge ${status.classe}">${status.texto}</span></td>
@@ -8717,6 +8717,15 @@
                 // A data só sai depois do filtro e da ordem, para comparar com a linha de cima de fato.
                 .map((linha, i) => linha.html(celulaDataLista(linha.data, visiveis[i - 1]?.data)))
                 .join('');
+            // Com um filtro marcado, a soma do que está na lista (em centésimos, como na Energia).
+            const totalVisiveis = visiveis.reduce((total, linha) => total + Math.round(Number(linha.valor || 0) * 100), 0) / 100;
+            const rodapeTotal = filtro === 'todos' ? '' : `
+                        <tfoot><tr class="fw-bold">
+                            <td colspan="2">Total<span class="small-muted fw-normal"> (${visiveis.length} ${visiveis.length === 1 ? 'item' : 'itens'})</span></td>
+                            <td class="d-none d-sm-table-cell" colspan="2"></td>
+                            <td class="text-end text-nowrap ${totalVisiveis < 0 ? 'valor-despesa' : 'valor-receita'}">${totalVisiveis < 0 ? '−' : '+'} ${formatarMoedaBR(Math.abs(totalVisiveis))}</td>
+                            <td></td>
+                        </tr></tfoot>`;
 
             const saldoClasse = relatorio.saldoPrevisto < 0 ? 'valor-despesa' : 'valor-receita';
             document.getElementById('gr-conteudo').innerHTML = `
@@ -8744,7 +8753,7 @@
                 <div class="table-responsive">
                     <table class="table table-sm table-striped align-middle">
                         <thead><tr><th>Data</th><th>Descrição</th><th class="d-none d-sm-table-cell">Categoria</th><th class="d-none d-sm-table-cell">Conta/Cartão</th><th class="text-end">Valor</th><th class="text-center">Realizado</th></tr></thead>
-                        <tbody>${linhas}</tbody>
+                        <tbody>${linhas}</tbody>${rodapeTotal}
                     </table>
                 </div>` : `<p class="text-muted text-center">${todas.length ? 'Nenhum lançamento neste filtro.' : 'Nenhum lançamento neste mês.'}</p>`}
                 ${filtro === 'todos' ? secaoTransferenciasRelatorio(relatorio.transferencias || []) : ''}`;
