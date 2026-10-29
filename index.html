@@ -2474,6 +2474,14 @@
                         </div>
 
                         <div class="tab-pane fade" id="gc-pane-categorias" role="tabpanel">
+                            <ul class="nav nav-pills mb-3" role="tablist" aria-label="Tipo de categoria">
+                                <li class="nav-item" role="presentation">
+                                    <button type="button" class="nav-link active" data-categoria-tipo="D" role="tab" aria-selected="true">Despesas</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button type="button" class="nav-link" data-categoria-tipo="R" role="tab" aria-selected="false">Receitas</button>
+                                </li>
+                            </ul>
                             <form class="form-validado row g-2 align-items-start mb-3" id="form-gastos-categoria" novalidate>
                                 <div class="col-12 col-md-5">
                                     <label for="gc-categoria-descricao" class="form-label">Descrição</label>
@@ -2495,7 +2503,7 @@
                             </form>
                             <div class="table-responsive">
                                 <table class="table table-sm table-striped align-middle">
-                                    <thead><tr><th>Descrição</th><th>Tipo</th><th></th></tr></thead>
+                                    <thead><tr><th>Descrição</th><th></th></tr></thead>
                                     <tbody id="gc-categorias-lista"></tbody>
                                 </table>
                             </div>
@@ -6945,6 +6953,8 @@
         };
         // Registro em edição em cada aba do modal de cadastros.
         const gastosEdicaoCadastro = { conta: null, cartao: null, categoria: null };
+        // Sub-aba aberta em Cadastros › Categorias ('D' ou 'R'); uma categoria nova já vem nesse tipo.
+        let gastosTipoCategoriaCadastro = 'D';
         // Cartões de crédito do banco (Open Finance), para ligar a um cartão. Lista vazia:
         // a integração não existe para este usuário e o campo fica escondido.
         let gastosCartoesBanco = null;
@@ -8937,15 +8947,19 @@
                     <td class="text-end text-nowrap">${botaoEditarGastos('cartao', c)} ${botaoAtivoGastos('cartao', c)}</td>
                 </tr>`).join('') : vazio(5);
 
-            const ordenadas = [...categorias].sort((a, b) =>
-                a.tipo.localeCompare(b.tipo) || a.descricao.localeCompare(b.descricao, 'pt-BR'));
+            document.querySelectorAll('#gc-pane-categorias [data-categoria-tipo]').forEach(aba => {
+                const ativa = aba.dataset.categoriaTipo === gastosTipoCategoriaCadastro;
+                aba.classList.toggle('active', ativa);
+                aba.setAttribute('aria-selected', ativa);
+            });
+            const ordenadas = categorias.filter(c => c.tipo === gastosTipoCategoriaCadastro)
+                .sort((a, b) => a.descricao.localeCompare(b.descricao, 'pt-BR'));
             document.getElementById('gc-categorias-lista').innerHTML = ordenadas.length ? ordenadas.map(c => `
                 <tr class="${c.ativo ? '' : 'text-muted'}">
                     <td>${nomeComSituacao(c.descricao, c.ativo)}</td>
-                    <td>${c.tipo === 'D' ? 'Despesa' : 'Receita'}</td>
                     <td class="text-end text-nowrap">${botaoEditarGastos('categoria', c)} ${botaoAtivoGastos('categoria', c)}
                         <button type="button" class="btn btn-sm btn-outline-danger" data-cadastro-acao="excluir" data-cadastro-tipo="categoria" data-id="${c.id}">Excluir</button></td>
-                </tr>`).join('') : vazio(3);
+                </tr>`).join('') : vazio(2);
 
             // A conta de pagamento do cartão em edição continua na lista mesmo desativada.
             const selectConta = document.getElementById('gc-cartao-conta');
@@ -8971,6 +8985,13 @@
                 preencherCartaoBancoGastos(null);
             }
             if (tipo === 'conta') preencherContaBancoGastos(null);
+            if (tipo === 'categoria') document.getElementById('gc-categoria-tipo').value = gastosTipoCategoriaCadastro;
+        }
+
+        function mostrarTipoCategoriaGastos(tipo) {
+            gastosTipoCategoriaCadastro = tipo;
+            if (!gastosEdicaoCadastro.categoria) document.getElementById('gc-categoria-tipo').value = tipo;
+            renderizarCadastrosGastos();
         }
 
         function editarCadastroGastos(tipo, id) {
@@ -9038,11 +9059,14 @@
             botao.disabled = true;
 
             try {
+                const corpo = corpoCadastroGastos(tipo);
                 const salvo = await apiRequest({
                     url: `${GASTOS_URL}/${config.url}${edicao ? `/${edicao.id}` : ''}`,
                     method: edicao ? 'PUT' : 'POST',
-                    body: corpoCadastroGastos(tipo)
+                    body: corpo
                 });
+                // A categoria salva pode ser do outro tipo: abre a sub-aba onde ela está.
+                if (tipo === 'categoria') gastosTipoCategoriaCadastro = corpo.tipo;
                 const bancoContaId = document.getElementById('gc-cartao-banco').value;
                 if (tipo === 'cartao' && gastosCartoesBanco?.length && bancoContaId !== (edicao?.bancoContaId ?? '')) {
                     await apiRequest({ url: `${GASTOS_URL}/cartoes/${salvo.id}/banco`, method: 'PUT', body: { bancoContaId: bancoContaId || null } });
@@ -9492,6 +9516,11 @@
         });
         document.getElementById('gc-configuracao-dia').addEventListener('input', atualizarExemploConfiguracaoGastos);
         document.getElementById('modal-gastos-cadastros').addEventListener('click', function(event) {
+            const abaCategoria = event.target.closest('[data-categoria-tipo]');
+            if (abaCategoria) {
+                mostrarTipoCategoriaGastos(abaCategoria.dataset.categoriaTipo);
+                return;
+            }
             const botao = event.target.closest('[data-cadastro-acao]');
             if (!botao) return;
 
