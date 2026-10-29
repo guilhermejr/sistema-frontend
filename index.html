@@ -747,6 +747,11 @@
             </button>
           </li>
           <li class="nav-item" role="presentation">
+            <button class="nav-link" id="ponto-tab" data-perfil="ROLE_PONTO" data-bs-toggle="tab" data-bs-target="#tab-ponto" type="button" role="tab">
+                <svg class="icone-aba" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022zm2.004.45a7 7 0 0 0-.985-.299l.219-.976q.576.129 1.126.342zm1.37.71a7 7 0 0 0-.439-.27l.493-.87a8 8 0 0 1 .979.654l-.615.789a7 7 0 0 0-.418-.302zm1.834 1.79a7 7 0 0 0-.653-.796l.724-.69q.406.429.747.91zm.744 1.352a7 7 0 0 0-.214-.468l.893-.45a8 8 0 0 1 .45 1.088l-.95.313a7 7 0 0 0-.179-.483m.53 2.507a7 7 0 0 0-.1-1.025l.985-.17q.1.58.116 1.17zm-.131 1.538q.05-.254.081-.51l.993.123a8 8 0 0 1-.23 1.155l-.964-.267q.069-.247.12-.501m-.952 2.379q.276-.436.486-.908l.914.405q-.24.54-.555 1.038zm-.964 1.205q.183-.183.35-.378l.758.653a8 8 0 0 1-.401.432z"/><path d="M8 1a7 7 0 1 0 4.95 11.95l.707.707A8.001 8.001 0 1 1 8 0z"/><path d="M7.5 3a.5.5 0 0 1 .5.5v5.21l3.248 1.856a.5.5 0 0 1-.496.868l-3.5-2A.5.5 0 0 1 7 9V3.5a.5.5 0 0 1 .5-.5"/></svg>Ponto
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
             <button class="nav-link" id="supermercado-tab" data-perfil="ROLE_SUPERMERCADO" data-bs-toggle="tab" data-bs-target="#tab-supermercado" type="button" role="tab">
                 <svg class="icone-aba" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .49.598l-1 5a.5.5 0 0 1-.465.401l-9.397.472L4.415 11H13a.5.5 0 0 1 0 1H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5M3.102 4l.84 4.479 9.144-.459L13.89 4zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4m7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4m-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2m7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/></svg>Supermercado
             </button>
@@ -1225,6 +1230,136 @@
             </div>
 
             <!-- ABA ADMINISTRAÇÃO -->
+            <div class="tab-pane fade" id="tab-ponto" role="tabpanel" aria-labelledby="ponto-tab">
+                <div id="ponto-alerta" class="alert hidden" role="alert"></div>
+
+                <div class="card filtro-card">
+                    <div class="card-body">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-12 col-md-3">
+                                <label for="ponto-ano" class="form-label">Ano</label>
+                                <!-- Opções montadas por carregarPontoDashboard() a partir dos espelhos enviados -->
+                                <select id="ponto-ano" class="form-select"></select>
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <button id="btn-enviar-espelho" class="btn btn-primary w-100" type="button">Enviar espelho (PDF)</button>
+                                <input type="file" id="ponto-arquivo" class="hidden" accept="application/pdf,.pdf" multiple>
+                            </div>
+                            <div class="col-12 col-md-6 small-muted" id="ponto-ultimo"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-12">
+                        <h5 class="mb-3" id="ponto-titulo-ano">Resumo do ano</h5>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3 mb-3">
+                        <div class="card card-resumo h-100">
+                            <div class="card-body d-flex align-items-center gap-3">
+                                <span class="icone-chip tom-azul"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 1.5a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-1v1a4.5 4.5 0 0 1-2.557 4.06c-.29.139-.443.377-.443.59v.7c0 .213.154.451.443.59A4.5 4.5 0 0 1 12.5 13v1h1a.5.5 0 0 1 0 1h-11a.5.5 0 1 1 0-1h1v-1a4.5 4.5 0 0 1 2.557-4.06c.29-.139.443-.377.443-.59v-.7c0-.213-.154-.451-.443-.59A4.5 4.5 0 0 1 3.5 3V2h-1a.5.5 0 0 1-.5-.5m2.5.5v1a3.5 3.5 0 0 0 1.989 3.158c.533.256 1.011.791 1.011 1.491v.702c0 .7-.478 1.235-1.011 1.491A3.5 3.5 0 0 0 4.5 13v1h7v-1a3.5 3.5 0 0 0-1.989-3.158C8.978 9.586 8.5 9.052 8.5 8.351v-.702c0-.7.478-1.235 1.011-1.491A3.5 3.5 0 0 0 11.5 3V2z"/></svg></span>
+                                <div class="text-start">
+                                    <h6 class="text-muted mb-1">Banco de horas</h6>
+                                    <div id="card-ponto-saldo" class="fs-4 fw-bold">--</div>
+                                    <div id="card-ponto-saldo-quando" class="small-muted">--</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3 mb-3">
+                        <div class="card card-resumo h-100">
+                            <div class="card-body d-flex align-items-center gap-3">
+                                <span class="icone-chip tom-verde"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5"/></svg></span>
+                                <div class="text-start">
+                                    <h6 class="text-muted mb-1">Horas a mais</h6>
+                                    <div id="card-ponto-extras" class="fs-4 fw-bold">--</div>
+                                    <div id="card-ponto-nao-compensaveis" class="small-muted">--</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3 mb-3">
+                        <div class="card card-resumo h-100">
+                            <div class="card-body d-flex align-items-center gap-3">
+                                <span class="icone-chip tom-vermelho"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1"/></svg></span>
+                                <div class="text-start">
+                                    <h6 class="text-muted mb-1">Horas a menos</h6>
+                                    <div id="card-ponto-faltas" class="fs-4 fw-bold">--</div>
+                                    <div class="small-muted">descontadas do banco</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3 mb-3">
+                        <div class="card card-resumo h-100">
+                            <div class="card-body d-flex align-items-center gap-3">
+                                <span class="icone-chip tom-amarelo"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8M8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0m0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13m8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5M3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8m10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0m-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0m9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707M4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708"/></svg></span>
+                                <div class="text-start">
+                                    <h6 class="text-muted mb-1">Férias</h6>
+                                    <div id="card-ponto-ferias" class="fs-4 fw-bold">--</div>
+                                    <div id="card-ponto-ferias-detalhe" class="small-muted">--</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card grafico-card">
+                    <div class="card-body">
+                        <canvas id="ponto-saldo" aria-label="Banco de horas no fim de cada mês" role="img"></canvas>
+                    </div>
+                </div>
+
+                <div class="card grafico-card">
+                    <div class="card-body">
+                        <canvas id="ponto-horas" aria-label="Horas trabalhadas e previstas por mês" role="img"></canvas>
+                    </div>
+                </div>
+
+                <div class="card grafico-card">
+                    <div class="card-body">
+                        <canvas id="ponto-extras" aria-label="Horas extras (não compensáveis) por mês" role="img"></canvas>
+                    </div>
+                </div>
+
+                <div class="card table-card">
+                    <div class="card-body">
+                        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2 mb-3">
+                            <h5 class="mb-0">Meses</h5>
+                            <div class="small-muted">Toque num mês para ver os dias.</div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Mês</th>
+                                        <th class="text-end d-none d-sm-table-cell">Dias</th>
+                                        <th class="text-end"><span class="d-sm-none">Trab.</span><span class="d-none d-sm-inline">Trabalhadas</span></th>
+                                        <th class="text-end d-none d-sm-table-cell">Previstas</th>
+                                        <th class="text-end">No mês</th>
+                                        <th class="text-end" title="Horas não compensáveis: não entram no banco">Extras</th>
+                                        <th class="text-end">Banco</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ponto-meses-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card table-card">
+                    <div class="card-body">
+                        <h5 class="mb-3">Ocorrências</h5>
+                        <ul class="list-group list-group-flush" id="ponto-ocorrencias"></ul>
+                        <div class="small-muted mt-3" id="ponto-ferias-anos"></div>
+                    </div>
+                </div>
+            </div>
+
             <div class="tab-pane fade" id="tab-administracao" role="tabpanel" aria-labelledby="administracao-tab">
                 <div id="admin-alerta" class="alert hidden" role="alert"></div>
 
@@ -1644,6 +1779,45 @@
                     <div class="text-center py-4 text-muted">Selecione uma folha para visualizar os detalhes.</div>
                 </div>
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DIAS DO ESPELHO DE PONTO -->
+    <div class="modal fade" id="modal-ponto-mes" tabindex="-1" aria-labelledby="ponto-mes-titulo" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="ponto-mes-anterior" aria-label="Mês anterior">‹</button>
+                    <h5 class="modal-title text-center flex-fill" id="ponto-mes-titulo">Espelho</h5>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="ponto-mes-proximo" aria-label="Próximo mês">›</button>
+                    <button type="button" class="btn-close ms-2" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="ponto-mes-alerta" class="alert hidden" role="alert"></div>
+                    <div class="small-muted mb-3" id="ponto-mes-resumo"></div>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle tabela-ponto">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Dia</th>
+                                    <th>Marcações</th>
+                                    <th class="d-none d-sm-table-cell">Ocorrência</th>
+                                    <th class="text-end d-none d-md-table-cell">Abono</th>
+                                    <th class="text-end">Trab.</th>
+                                    <th class="text-end">No dia</th>
+                                    <th class="text-end">Banco</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ponto-mes-dias"></tbody>
+                        </table>
+                    </div>
+                    <div id="ponto-mes-ajustes"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-danger me-auto" id="ponto-mes-excluir">Excluir mês</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
                 </div>
             </div>
@@ -2585,6 +2759,14 @@
 
         const GASTOS_URL = `${API_BASE}/gastos-service`;
 
+        const PONTO_URL = `${API_BASE}/ponto-service`;
+        // Espelhos de ponto do usuário (resumo de cada mês, do mais antigo ao mais
+        // recente) e o mês aberto no modal. Ficam aqui porque limparDashboard() roda
+        // na carga da página.
+        const CHAVE_ANO_PONTO = 'pontoAno';
+        let pontoEspelhos = [];
+        let pontoMesAberto = null;
+
         const USUARIOS_URL = `${API_BASE}/autenticacao-service/usuarios`;
         const PERFIS_URL = `${API_BASE}/autenticacao-service/perfis`;
         // Formulários da aba Gastos que usam as máscaras e a validação compartilhadas.
@@ -2650,6 +2832,10 @@
 
         let graficoGastosDespesas = null;
         let graficoGastosReceitas = null;
+
+        let graficoPontoSaldo = null;
+        let graficoPontoHoras = null;
+        let graficoPontoExtras = null;
 
         // ============================================
         // HELPERS DE UI
@@ -3072,18 +3258,22 @@
         async function apiRequest({ url, method = 'GET', headers = {}, body = null }) {
             let accessToken = await garantirAccessTokenValido();
 
+            // FormData (envio de arquivo) vai sem Content-Type: o navegador põe o
+            // multipart com o boundary; definir à mão quebra o corpo.
+            const formulario = body instanceof FormData;
+
             async function executarRequisicao(token) {
                 const config = {
                     method,
                     headers: {
-                        'Content-Type': 'application/json',
+                        ...(formulario ? {} : { 'Content-Type': 'application/json' }),
                         ...headers,
                         'Authorization': `Bearer ${token}`
                     }
                 };
 
                 if (body) {
-                    config.body = JSON.stringify(body);
+                    config.body = formulario ? body : JSON.stringify(body);
                 }
 
                 return fetch(url, config);
@@ -3530,6 +3720,13 @@
             destruirGraficosEnergia();
             destruirGraficosSalario();
             destruirGraficosSaude();
+            destruirGraficosPonto();
+        }
+
+        function destruirGraficosPonto() {
+            if (graficoPontoSaldo) { graficoPontoSaldo.destroy(); graficoPontoSaldo = null; }
+            if (graficoPontoHoras) { graficoPontoHoras.destroy(); graficoPontoHoras = null; }
+            if (graficoPontoExtras) { graficoPontoExtras.destroy(); graficoPontoExtras = null; }
         }
 
         function destruirGraficosEnergia() {
@@ -3593,6 +3790,9 @@
 
             // Remédios
             limparAbaRemedios();
+
+            // Ponto
+            limparAbaPonto();
 
             // Administração
             limparAbaAdministracao();
@@ -4543,6 +4743,7 @@
             'tab-salario': () => carregarAnosSalario().then(() => carregarSalarioDashboard(obterAnoSalarioSelecionado())),
             'tab-supermercado': () => carregarSupermercadoDashboard(0),
             'tab-remedios': () => carregarRemediosDashboard(),
+            'tab-ponto': () => carregarPontoDashboard(),
             'tab-administracao': () => carregarAdministracao(0)
         };
 
@@ -9534,13 +9735,477 @@
         });
 
         // ============================================
+        // PONTO (espelho de ponto mensal, ponto-service)
+        // ============================================
+        // As horas chegam em minutos, com sinal, como o sistema de ponto da empresa
+        // calculou; aqui só se soma e formata. O banco de horas zera a cada semestre
+        // (janeiro e julho), por isso o gráfico do saldo volta a zero nesses meses.
+
+        const MESES_CURTOS_PONTO = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+        const DIAS_SEMANA_PONTO = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+        const OCORRENCIA_FERIAS = 'Férias';
+
+        // "08:32", "-03:42"; com sinal, o positivo leva "+". Vazio fica vazio.
+        function formatarHorasPonto(minutos, comSinal = false) {
+            if (minutos === null || minutos === undefined) return '';
+            const abs = Math.abs(minutos);
+            const texto = `${String(Math.floor(abs / 60)).padStart(2, '0')}:${String(abs % 60).padStart(2, '0')}`;
+            if (minutos < 0) return `-${texto}`;
+            return comSinal && minutos > 0 ? `+${texto}` : texto;
+        }
+
+        function classeSinalPonto(minutos) {
+            return minutos < 0 ? 'valor-despesa' : minutos > 0 ? 'valor-receita' : '';
+        }
+
+        function rotuloMesPonto(espelho) {
+            return `${MESES_CURTOS_PONTO[espelho.mes - 1]}/${String(espelho.ano).slice(2)}`;
+        }
+
+        function mostrarAlertaPonto(id, mensagem, tipo = 'success') {
+            const alerta = document.getElementById(id);
+            alerta.className = `alert alert-${tipo}`;
+            alerta.textContent = mensagem;
+            show(id);
+            sumirSeSucesso(alerta);
+        }
+
+        function esconderAlertaPonto(id) {
+            document.getElementById(id).textContent = '';
+            hide(id);
+        }
+
+        function anoSalvoPonto() {
+            try { return localStorage.getItem(CHAVE_ANO_PONTO); } catch { return null; }
+        }
+
+        function salvarAnoPonto(ano) {
+            try { localStorage.setItem(CHAVE_ANO_PONTO, String(ano)); } catch { /* sem armazenamento: fica o mais recente */ }
+        }
+
+        function limparAbaPonto() {
+            pontoEspelhos = [];
+            pontoMesAberto = null;
+            destruirGraficosPonto();
+            document.getElementById('ponto-ano').innerHTML = '';
+            document.getElementById('ponto-ultimo').textContent = '';
+            ['card-ponto-saldo', 'card-ponto-saldo-quando', 'card-ponto-extras', 'card-ponto-nao-compensaveis',
+                'card-ponto-faltas', 'card-ponto-ferias', 'card-ponto-ferias-detalhe'].forEach(id => {
+                const el = document.getElementById(id);
+                el.textContent = '--';
+                el.classList.remove('valor-despesa', 'valor-receita');
+            });
+            document.getElementById('ponto-meses-body').innerHTML =
+                '<tr><td colspan="7" class="text-center text-muted">Nenhum dado carregado.</td></tr>';
+            document.getElementById('ponto-ocorrencias').innerHTML = '';
+            document.getElementById('ponto-ferias-anos').textContent = '';
+        }
+
+        async function carregarPontoDashboard() {
+            destruirGraficosPonto();
+            pontoEspelhos = await apiRequest({ url: `${PONTO_URL}/espelhos` }) || [];
+            preencherAnosPonto();
+            renderizarPonto();
+        }
+
+        async function carregarSomentePonto() {
+            clearDashboardError();
+            toggleDashboardLoading(true);
+            try {
+                await carregarPontoDashboard();
+            } catch (error) {
+                console.error(error);
+                if (sessaoExpirou(error)) return;
+                setDashboardError(error.message || 'Erro ao carregar o ponto.');
+            } finally {
+                toggleDashboardLoading(false);
+            }
+        }
+
+        // Anos com espelho, do mais recente ao mais antigo. Fica o ano salvo, se ainda
+        // existir, senão o mais recente.
+        function preencherAnosPonto() {
+            const anos = [...new Set(pontoEspelhos.map(e => String(e.ano)))].sort((a, b) => b - a);
+            const select = document.getElementById('ponto-ano');
+            const salvo = anoSalvoPonto();
+            select.innerHTML = anos.map(ano => `<option value="${ano}">${ano}</option>`).join('');
+            select.value = anos.includes(salvo) ? salvo : (anos[0] || '');
+            select.disabled = !anos.length;
+        }
+
+        function renderizarPonto() {
+            destruirGraficosPonto();
+            const ano = Number(document.getElementById('ponto-ano').value);
+            const doAno = pontoEspelhos.filter(e => e.ano === ano);
+            const ultimo = pontoEspelhos.at(-1);
+
+            document.getElementById('ponto-ultimo').textContent = ultimo
+                ? `Último espelho: ${nomeMes(ultimo.ano, ultimo.mes)}${ultimo.assinado ? `, assinado em ${formatarData(ultimo.assinado.slice(0, 10))}` : ''}.`
+                : 'Nenhum espelho enviado. Envie o PDF de cada mês (pode escolher vários de uma vez).';
+            document.getElementById('ponto-titulo-ano').textContent = ano ? `Resumo de ${ano}` : 'Resumo do ano';
+
+            renderizarCardsPonto(doAno);
+            renderizarMesesPonto(doAno);
+            renderizarOcorrenciasPonto(doAno, ano);
+
+            if (doAno.length) {
+                criarGraficoPontoSaldo(doAno, ano);
+                criarGraficoPontoHoras(doAno, ano);
+                criarGraficoPontoExtras(doAno, ano);
+            }
+        }
+
+        function definirCardPonto(id, texto, minutos = 0) {
+            const el = document.getElementById(id);
+            el.textContent = texto;
+            el.classList.remove('valor-despesa', 'valor-receita');
+            const classe = classeSinalPonto(minutos);
+            if (classe) el.classList.add(classe);
+        }
+
+        function renderizarCardsPonto(doAno) {
+            const soma = campo => doAno.reduce((total, e) => total + (e[campo] || 0), 0);
+
+            // O banco do card é o do último mês do ano escolhido (no ano corrente, o atual).
+            const ultimo = doAno.at(-1);
+            if (ultimo && ultimo.saldo !== null) {
+                definirCardPonto('card-ponto-saldo', formatarHorasPonto(ultimo.saldo), ultimo.saldo);
+                document.getElementById('card-ponto-saldo-quando').textContent =
+                    `fim de ${MESES_CURTOS_PONTO[ultimo.mes - 1]}/${ultimo.ano} · ${ultimo.mes <= 6 ? '1º' : '2º'} semestre`;
+            } else {
+                definirCardPonto('card-ponto-saldo', '--');
+                document.getElementById('card-ponto-saldo-quando').textContent = '--';
+            }
+
+            definirCardPonto('card-ponto-extras', doAno.length ? formatarHorasPonto(soma('extras'), true) : '--', soma('extras'));
+            const naoCompensaveis = soma('naoCompensaveis');
+            document.getElementById('card-ponto-nao-compensaveis').textContent = naoCompensaveis
+                ? `mais ${formatarHorasPonto(naoCompensaveis)} não compensáveis`
+                : 'entram no banco';
+            definirCardPonto('card-ponto-faltas', doAno.length ? formatarHorasPonto(soma('faltas')) : '--', soma('faltas'));
+
+            const ocorrencias = somarOcorrenciasPonto(doAno);
+            const ferias = ocorrencias.get(OCORRENCIA_FERIAS) || 0;
+            const outras = [...ocorrencias].filter(([nome]) => nome !== OCORRENCIA_FERIAS).reduce((t, [, n]) => t + n, 0);
+            definirCardPonto('card-ponto-ferias', doAno.length ? `${ferias} ${ferias === 1 ? 'dia' : 'dias'}` : '--');
+            document.getElementById('card-ponto-ferias-detalhe').textContent = !doAno.length ? '--'
+                : outras ? `e ${outras} ${outras === 1 ? 'dia' : 'dias'} de outras ocorrências` : 'nenhuma outra ocorrência';
+        }
+
+        function somarOcorrenciasPonto(espelhos) {
+            const total = new Map();
+            espelhos.forEach(e => Object.entries(e.ocorrencias || {}).forEach(([nome, dias]) => {
+                total.set(nome, (total.get(nome) || 0) + dias);
+            }));
+            return total;
+        }
+
+        function renderizarMesesPonto(doAno) {
+            const corpo = document.getElementById('ponto-meses-body');
+            if (!doAno.length) {
+                corpo.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Nenhum espelho neste ano.</td></tr>';
+                return;
+            }
+            corpo.innerHTML = doAno.map(e => `
+                <tr role="button" data-ponto-mes="${e.ano}-${e.mes}">
+                    <td><span class="d-sm-none">${MESES_CURTOS_PONTO[e.mes - 1]}</span><span class="d-none d-sm-inline">${MESES[e.mes - 1]}</span></td>
+                    <td class="text-end d-none d-sm-table-cell">${e.diasTrabalhados}</td>
+                    <td class="text-end">${formatarHorasPonto(e.trabalhadas)}${e.abonos ? `<div class="small-muted text-nowrap">+ ${formatarHorasPonto(e.abonos)} abono</div>` : ''}</td>
+                    <td class="text-end d-none d-sm-table-cell">${formatarHorasPonto(e.previstas)}</td>
+                    <td class="text-end ${classeSinalPonto(e.compensaveis)}">${formatarHorasPonto(e.compensaveis, true) || '00:00'}</td>
+                    <td class="text-end">${e.naoCompensaveis ? formatarHorasPonto(e.naoCompensaveis) : '<span class="text-muted">—</span>'}</td>
+                    <td class="text-end ${classeSinalPonto(e.saldo)}">${formatarHorasPonto(e.saldo) || '--'}</td>
+                </tr>`).join('');
+        }
+
+        function renderizarOcorrenciasPonto(doAno, ano) {
+            const ocorrencias = [...somarOcorrenciasPonto(doAno)].sort((a, b) => b[1] - a[1]);
+            document.getElementById('ponto-ocorrencias').innerHTML = ocorrencias.length
+                ? ocorrencias.map(([nome, dias]) => `
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span>${escapeHtml(nome)}</span><span class="text-nowrap">${dias} ${dias === 1 ? 'dia' : 'dias'}</span>
+                    </li>`).join('')
+                : `<li class="list-group-item px-0 text-muted">${ano ? `Nenhuma ocorrência em ${ano}.` : 'Nenhuma ocorrência.'}</li>`;
+
+            const porAno = new Map();
+            pontoEspelhos.forEach(e => porAno.set(e.ano, (porAno.get(e.ano) || 0) + ((e.ocorrencias || {})[OCORRENCIA_FERIAS] || 0)));
+            const linhas = [...porAno].filter(([, dias]) => dias).map(([a, dias]) => `${a}: ${dias} dias`);
+            document.getElementById('ponto-ferias-anos').textContent = linhas.length ? `Férias por ano — ${linhas.join(' · ')}` : '';
+        }
+
+        function formatarHorasGraficoPonto(horas) {
+            return Number.isFinite(horas) ? formatarHorasPonto(Math.round(horas * 60)) : '';
+        }
+
+        // Meses do ano escolhido; em julho o banco volta a zero (novo semestre).
+        function criarGraficoPontoSaldo(doAno, ano) {
+            const opcoes = opcoesPadraoComDatalabels(`Banco de horas no fim de cada mês em ${ano}`, formatarHorasGraficoPonto);
+            opcoes.plugins.legend.display = false;
+
+            graficoPontoSaldo = new Chart(document.getElementById('ponto-saldo'), {
+                type: 'line',
+                data: {
+                    labels: doAno.map(e => MESES_CURTOS_PONTO[e.mes - 1]),
+                    datasets: [{
+                        label: 'Banco',
+                        data: doAno.map(e => e.saldo === null ? null : e.saldo / 60),
+                        borderWidth: 2,
+                        tension: 0.2,
+                        fill: false,
+                        spanGaps: true
+                    }]
+                },
+                options: {
+                    ...opcoes,
+                    scales: {
+                        x: { ticks: { padding: 10 } },
+                        y: { ticks: { padding: 10, callback: v => `${v}h` }, grace: '10%' }
+                    }
+                }
+            });
+        }
+
+        // Trabalhadas somam o abono (férias, atestado): é tempo que conta como cumprido.
+        function criarGraficoPontoHoras(doAno, ano) {
+            graficoPontoHoras = new Chart(document.getElementById('ponto-horas'), {
+                type: 'bar',
+                data: {
+                    labels: doAno.map(e => MESES_CURTOS_PONTO[e.mes - 1]),
+                    datasets: [
+                        { label: 'Trabalhadas + abono', data: doAno.map(e => (e.trabalhadas + e.abonos) / 60) },
+                        { label: 'Previstas', data: doAno.map(e => e.previstas / 60) }
+                    ]
+                },
+                options: {
+                    ...opcoesPadraoComDatalabels(`Horas por mês em ${ano}`, formatarHorasGraficoPonto),
+                    scales: {
+                        x: { ticks: { padding: 10 } },
+                        y: { beginAtZero: true, ticks: { padding: 10, callback: v => `${v}h` }, grace: '10%' }
+                    }
+                }
+            });
+        }
+
+        // Extras são as horas não compensáveis: as que o espelho não leva para o banco.
+        function criarGraficoPontoExtras(doAno, ano) {
+            const total = doAno.reduce((soma, e) => soma + (e.naoCompensaveis || 0), 0);
+            const opcoes = opcoesPadraoComDatalabels(`Horas extras por mês em ${ano} (total ${formatarHorasPonto(total)})`,
+                formatarHorasGraficoPonto);
+            opcoes.plugins.legend.display = false;
+            // Mês sem extra fica sem rótulo, em vez de um "00:00" no chão do gráfico.
+            const exibir = opcoes.plugins.datalabels.display;
+            opcoes.plugins.datalabels.display = ctx => (ctx.dataset.data[ctx.dataIndex] ? exibir(ctx) : false);
+
+            graficoPontoExtras = new Chart(document.getElementById('ponto-extras'), {
+                type: 'bar',
+                data: {
+                    labels: doAno.map(e => MESES_CURTOS_PONTO[e.mes - 1]),
+                    datasets: [{
+                        label: 'Extras',
+                        data: doAno.map(e => (e.naoCompensaveis || 0) / 60),
+                        backgroundColor: 'rgba(25, 135, 84, 0.55)',
+                        borderColor: 'rgb(25, 135, 84)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    ...opcoes,
+                    scales: {
+                        x: { ticks: { padding: 10 } },
+                        y: { beginAtZero: true, ticks: { padding: 10, callback: v => `${v}h` }, grace: '10%' }
+                    }
+                }
+            });
+        }
+
+        // ---------- dias do mês (modal)
+
+        async function abrirMesPonto(ano, mes) {
+            pontoMesAberto = { ano, mes };
+            esconderAlertaPonto('ponto-mes-alerta');
+            document.getElementById('ponto-mes-titulo').textContent = nomeMes(ano, mes);
+            document.getElementById('ponto-mes-resumo').textContent = '';
+            document.getElementById('ponto-mes-ajustes').innerHTML = '';
+            document.getElementById('ponto-mes-dias').innerHTML =
+                '<tr><td colspan="7" class="text-center text-muted py-4">Carregando...</td></tr>';
+            atualizarNavegacaoPonto();
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-ponto-mes')).show();
+
+            try {
+                const espelho = await apiRequest({ url: `${PONTO_URL}/espelhos/${ano}/${mes}` });
+                // Navegou para outro mês enquanto este carregava: descarta.
+                if (pontoMesAberto?.ano !== ano || pontoMesAberto?.mes !== mes) return;
+                renderizarMesPonto(espelho);
+            } catch (error) {
+                console.error(error);
+                if (sessaoExpirouGastos(error)) return;
+                document.getElementById('ponto-mes-dias').innerHTML = '';
+                mostrarAlertaPonto('ponto-mes-alerta', error.message || 'Não foi possível carregar o mês.', 'danger');
+            }
+        }
+
+        function indiceMesAbertoPonto() {
+            return pontoEspelhos.findIndex(e => e.ano === pontoMesAberto?.ano && e.mes === pontoMesAberto?.mes);
+        }
+
+        function atualizarNavegacaoPonto() {
+            const i = indiceMesAbertoPonto();
+            document.getElementById('ponto-mes-anterior').disabled = i <= 0;
+            document.getElementById('ponto-mes-proximo').disabled = i < 0 || i >= pontoEspelhos.length - 1;
+        }
+
+        function renderizarMesPonto({ resumo, dias, ajustes }) {
+            const partes = [
+                `${resumo.diasTrabalhados} ${resumo.diasTrabalhados === 1 ? 'dia trabalhado' : 'dias trabalhados'}`,
+                `${formatarHorasPonto(resumo.trabalhadas)} de ${formatarHorasPonto(resumo.previstas)} previstas`,
+                `no mês ${formatarHorasPonto(resumo.compensaveis, true) || '00:00'}`,
+                `banco ${formatarHorasPonto(resumo.saldo) || '--'}`
+            ];
+            if (resumo.naoCompensaveis) partes.push(`${formatarHorasPonto(resumo.naoCompensaveis)} não compensáveis`);
+            if (resumo.folhaPagamento) partes.push(`folha ${resumo.folhaPagamento.replace('_', '/')}`);
+            document.getElementById('ponto-mes-resumo').textContent = partes.join(' · ');
+
+            document.getElementById('ponto-mes-dias').innerHTML = dias.map(dia => {
+                const [a, m, d] = dia.data.split('-').map(Number);
+                const semana = DIAS_SEMANA_PONTO[new Date(a, m - 1, d).getDay()];
+                const vazio = !dia.marcacoes && !dia.ocorrencia && dia.trabalhadas === null && dia.abono === null;
+                const marcacoes = (dia.marcacoes || '').split(' ').filter(Boolean)
+                    .map(par => `<span class="text-nowrap">${escapeHtml(par)}</span>`).join(' ');
+                const ocorrencia = dia.ocorrencia ? escapeHtml(dia.ocorrencia) : '';
+                return `
+                    <tr class="${vazio ? 'text-muted' : ''}">
+                        <td class="text-nowrap">${String(d).padStart(2, '0')} <span class="small-muted">${semana}</span></td>
+                        <td>${marcacoes}${ocorrencia ? `<div class="small-muted d-sm-none">${ocorrencia}</div>` : ''}</td>
+                        <td class="d-none d-sm-table-cell">${ocorrencia}</td>
+                        <td class="text-end d-none d-md-table-cell">${formatarHorasPonto(dia.abono)}</td>
+                        <td class="text-end">${formatarHorasPonto(dia.trabalhadas)}</td>
+                        <td class="text-end ${classeSinalPonto(dia.compensaveis)}">${formatarHorasPonto(dia.compensaveis, true)}${dia.naoCompensaveis ? `<div class="small-muted text-nowrap" title="Horas não compensáveis">+${formatarHorasPonto(dia.naoCompensaveis)} nc</div>` : ''}</td>
+                        <td class="text-end ${classeSinalPonto(dia.acumulo)}">${formatarHorasPonto(dia.acumulo)}</td>
+                    </tr>`;
+            }).join('');
+
+            const secao = (tipo, titulo) => {
+                const itens = ajustes.filter(a => a.tipo === tipo);
+                if (!itens.length) return '';
+                return `
+                    <h6 class="mt-3 mb-2">${titulo}</h6>
+                    <ul class="list-unstyled small mb-0">
+                        ${itens.map(a => `<li>${formatarData(a.dataHora.slice(0, 10)).slice(0, 5)} ${a.dataHora.slice(11, 16)}${a.motivo ? ` — ${escapeHtml(a.motivo)}` : ''}</li>`).join('')}
+                    </ul>`;
+            };
+            document.getElementById('ponto-mes-ajustes').innerHTML =
+                secao('I', 'Marcações incluídas') + secao('D', 'Marcações descartadas');
+        }
+
+        async function excluirMesPonto() {
+            if (!pontoMesAberto) return;
+            const { ano, mes } = pontoMesAberto;
+            if (!confirm(`Excluir o espelho de ${nomeMes(ano, mes)}? Para tê-lo de volta, envie o PDF de novo.`)) return;
+
+            const botao = document.getElementById('ponto-mes-excluir');
+            botao.disabled = true;
+            try {
+                await apiRequest({ url: `${PONTO_URL}/espelhos/${ano}/${mes}`, method: 'DELETE' });
+                bootstrap.Modal.getInstance(document.getElementById('modal-ponto-mes'))?.hide();
+                await carregarSomentePonto();
+                mostrarAlertaPonto('ponto-alerta', `Espelho de ${nomeMes(ano, mes)} excluído.`);
+            } catch (error) {
+                console.error(error);
+                if (sessaoExpirouGastos(error)) return;
+                mostrarAlertaPonto('ponto-mes-alerta', error.message || 'Não foi possível excluir.', 'danger');
+            } finally {
+                botao.disabled = false;
+            }
+        }
+
+        // ---------- envio dos PDFs
+
+        // Um por vez, para cada erro dizer de qual arquivo é. Um mês que já existia é
+        // substituído pelo serviço (o RH pode reemitir o espelho corrigido).
+        async function enviarEspelhosPonto(arquivos) {
+            if (!arquivos.length) return;
+            const botao = document.getElementById('btn-enviar-espelho');
+            const textoBotao = botao.textContent;
+            botao.disabled = true;
+            esconderAlertaPonto('ponto-alerta');
+
+            const enviados = [];
+            const erros = [];
+            try {
+                for (const [i, arquivo] of arquivos.entries()) {
+                    botao.textContent = arquivos.length > 1 ? `Enviando ${i + 1} de ${arquivos.length}...` : 'Enviando...';
+                    const corpo = new FormData();
+                    corpo.append('arquivo', arquivo);
+                    try {
+                        enviados.push(await apiRequest({ url: `${PONTO_URL}/espelhos`, method: 'POST', body: corpo }));
+                    } catch (error) {
+                        console.error(error);
+                        if (sessaoExpirou(error)) return;
+                        erros.push(`${arquivo.name}: ${error.message}`);
+                    }
+                }
+            } finally {
+                botao.disabled = false;
+                botao.textContent = textoBotao;
+                document.getElementById('ponto-arquivo').value = '';
+            }
+
+            if (enviados.length) {
+                const recente = enviados.map(r => r.espelho).reduce((a, b) => (b.ano * 12 + b.mes > a.ano * 12 + a.mes ? b : a));
+                salvarAnoPonto(recente.ano);
+                await carregarSomentePonto();
+            }
+
+            const substituidos = enviados.filter(r => r.substituido).length;
+            let mensagem;
+            if (enviados.length === 1) {
+                const { ano, mes } = enviados[0].espelho;
+                mensagem = `Espelho de ${nomeMes(ano, mes)} ${substituidos ? 'substituído pelo novo arquivo' : 'importado'}.`;
+            } else if (enviados.length) {
+                mensagem = `${enviados.length} espelhos importados${substituidos ? ` (${substituidos} já existiam e foram substituídos)` : ''}.`;
+            } else {
+                mensagem = '';
+            }
+            if (erros.length) {
+                mensagem = [mensagem, `Não importados — ${erros.join(' | ')}`].filter(Boolean).join(' ');
+            }
+            mostrarAlertaPonto('ponto-alerta', mensagem, erros.length ? (enviados.length ? 'warning' : 'danger') : 'success');
+        }
+
+        document.getElementById('btn-enviar-espelho').addEventListener('click', () => {
+            document.getElementById('ponto-arquivo').click();
+        });
+        document.getElementById('ponto-arquivo').addEventListener('change', event => {
+            enviarEspelhosPonto([...event.target.files]);
+        });
+        document.getElementById('ponto-ano').addEventListener('change', event => {
+            salvarAnoPonto(event.target.value);
+            renderizarPonto();
+        });
+        document.getElementById('ponto-meses-body').addEventListener('click', event => {
+            const linha = event.target.closest('[data-ponto-mes]');
+            if (!linha) return;
+            const [ano, mes] = linha.dataset.pontoMes.split('-').map(Number);
+            abrirMesPonto(ano, mes);
+        });
+        document.getElementById('ponto-mes-anterior').addEventListener('click', () => {
+            const anterior = pontoEspelhos[indiceMesAbertoPonto() - 1];
+            if (anterior) abrirMesPonto(anterior.ano, anterior.mes);
+        });
+        document.getElementById('ponto-mes-proximo').addEventListener('click', () => {
+            const proximo = pontoEspelhos[indiceMesAbertoPonto() + 1];
+            if (proximo) abrirMesPonto(proximo.ano, proximo.mes);
+        });
+        document.getElementById('ponto-mes-excluir').addEventListener('click', excluirMesPonto);
+
+        // ============================================
         // ADMINISTRAÇÃO (usuários e perfis do autenticacao-service)
         // ============================================
         const USUARIOS_POR_PAGINA = 10;
         const PERFIL_ADMIN = 'ROLE_ADMIN';
         const NOMES_PERFIS = {
             ROLE_ADMIN: 'Administração', ROLE_GASTOS: 'Gastos', ROLE_SAUDE: 'Saúde', ROLE_ENERGIA: 'Energia',
-            ROLE_REMEDIOS: 'Remédios', ROLE_SALARIO: 'Salário', ROLE_SUPERMERCADO: 'Supermercado', ROLE_LIVROS: 'Livros'
+            ROLE_REMEDIOS: 'Remédios', ROLE_SALARIO: 'Salário', ROLE_SUPERMERCADO: 'Supermercado', ROLE_PONTO: 'Ponto', ROLE_LIVROS: 'Livros'
         };
         // { pagina, usuarios, perfis }
         let administracao = null;
