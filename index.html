@@ -7142,7 +7142,8 @@
         let gastosLancamento = null;
         // { cartaoId, ano, mes, dados, banco (transações do banco na fatura, se o cartão estiver ligado) }
         let gastosFatura = null;
-        // { ano, mes, filtro (chave de FILTROS_RELATORIO_GASTOS), dados (o último relatório carregado) }
+        // { ano, mes, filtro (chave de FILTROS_RELATORIO_GASTOS), origem ('' = todas, 'conta:ID' ou 'cartao:ID'),
+        //   dados (o último relatório carregado) }
         let gastosRelatorio = null;
         // Situação de cada linha do relatório, para os botões de filtro.
         const FILTROS_RELATORIO_GASTOS = {
@@ -8819,6 +8820,7 @@
                 mes: mes ?? atual?.mes ?? hoje.getMonth() + 1,
                 // Pelo botão abre em Todos; voltando de uma edição ou fatura, mantém o filtro.
                 filtro: ano === null ? 'todos' : (gastosRelatorio?.filtro ?? 'todos'),
+                origem: ano === null ? '' : (gastosRelatorio?.origem ?? ''),
                 dados: null
             };
             document.getElementById('gr-conteudo').innerHTML = '<p class="text-muted text-center my-3">Carregando...</p>';
@@ -8869,8 +8871,8 @@
 
         // Entrada positiva e saída negativa. As transferências ficam de fora, como dos totais.
         function exportarRelatorioGastos() {
-            const { ano, mes, filtro, visiveis } = gastosRelatorio;
-            baixarCsv(`relatorio-${ano}-${String(mes).padStart(2, '0')}${filtro === 'todos' ? '' : `-${filtro}`}.csv`,
+            const { ano, mes, filtro, visiveis, nomeOrigem } = gastosRelatorio;
+            baixarCsv(`relatorio-${ano}-${String(mes).padStart(2, '0')}${filtro === 'todos' ? '' : `-${filtro}`}${nomeOrigem ? `-${slugArquivo(nomeOrigem)}` : ''}.csv`,
                 ['Data', 'Descrição', 'Parcela', 'Categoria', 'Conta/Cartão', 'Valor', 'Realizado'], visiveis.map(linha => linha.csv));
         }
 
@@ -8884,7 +8886,7 @@
                 const situacao = l.tipo === 'R' ? (l.realizado ? 'recebidos' : 'a-receber') : (l.realizado ? 'pagos' : 'a-pagar');
                 const csv = [formatarDataISO(l.data), l.descricao, l.parcela ? `${l.parcela}/${l.totalParcelas}` : '', l.categoria?.descricao || '',
                     l.conta?.nome || '', numeroCsv(l.tipo === 'R' ? l.valor : -l.valor), l.realizado ? 'Sim' : 'Não'];
-                return { data: l.data, situacao, csv, valor: l.tipo === 'R' ? l.valor : -l.valor, html: celulaData => `
+                return { data: l.data, situacao, origem: l.conta ? `conta:${l.conta.id}` : '', csv, valor: l.tipo === 'R' ? l.valor : -l.valor, html: celulaData => `
                 <tr class="item-clicavel" data-editar-lancamento="${l.id}">
                     ${celulaData}
                     <td>${descricaoComParcela(l)}${marcaFixa(l)}<div class="small text-muted d-sm-none">${escapeHtml(l.conta?.nome || '')}</div></td>
@@ -8908,7 +8910,7 @@
                 // A quitada aparece no dia em que foi paga (o do extrato, quando conciliada); a outra, no vencimento.
                 const data = f.pagamento || f.vencimento;
                 const csv = [formatarDataISO(data), `Fatura ${f.cartaoNome}`, '', 'Cartão de crédito', f.cartaoNome, numeroCsv(-f.total), quitada ? 'Sim' : 'Não'];
-                return { data, situacao: f.pendente > 0 ? 'a-pagar' : 'pagos', csv, valor: -f.total, html: celulaData => `
+                return { data, origem: `cartao:${f.cartaoId}`, situacao: f.pendente > 0 ? 'a-pagar' : 'pagos', csv, valor: -f.total, html: celulaData => `
                 <tr class="item-clicavel" data-relatorio-fatura="${f.cartaoId}" title="Ver a fatura">
                     ${celulaData}
                     <td>Fatura ${escapeHtml(f.cartaoNome)} <span class="badge ${status.classe}">${status.texto}</span></td>
@@ -8925,8 +8927,22 @@
             });
 
             const todas = [...linhasLancamentos, ...linhasFaturas];
+
+            // Contas e cartões que têm algo no mês, para o filtro por origem: contas primeiro.
+            const origens = new Map();
+            relatorio.lancamentos.forEach(l => l.conta && origens.set(`conta:${l.conta.id}`, l.conta.nome));
+            (relatorio.transferencias || []).forEach(t => [t.contaOrigem, t.contaDestino].forEach(c => c && origens.set(`conta:${c.id}`, c.nome)));
+            (relatorio.faturas || []).forEach(f => origens.set(`cartao:${f.cartaoId}`, f.cartaoNome));
+            const listaOrigens = [...origens].sort(([a, na], [b, nb]) => b.startsWith('conta:') - a.startsWith('conta:') || na.localeCompare(nb, 'pt-BR'));
+            // Uma origem que sumiu (outro mês sem ela) volta para Todas.
+            if (gastosRelatorio.origem && !origens.has(gastosRelatorio.origem)) gastosRelatorio.origem = '';
+            const origem = gastosRelatorio.origem;
+            gastosRelatorio.nomeOrigem = origem ? origens.get(origem) : '';
+            const filtrado = filtro !== 'todos' || origem;
+
             const visiveis = todas
                 .filter(linha => filtro === 'todos' || linha.situacao === filtro)
+                .filter(linha => !origem || linha.origem === origem)
                 // Mais recente primeiro; no mesmo dia, o último lançado em cima.
                 .sort((a, b) => a.data.localeCompare(b.data))
                 .reverse();
@@ -8938,7 +8954,7 @@
                 .join('');
             // Com um filtro marcado, a soma do que está na lista (em centésimos, como na Energia).
             const totalVisiveis = visiveis.reduce((total, linha) => total + Math.round(Number(linha.valor || 0) * 100), 0) / 100;
-            const rodapeTotal = filtro === 'todos' ? '' : `
+            const rodapeTotal = !filtrado ? '' : `
                         <tfoot><tr class="fw-bold">
                             <td colspan="2">Total<span class="small-muted fw-normal"> (${visiveis.length} ${visiveis.length === 1 ? 'item' : 'itens'})</span></td>
                             <td class="d-none d-sm-table-cell" colspan="2"></td>
@@ -8967,7 +8983,14 @@
                     <button type="button" class="btn btn-sm ${chave === filtro ? 'btn-secondary' : 'btn-outline-secondary'}"
                         data-relatorio-filtro="${chave}" aria-pressed="${chave === filtro}">${texto}</button>`).join('')}
                 </div>` : ''}
-                ${filtro !== 'todos' ? `<div class="d-none d-print-block text-center mb-2">Filtro: ${FILTROS_RELATORIO_GASTOS[filtro]}</div>` : ''}
+                ${listaOrigens.length > 1 ? `
+                <div class="d-flex justify-content-center mb-3 d-print-none">
+                    <select class="form-select form-select-sm w-auto mw-100" id="gr-origem" aria-label="Filtrar por conta ou cartão">
+                        <option value="">Todas as contas e cartões</option>
+                        ${listaOrigens.map(([chave, nome]) => `<option value="${chave}" ${chave === origem ? 'selected' : ''}>${chave.startsWith('cartao:') ? 'Cartão ' : ''}${escapeHtml(nome)}</option>`).join('')}
+                    </select>
+                </div>` : ''}
+                ${filtrado ? `<div class="d-none d-print-block text-center mb-2">Filtro: ${[filtro !== 'todos' ? FILTROS_RELATORIO_GASTOS[filtro] : '', escapeHtml(gastosRelatorio.nomeOrigem)].filter(Boolean).join(' · ')}</div>` : ''}
                 ${linhas ? `
                 <div class="table-responsive">
                     <table class="table table-sm table-striped align-middle">
@@ -8975,7 +8998,8 @@
                         <tbody>${linhas}</tbody>${rodapeTotal}
                     </table>
                 </div>` : `<p class="text-muted text-center">${todas.length ? 'Nenhum lançamento neste filtro.' : 'Nenhum lançamento neste mês.'}</p>`}
-                ${filtro === 'todos' ? secaoTransferenciasRelatorio(relatorio.transferencias || []) : ''}`;
+                ${filtro === 'todos' && !origem.startsWith('cartao:') ? secaoTransferenciasRelatorio((relatorio.transferencias || [])
+                    .filter(t => !origem || `conta:${t.contaOrigem?.id}` === origem || `conta:${t.contaDestino?.id}` === origem)) : ''}`;
         }
 
         // Transferências do ciclo, só para consulta: não entram em Entradas, Saídas nem
@@ -9712,6 +9736,10 @@
         });
         document.getElementById('modal-gastos-relatorio').addEventListener('change', function(event) {
             if (event.target.dataset.realizadoLancamento) alterarRealizadoGastos(event.target);
+            if (event.target.id === 'gr-origem' && gastosRelatorio?.dados) {
+                gastosRelatorio.origem = event.target.value;
+                renderizarRelatorioGastos(gastosRelatorio.dados);
+            }
         });
 
         // Cadastros
