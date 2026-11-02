@@ -8902,8 +8902,10 @@
                 const status = STATUS_FATURA[f.status] || { texto: f.status, classe: 'text-bg-secondary' };
                 const quitada = f.pendente <= 0 && f.total > 0;
                 // Fatura com algo pendente continua a pagar, mesmo que parte já tenha sido paga.
-                const csv = [formatarDataISO(f.vencimento), `Fatura ${f.cartaoNome}`, '', 'Cartão de crédito', f.cartaoNome, numeroCsv(-f.total), quitada ? 'Sim' : 'Não'];
-                return { data: f.vencimento, situacao: f.pendente > 0 ? 'a-pagar' : 'pagos', csv, valor: -f.total, html: celulaData => `
+                // A quitada aparece no dia em que foi paga (o do extrato, quando conciliada); a outra, no vencimento.
+                const data = f.pagamento || f.vencimento;
+                const csv = [formatarDataISO(data), `Fatura ${f.cartaoNome}`, '', 'Cartão de crédito', f.cartaoNome, numeroCsv(-f.total), quitada ? 'Sim' : 'Não'];
+                return { data, situacao: f.pendente > 0 ? 'a-pagar' : 'pagos', csv, valor: -f.total, html: celulaData => `
                 <tr class="item-clicavel" data-relatorio-fatura="${f.cartaoId}" title="Ver a fatura">
                     ${celulaData}
                     <td>Fatura ${escapeHtml(f.cartaoNome)} <span class="badge ${status.classe}">${status.texto}</span></td>
