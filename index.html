@@ -8231,10 +8231,13 @@
                 const r = await apiRequest({ url: `${GASTOS_URL}/cartoes/${gastosFatura.cartaoId}/banco/sincronizar`, method: 'POST' });
                 const cartao = gastosDados?.cartoes.find(c => c.id === gastosFatura.cartaoId);
                 if (cartao) Object.assign(cartao, { bancoSincronizado: r.sincronizado, bancoLimite: r.limite, bancoLimiteDisponivel: r.limiteDisponivel });
+                // O banco mudou o vencimento: o serviço já reposicionou as compras não pagas.
+                if (cartao && r.novoDiaVencimento) cartao.diaVencimento = r.novoDiaVencimento;
                 renderizarGastosDashboard();
                 const partes = [`${r.novas} nova${r.novas === 1 ? '' : 's'}`, `${r.atualizadas} alterada${r.atualizadas === 1 ? '' : 's'}`];
                 if (r.removidas) partes.push(`${r.removidas} removida${r.removidas === 1 ? '' : 's'}`);
-                mostrarAlertaModalGastos('gf-alerta', `Banco consultado: ${partes.join(', ')}.`, 'success');
+                const vencimento = r.novoDiaVencimento ? ` O vencimento do cartão mudou para o dia ${r.novoDiaVencimento}.` : '';
+                mostrarAlertaModalGastos('gf-alerta', `Banco consultado: ${partes.join(', ')}.${vencimento}`, 'success');
                 await carregarFaturaGastos();
             } catch (error) {
                 console.error(error);
