@@ -8478,8 +8478,11 @@
                     : 'Desfazer volta a transação para revisar. Um lançamento criado a partir do banco continua existindo.',
                 `<details><summary class="small">Ver as ${revisadas.length}</summary><ul class="list-group list-group-flush lista-gastos">${revisadas.map(l => {
                     const ligado = l.lancamento ?? l.ligado;
+                    // No cartão, a despesa avulsa ligada pode virar fixa (a assinatura que se repete todo mês).
+                    const podeFixar = !conta && l.lancamento && l.lancamento.tipo === 'D' && !l.lancamento.recorrenciaId && !l.lancamento.parcelamento;
                     return linhaConciliacaoGastos(l.transacao, `${SITUACOES[l.transacao.situacao] || ''}${ligado ? ` ↔ ${textoLancamentoConciliacao(ligado)}` : ''}`,
-                        `<button type="button" class="btn btn-sm btn-outline-secondary" data-gk-desfazer="${l.transacao.id}">Desfazer</button>`);
+                        `${podeFixar ? `<button type="button" class="btn btn-sm btn-outline-primary" data-gk-fixa="${l.transacao.id}">Tornar fixa</button>` : ''}
+                         <button type="button" class="btn btn-sm btn-outline-secondary" data-gk-desfazer="${l.transacao.id}">Desfazer</button>`);
                 }).join('')}</ul></details>`);
 
             const vazio = conta ? 'Nenhuma transação do banco neste mês.' : 'Nenhuma transação do banco nesta fatura. Use Sincronizar na fatura para buscar.';
@@ -9630,6 +9633,9 @@
                 acaoConciliacaoGastos({ url: `${transacoes}/${alvo.dataset.gkIgnorar}/ignorar`, method: 'POST' }, 'Transação ignorada.', alvo);
             } else if (alvo.dataset.gkDesfazer) {
                 acaoConciliacaoGastos({ url: `${transacoes}/${alvo.dataset.gkDesfazer}/desfazer`, method: 'POST' }, 'Voltou para revisar.', alvo);
+            } else if (alvo.dataset.gkFixa) {
+                acaoConciliacaoGastos({ url: `${transacoes}/${alvo.dataset.gkFixa}/fixa`, method: 'POST' },
+                    'Agora é despesa fixa: as próximas faturas já trazem este lançamento.', alvo);
             }
         });
 
