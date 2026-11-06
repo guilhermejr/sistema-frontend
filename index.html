@@ -480,6 +480,11 @@
             height: 260px;
         }
 
+        .grafico-faturas-meses {
+            position: relative;
+            height: 320px;
+        }
+
         .legenda-categorias .cor {
             display: inline-block;
             width: 0.75rem;
@@ -495,6 +500,30 @@
 
         .gastos-acoes > .btn-group > .btn:first-child {
             flex-grow: 1;
+        }
+
+        /* Fora da grade do celular o Gráficos fica na largura do texto. */
+        .gastos-acoes > .btn-group.menu-graficos {
+            min-width: 0;
+        }
+
+        /* As duas metades do Gráficos são um botão só: as duas abrem o menu, sem a linha
+           entre elas, e o realce de passar o mouse ou de menu aberto pinta as duas. A
+           divisão fica só para a seta cair no mesmo lugar da seta do Despesa. */
+        .menu-graficos > .btn:first-child {
+            border-right-width: 0;
+        }
+
+        .menu-graficos > .dropdown-toggle-split {
+            border-left-width: 0;
+            margin-left: 0;
+        }
+
+        .menu-graficos:hover > .btn,
+        .menu-graficos:has(.show) > .btn {
+            color: var(--bs-btn-hover-color);
+            background-color: var(--bs-btn-hover-bg);
+            border-color: var(--bs-btn-hover-border-color);
         }
 
         .navegacao-mes {
@@ -1473,7 +1502,14 @@
                             </ul>
                         </div>
                         <button type="button" class="btn btn-outline-secondary" id="btn-gastos-relatorio"><svg class="icone-botao" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M10 13.5a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-6a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5zm-2.5.5a.5.5 0 0 1-.5-.5v-4a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5zm-3 0a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5z"/><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/></svg>Relatório</button>
-                        <button type="button" class="btn btn-outline-secondary" id="btn-gastos-graficos"><svg class="icone-botao" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M7.5 1.018a7 7 0 0 0-4.79 11.566L7.5 7.793zm1 0V7.5h6.482A7 7 0 0 0 8.5 1.018M14.982 8.5H8.207l-4.79 4.79A7 7 0 0 0 14.982 8.5M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8"/></svg>Gráficos</button>
+                        <div class="btn-group menu-graficos">
+                            <button type="button" class="btn btn-outline-secondary" id="btn-gastos-graficos" data-bs-toggle="dropdown" data-bs-reference="parent" aria-expanded="false"><svg class="icone-botao" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M7.5 1.018a7 7 0 0 0-4.79 11.566L7.5 7.793zm1 0V7.5h6.482A7 7 0 0 0 8.5 1.018M14.982 8.5H8.207l-4.79 4.79A7 7 0 0 0 14.982 8.5M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8"/></svg>Gráficos</button>
+                            <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" data-bs-reference="parent" aria-expanded="false" aria-label="Escolher gráfico"></button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><button type="button" class="dropdown-item" id="btn-gastos-graficos-mes"><svg class="icone-botao" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M7.5 1.018a7 7 0 0 0-4.79 11.566L7.5 7.793zm1 0V7.5h6.482A7 7 0 0 0 8.5 1.018M14.982 8.5H8.207l-4.79 4.79A7 7 0 0 0 14.982 8.5M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8"/></svg>Do mês</button></li>
+                                <li><button type="button" class="dropdown-item" id="btn-gastos-graficos-cartao"><svg class="icone-botao" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v1h14V4a1 1 0 0 0-1-1zm13 4H1v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1z"/><path d="M2 10a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/></svg>Cartão de crédito</button></li>
+                            </ul>
+                        </div>
                         <button type="button" class="btn btn-outline-secondary" id="btn-gastos-cadastros"><svg class="icone-botao" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"/><path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115z"/></svg>Cadastros</button>
                     </div>
                 </div>
@@ -2506,6 +2542,27 @@
         </div>
     </div>
 
+    <div class="modal fade" id="modal-gastos-faturas-meses" tabindex="-1" aria-labelledby="gfm-titulo" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="gfm-titulo">Cartão de crédito</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="small-muted text-center mb-3">Faturas pelo mês de vencimento: os 2 meses anteriores e os próximos 10</div>
+                    <div id="gfm-alerta" class="alert alert-danger hidden" role="alert"></div>
+                    <div class="card card-resumo">
+                        <div class="card-body">
+                            <div class="grafico-faturas-meses"><canvas id="gfm-grafico" aria-label="Faturas de cartão por mês" role="img"></canvas></div>
+                            <div id="gfm-lista"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL CADASTROS: CONTAS, CARTÕES E CATEGORIAS -->
     <div class="modal fade" id="modal-admin-usuario" tabindex="-1" aria-labelledby="admin-usuario-titulo" aria-hidden="true">
         <div class="modal-dialog modal-dialog-scrollable">
@@ -2844,6 +2901,7 @@
 
         let graficoGastosDespesas = null;
         let graficoGastosReceitas = null;
+        let graficoGastosFaturasMeses = null;
 
         let graficoPontoSaldo = null;
         let graficoPontoHoras = null;
@@ -8822,6 +8880,116 @@
             });
         }
 
+        // ---------- gráfico do cartão de crédito
+
+        const MESES_CURTOS_GASTOS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+        const formatoCompactoGastos = new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 });
+        // "1,2 mil" a partir de mil; abaixo, o valor inteiro (os centavos ficam na lista).
+        const valorCurtoGastos = valor => Math.abs(valor) >= 1000 ? formatoCompactoGastos.format(valor) : Math.round(valor).toLocaleString('pt-BR');
+
+        async function abrirFaturasMesesGastos() {
+            esconderAlertaModalGastos('gfm-alerta');
+            graficoGastosFaturasMeses?.destroy();
+            graficoGastosFaturasMeses = null;
+            document.getElementById('gfm-lista').innerHTML = '<p class="text-muted text-center my-3">Carregando...</p>';
+
+            // O canvas só tem tamanho com o modal já visível.
+            await trocarModalGastos('modal-gastos-faturas-meses');
+            try {
+                const dados = await apiRequest({ url: `${GASTOS_URL}/relatorios/faturas` });
+                renderizarFaturasMesesGastos(dados);
+            } catch (error) {
+                console.error(error);
+                document.getElementById('gfm-lista').innerHTML = '';
+                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('gfm-alerta', error.message || 'Não foi possível carregar o gráfico.', 'danger');
+            }
+        }
+
+        // Barras empilhadas por cartão; os meses que já passaram ficam esmaecidos e o
+        // total de cada mês vai acima da barra e na lista abaixo.
+        function renderizarFaturasMesesGastos({ meses, cartoes }) {
+            const hoje = new Date();
+            const passou = ({ ano, mes }) => ano * 12 + mes < hoje.getFullYear() * 12 + hoje.getMonth() + 1;
+            const ehAtual = ({ ano, mes }) => ano === hoje.getFullYear() && mes === hoje.getMonth() + 1;
+            const totais = meses.map((_, i) => cartoes.reduce((soma, cartao) => soma + Number(cartao.valores[i]), 0));
+            const cores = cartoes.map((_, i) => CORES_CATEGORIAS_GASTOS[i % CORES_CATEGORIAS_GASTOS.length]);
+            const canvas = document.getElementById('gfm-grafico');
+            const lista = document.getElementById('gfm-lista');
+
+            canvas.parentElement.classList.toggle('hidden', !cartoes.length);
+            if (!cartoes.length) {
+                lista.innerHTML = '<p class="text-muted text-center my-3">Nenhuma fatura de cartão neste período.</p>';
+                return;
+            }
+
+            lista.innerHTML = `
+                <ul class="list-group list-group-flush legenda-categorias mt-3">
+                    ${cartoes.length > 1 ? `
+                    <li class="list-group-item d-flex flex-wrap gap-3 px-0 small">
+                        ${cartoes.map((cartao, i) => `<span class="d-inline-flex align-items-center gap-1"><span class="cor" style="background:${cores[i]}"></span>${escapeHtml(cartao.nome)}</span>`).join('')}
+                    </li>` : ''}
+                    ${meses.map((m, i) => `
+                    <li class="list-group-item d-flex align-items-center gap-2 px-0${passou(m) ? ' text-muted' : ''}">
+                        <span class="flex-grow-1${ehAtual(m) ? ' fw-semibold' : ''}">${nomeMes(m.ano, m.mes)}${ehAtual(m) ? ' (atual)' : ''}</span>
+                        <span class="fw-semibold text-nowrap text-end" style="min-width:6.5rem">${formatarMoedaBR(totais[i])}</span>
+                    </li>`).join('')}
+                </ul>`;
+
+            const ultimo = cartoes.length - 1;
+            // No celular as 12 barras são estreitas: o total vai girado, como nos outros gráficos de barra.
+            const mobile = isMobile();
+            graficoGastosFaturasMeses = new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: meses.map(m => `${MESES_CURTOS_GASTOS[m.mes - 1]}/${String(m.ano).slice(2)}`),
+                    datasets: cartoes.map((cartao, i) => ({
+                        label: cartao.nome,
+                        data: cartao.valores.map(Number),
+                        backgroundColor: meses.map(m => passou(m) ? cores[i] + '66' : cores[i]),
+                        // Só a última pilha leva o rótulo: o total do mês, acima da barra.
+                        datalabels: i === ultimo ? {
+                            display: ctx => totais[ctx.dataIndex] > 0,
+                            anchor: 'end',
+                            align: 'end',
+                            rotation: mobile ? -90 : 0,
+                            color: '#333',
+                            font: { weight: 'bold', size: 11 },
+                            formatter: (_, ctx) => valorCurtoGastos(totais[ctx.dataIndex])
+                        } : { display: false }
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: { top: mobile ? 44 : 20 } },
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: { display: false },
+                            ticks: { font: ctx => ({ weight: ehAtual(meses[ctx.index] ?? {}) ? 'bold' : 'normal' }) }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            ticks: { callback: valor => formatoCompactoGastos.format(valor) }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            filter: item => item.parsed.y !== 0,
+                            callbacks: {
+                                title: itens => nomeMes(meses[itens[0].dataIndex].ano, meses[itens[0].dataIndex].mes),
+                                label: ctx => ` ${ctx.dataset.label}: ${formatarMoedaBR(ctx.parsed.y)}`,
+                                footer: itens => cartoes.length > 1 ? `Total: ${formatarMoedaBR(totais[itens[0].dataIndex])}` : ''
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
         // ---------- relatório do mês
 
         async function abrirRelatorioGastos(ano = null, mes = null) {
@@ -9503,7 +9671,8 @@
 
         document.getElementById('btn-gastos-transferencia').addEventListener('click', abrirMovimentacaoGastos);
         document.getElementById('btn-gastos-relatorio').addEventListener('click', () => abrirRelatorioGastos());
-        document.getElementById('btn-gastos-graficos').addEventListener('click', abrirGraficosGastos);
+        document.getElementById('btn-gastos-graficos-mes').addEventListener('click', abrirGraficosGastos);
+        document.getElementById('btn-gastos-graficos-cartao').addEventListener('click', abrirFaturasMesesGastos);
         document.getElementById('btn-gastos-cadastros').addEventListener('click', abrirCadastrosGastos);
 
         // Lançamento

@@ -33,7 +33,7 @@ The gateway fronts several Spring services; this frontend calls eight, all under
 - `saude-service` — `treinos/*` and `metricas/*` (weekly/moving-average health series)
 - `supermercado-service` — `compras?page&size&sort` (paginated invoices, 20 per page) and `compras/{id}` (detail with items); `nfe` (invoices still waiting for the scheduled task, shown above the table) and `DELETE nfe/{id}`
 - `remedios-service` — `sintomas`, `remedios`, `remedios/vencendo`, `remedios/estoque-baixo` and `PUT remedios/consumir/{id}`
-- `gastos-service` — `dashboard`, `agenda/{pagar|receber}`, `relatorios/{ano}/{mes}`, `configuracoes`, `contas`, `cartoes` (+ `faturas/*` and invoice payment), `categorias`, `lancamentos` and `movimentacoes`; full CRUD, see its README
+- `gastos-service` — `dashboard`, `agenda/{pagar|receber}`, `relatorios/{ano}/{mes}`, `relatorios/faturas` (card invoices month by month, for the Gráficos › Cartão de crédito chart), `configuracoes`, `contas`, `cartoes` (+ `faturas/*` and invoice payment), `categorias`, `lancamentos` and `movimentacoes`; full CRUD, see its README
 - `ponto-service` — `espelhos` (list with monthly totals; `POST` multipart upload of the PDF), `espelhos/{ano}/{mes}` (days and adjustments; `DELETE`)
 
 Sibling repos for these live at `../sistema-*-service`.
