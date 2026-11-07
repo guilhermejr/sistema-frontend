@@ -1432,7 +1432,10 @@
 
                 <div id="remedios-alerta" class="alert hidden" role="alert"></div>
 
-                <div class="d-flex justify-content-end mb-3">
+                <div class="d-flex justify-content-end gap-2 mb-3">
+                    <button id="btn-sintomas" class="btn btn-outline-secondary" type="button">
+                        Sintomas
+                    </button>
                     <button id="btn-novo-remedio" class="btn btn-primary" type="button">
                         Novo remédio
                     </button>
@@ -1911,6 +1914,40 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-success" id="modal-confirmar-consumo-ok">Consumir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SINTOMAS (CADASTRO) -->
+    <div class="modal fade" id="modal-sintomas" tabindex="-1" aria-labelledby="modal-sintomas-label" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-sintomas-label">Sintomas</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="sintomas-cadastro-alerta" class="alert hidden" role="alert"></div>
+
+                    <form class="form-validado row g-2 align-items-start mb-3" id="form-sintoma" novalidate>
+                        <div class="col-12 col-sm">
+                            <label for="sintoma-descricao" class="form-label">Descrição</label>
+                            <input type="text" class="form-control" id="sintoma-descricao" data-tipo="texto" maxlength="255" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-12 col-sm-auto pt-sm-4 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-fill mt-sm-1" id="sintoma-salvar">Adicionar</button>
+                            <button type="button" class="btn btn-outline-secondary mt-sm-1 hidden" id="sintoma-cancelar">Cancelar</button>
+                        </div>
+                    </form>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped align-middle mb-0">
+                            <thead><tr><th>Sintoma</th><th aria-label="Ações"></th></tr></thead>
+                            <tbody id="sintomas-cadastro-lista"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -6850,6 +6887,144 @@
             }
         }
 
+        // Cadastro de sintomas: um modal com o formulário em cima (Adicionar, ou Salvar
+        // quando há um em edição) e a lista embaixo. Remover só fica liberado para
+        // sintoma sem remédio: o backend recusa os outros (a FK não tem cascade).
+        let sintomaEmEdicao = null;
+        let sintomasAlterados = false;
+
+        function mostrarAlertaSintomas(mensagem, tipo) {
+            const alerta = document.getElementById('sintomas-cadastro-alerta');
+            alerta.className = `alert alert-${tipo}`;
+            alerta.textContent = mensagem;
+            alerta.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            sumirSeSucesso(alerta);
+        }
+
+        function esconderAlertaSintomas() {
+            const alerta = document.getElementById('sintomas-cadastro-alerta');
+            alerta.textContent = '';
+            alerta.classList.add('hidden');
+        }
+
+        function renderizarCadastroSintomas() {
+            document.getElementById('sintomas-cadastro-lista').innerHTML = sintomasCarregados.length
+                ? sintomasCarregados.map(sintoma => {
+                    const id = escapeHtml(String(sintoma.id ?? ''));
+                    const quantos = remediosParaSintoma(sintoma.id).length;
+                    return `
+                        <tr>
+                            <td>${formatarTexto(sintoma.descricao, 'Sem descrição')}
+                                <div class="small-muted">${quantos ? `${quantos} remédio(s)` : 'Nenhum remédio'}</div></td>
+                            <td class="text-end text-nowrap">
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-sintoma-acao="editar" data-id="${id}">Editar</button>
+                                <button type="button" class="btn btn-sm btn-outline-danger" data-sintoma-acao="remover" data-id="${id}"
+                                        ${quantos ? 'disabled title="Usado por remédios"' : ''}>Remover</button>
+                            </td>
+                        </tr>`;
+                }).join('')
+                : '<tr><td colspan="2" class="text-muted">Nenhum sintoma cadastrado.</td></tr>';
+        }
+
+        function cancelarEdicaoSintoma() {
+            sintomaEmEdicao = null;
+            const input = document.getElementById('sintoma-descricao');
+            input.value = '';
+            marcarCampo(input, null);
+            document.getElementById('sintoma-salvar').textContent = 'Adicionar';
+            document.getElementById('sintoma-cancelar').classList.add('hidden');
+        }
+
+        function editarSintoma(id) {
+            const sintoma = sintomasCarregados.find(s => String(s.id) === String(id));
+            if (!sintoma) return;
+            cancelarEdicaoSintoma();
+            sintomaEmEdicao = sintoma;
+            document.getElementById('sintoma-descricao').value = sintoma.descricao ?? '';
+            document.getElementById('sintoma-salvar').textContent = 'Salvar';
+            document.getElementById('sintoma-cancelar').classList.remove('hidden');
+            document.getElementById('sintoma-descricao').focus();
+        }
+
+        // Relê sintomas e remédios para a lista do modal; a aba é refeita ao fechar.
+        async function recarregarCadastroSintomas() {
+            const [sintomas, remedios] = await Promise.all([
+                apiRequest({ url: SINTOMAS_URL }),
+                apiRequest({ url: REMEDIOS_URL })
+            ]);
+            sintomasCarregados = Array.isArray(sintomas) ? sintomas : [];
+            remediosCarregados = Array.isArray(remedios) ? remedios : [];
+            renderizarCadastroSintomas();
+        }
+
+        async function salvarSintoma() {
+            esconderAlertaSintomas();
+            const input = document.getElementById('sintoma-descricao');
+            const mensagem = validarCampo(input);
+            marcarCampo(input, mensagem);
+            if (mensagem) {
+                input.focus();
+                return;
+            }
+
+            const edicao = sintomaEmEdicao;
+            const descricao = input.value.trim();
+            const botao = document.getElementById('sintoma-salvar');
+            botao.disabled = true;
+            try {
+                await apiRequest({
+                    url: edicao ? `${SINTOMAS_URL}/${edicao.id}` : SINTOMAS_URL,
+                    method: edicao ? 'PUT' : 'POST',
+                    body: { descricao }
+                });
+                sintomasAlterados = true;
+                cancelarEdicaoSintoma();
+                await recarregarCadastroSintomas();
+                mostrarAlertaSintomas(`${descricao} ${edicao ? 'alterado' : 'cadastrado'}.`, 'success');
+            } catch (error) {
+                console.error(error);
+                if (!sessaoExpirouGastos(error)) mostrarAlertaSintomas(error.message || 'Não foi possível salvar o sintoma.', 'danger');
+            } finally {
+                botao.disabled = false;
+            }
+        }
+
+        async function removerSintoma(id) {
+            const sintoma = sintomasCarregados.find(s => String(s.id) === String(id));
+            const descricao = sintoma?.descricao || 'sintoma';
+            if (!confirm(`Remover ${descricao}?`)) return;
+
+            esconderAlertaSintomas();
+            try {
+                await apiRequest({ url: `${SINTOMAS_URL}/${id}`, method: 'DELETE' });
+                sintomasAlterados = true;
+                if (String(sintomaEmEdicao?.id) === String(id)) cancelarEdicaoSintoma();
+                if (String(sintomaSelecionadoId) === String(id)) {
+                    sintomaSelecionadoId = null;
+                    document.getElementById('remedios-do-sintoma').innerHTML = '';
+                    document.getElementById('titulo-remedios-sintoma').textContent = 'Remédios';
+                    document.getElementById('subtitulo-remedios-sintoma').textContent = 'Selecione um sintoma acima.';
+                }
+                await recarregarCadastroSintomas();
+                mostrarAlertaSintomas(`${descricao} removido.`, 'success');
+            } catch (error) {
+                console.error(error);
+                if (!sessaoExpirouGastos(error)) mostrarAlertaSintomas(error.message || `Não foi possível remover ${descricao}.`, 'danger');
+            }
+        }
+
+        function abrirCadastroSintomas() {
+            esconderAlertaRemedios();
+            esconderAlertaSintomas();
+            cancelarEdicaoSintoma();
+            sintomasAlterados = false;
+            renderizarCadastroSintomas();
+
+            const modalElement = document.getElementById('modal-sintomas');
+            modalElement.addEventListener('shown.bs.modal', () => document.getElementById('sintoma-descricao').focus(), { once: true });
+            bootstrap.Modal.getOrCreateInstance(modalElement).show();
+        }
+
         // O backend apaga junto o histórico de consumo do remédio.
         async function removerRemedio(remedio) {
             const nome = remedio?.nome || 'remédio';
@@ -7095,7 +7270,7 @@
         });
 
         // Máscaras e validação campo a campo valem para todos os formulários de cadastro.
-        ['form-novo-acompanhamento', 'form-remedio', 'form-nova-folha', 'form-item-folha', 'form-admin-usuario', 'form-troca-senha', ...FORMULARIOS_GASTOS].forEach(idFormulario => {
+        ['form-novo-acompanhamento', 'form-remedio', 'form-sintoma', 'form-nova-folha', 'form-item-folha', 'form-admin-usuario', 'form-troca-senha', ...FORMULARIOS_GASTOS].forEach(idFormulario => {
             const form = document.getElementById(idFormulario);
 
             form.addEventListener('input', function(event) {
@@ -7281,6 +7456,27 @@
         });
 
         document.getElementById('btn-novo-remedio').addEventListener('click', () => abrirModalRemedio());
+
+        document.getElementById('btn-sintomas').addEventListener('click', abrirCadastroSintomas);
+
+        document.getElementById('form-sintoma').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            await salvarSintoma();
+        });
+
+        document.getElementById('sintoma-cancelar').addEventListener('click', cancelarEdicaoSintoma);
+
+        document.getElementById('sintomas-cadastro-lista').addEventListener('click', async function(event) {
+            const botao = event.target.closest('button[data-sintoma-acao]');
+            if (!botao || botao.disabled) return;
+            if (botao.dataset.sintomaAcao === 'editar') editarSintoma(botao.dataset.id);
+            else await removerSintoma(botao.dataset.id);
+        });
+
+        // Os chips e os cards da aba dependem dos sintomas: refaz a aba se algo mudou.
+        document.getElementById('modal-sintomas').addEventListener('hidden.bs.modal', async function() {
+            if (sintomasAlterados) await carregarRemediosDashboard();
+        });
 
         document.getElementById('form-remedio').addEventListener('submit', async function(event) {
             event.preventDefault();
