@@ -1432,6 +1432,12 @@
 
                 <div id="remedios-alerta" class="alert hidden" role="alert"></div>
 
+                <div class="d-flex justify-content-end mb-3">
+                    <button id="btn-novo-remedio" class="btn btn-primary" type="button">
+                        Novo remédio
+                    </button>
+                </div>
+
                 <div class="row mb-2">
                     <div class="col-12 col-lg-6 mb-3">
                         <div class="card table-card alerta-card h-100">
@@ -1907,6 +1913,81 @@
                     <button type="button" class="btn btn-success" id="modal-confirmar-consumo-ok">Consumir</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL REMEDIO (NOVO / EDITAR) -->
+    <div class="modal fade" id="modal-remedio" tabindex="-1" aria-labelledby="modal-remedio-label" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <form class="modal-content form-validado" id="form-remedio" novalidate>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-remedio-label">Novo remédio</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="remedio-alerta" class="alert alert-danger hidden" role="alert"></div>
+
+                    <div class="row g-3 mb-2">
+                        <div class="col-12 col-md-8">
+                            <label for="remedio-nome" class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="remedio-nome" name="nome" data-tipo="texto" maxlength="255" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label for="remedio-validade" class="form-label">Validade</label>
+                            <div class="campo-data">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="remedio-validade" name="validade" data-tipo="data" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10" autocomplete="off">
+                                    <button type="button" class="btn btn-outline-secondary botao-calendario" data-calendario aria-label="Abrir calendário" aria-expanded="false"></button>
+                                </div>
+                                <div class="mini-calendario hidden" role="dialog" aria-label="Escolher data"></div>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <label for="remedio-quantidade" class="form-label">Estoque</label>
+                            <input type="text" class="form-control" id="remedio-quantidade" name="quantidade" data-tipo="inteiro" data-vazio="Obrigatório." data-minimo="0" data-maximo="9999" inputmode="numeric" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-4">
+                            <label for="remedio-dose" class="form-label">Dose</label>
+                            <input type="text" class="form-control" id="remedio-dose" name="dose" data-tipo="inteiro" data-vazio="Obrigatório." data-minimo="1" data-maximo="9999" inputmode="numeric" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-4">
+                            <label for="remedio-estoqueBaixo" class="form-label">Alerta em</label>
+                            <input type="text" class="form-control" id="remedio-estoqueBaixo" name="estoqueBaixo" data-tipo="inteiro" data-vazio="Obrigatório." data-minimo="1" data-maximo="9999" inputmode="numeric" autocomplete="off">
+                            <div class="invalid-feedback"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-2">
+                        <span class="form-label d-block">Sintomas</span>
+                        <div id="remedio-sintomas" class="d-flex flex-wrap gap-2"></div>
+                        <div class="invalid-feedback d-block" id="remedio-sintomas-erro"></div>
+                    </div>
+
+                    <div class="mb-2">
+                        <label for="remedio-descricao" class="form-label">Descrição</label>
+                        <textarea class="form-control" id="remedio-descricao" name="descricao" data-tipo="texto" rows="2"></textarea>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="mb-2">
+                        <label for="remedio-posologia" class="form-label">Posologia</label>
+                        <textarea class="form-control" id="remedio-posologia" name="posologia" data-tipo="texto" rows="2"></textarea>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div>
+                        <label for="remedio-contraIndicacao" class="form-label">Contraindicação</label>
+                        <textarea class="form-control" id="remedio-contraIndicacao" name="contraIndicacao" data-tipo="texto" rows="2"></textarea>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="remedio-salvar">Salvar</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -5121,7 +5202,8 @@
                 case 'inteiro': {
                     const minimo = Number(input.dataset.minimo);
                     const maximo = Number(input.dataset.maximo);
-                    if (!valor) return 'Informe um número.';
+                    // data-vazio: mensagem mais curta para campo estreito (três por linha no celular).
+                    if (!valor) return input.dataset.vazio || 'Informe um número.';
                     if (!/^\d+$/.test(valor) || Number(valor) < minimo || Number(valor) > maximo) return `De ${minimo} a ${maximo}.`;
                     return null;
                 }
@@ -6452,14 +6534,24 @@
                                     ` : ''}
                                 </dl>
 
-                                <button type="button"
-                                        class="btn btn-sm ${liberado ? 'btn-success' : 'btn-outline-secondary'}"
-                                        data-consumir-id="${escapeHtml(String(remedio.id ?? ''))}"
-                                        ${liberado ? '' : 'disabled'}>
-                                    ${liberado
-                                        ? `Consumir ${formatarNumero(remedio.dose, 0)}`
-                                        : 'Estoque insuficiente'}
-                                </button>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="button"
+                                            class="btn btn-sm ${liberado ? 'btn-success' : 'btn-outline-secondary'}"
+                                            data-consumir-id="${escapeHtml(String(remedio.id ?? ''))}"
+                                            ${liberado ? '' : 'disabled'}>
+                                        ${liberado
+                                            ? `Consumir ${formatarNumero(remedio.dose, 0)}`
+                                            : 'Estoque insuficiente'}
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-primary ms-auto"
+                                            data-editar-remedio-id="${escapeHtml(String(remedio.id ?? ''))}">
+                                        Editar
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                            data-remover-remedio-id="${escapeHtml(String(remedio.id ?? ''))}">
+                                        Remover
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -6601,6 +6693,189 @@
                 }
 
                 mostrarAlertaRemedios(error.message || `Não foi possível consumir ${nome}.`, 'danger');
+            } finally {
+                toggleDashboardLoading(false);
+            }
+        }
+
+        // Cadastro de remédio: o mesmo modal cria (POST) e edita (PUT). Espelha o
+        // RemedioRequest: todos os textos obrigatórios, validade dd/MM/aaaa, estoque
+        // >= 0, dose e alerta >= 1 e ao menos um sintoma.
+        let remedioEmEdicao = null;
+
+        function mostrarAlertaRemedio(mensagem) {
+            const alerta = document.getElementById('remedio-alerta');
+            alerta.textContent = mensagem;
+            show('remedio-alerta');
+            alerta.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function esconderAlertaRemedio() {
+            const alerta = document.getElementById('remedio-alerta');
+            alerta.textContent = '';
+            hide('remedio-alerta');
+        }
+
+        function sintomasMarcadosRemedio() {
+            return [...document.querySelectorAll('#remedio-sintomas input:checked')].map(input => Number(input.value));
+        }
+
+        function validarSintomasRemedio() {
+            const mensagem = sintomasMarcadosRemedio().length ? '' : 'Escolha ao menos um sintoma.';
+            document.getElementById('remedio-sintomas-erro').textContent = mensagem;
+            return !mensagem;
+        }
+
+        function validarFormularioRemedio() {
+            const form = document.getElementById('form-remedio');
+            let primeiroInvalido = null;
+
+            form.querySelectorAll('[data-tipo]').forEach(campo => {
+                const mensagem = validarCampo(campo);
+                marcarCampo(campo, mensagem);
+                if (mensagem && !primeiroInvalido) primeiroInvalido = campo;
+            });
+
+            const sintomasOk = validarSintomasRemedio();
+            if (!sintomasOk && !primeiroInvalido) {
+                primeiroInvalido = document.querySelector('#remedio-sintomas input');
+            }
+
+            primeiroInvalido?.focus();
+            return !primeiroInvalido;
+        }
+
+        function abrirModalRemedio(remedio = null) {
+            remedioEmEdicao = remedio;
+
+            const form = document.getElementById('form-remedio');
+            form.reset();
+            form.querySelectorAll('[data-tipo]').forEach(campo => marcarCampo(campo, null));
+            document.getElementById('remedio-sintomas-erro').textContent = '';
+            esconderAlertaRemedio();
+            esconderAlertaRemedios();
+
+            document.getElementById('modal-remedio-label').textContent = remedio ? 'Editar remédio' : 'Novo remédio';
+
+            // Um novo remédio já vem marcado com o sintoma que está aberto na aba.
+            const marcados = new Set(remedio
+                ? (remedio.sintomas || []).map(s => String(s.id))
+                : (sintomaSelecionadoId !== null ? [String(sintomaSelecionadoId)] : []));
+
+            document.getElementById('remedio-sintomas').innerHTML = sintomasCarregados.length
+                ? sintomasCarregados.map(sintoma => {
+                    const id = escapeHtml(String(sintoma.id ?? ''));
+                    return `
+                        <input type="checkbox" class="btn-check" id="remedio-sintoma-${id}" value="${id}" autocomplete="off"
+                               ${marcados.has(String(sintoma.id)) ? 'checked' : ''}>
+                        <label class="btn btn-sm btn-outline-primary chip-sintoma" for="remedio-sintoma-${id}">
+                            ${formatarTexto(sintoma.descricao, 'Sem descrição')}
+                        </label>
+                    `;
+                }).join('')
+                : '<span class="text-muted">Nenhum sintoma cadastrado.</span>';
+
+            if (remedio) {
+                document.getElementById('remedio-nome').value = remedio.nome ?? '';
+                document.getElementById('remedio-validade').value = remedio.validade ? formatarDataISO(remedio.validade) : '';
+                document.getElementById('remedio-quantidade').value = remedio.quantidade ?? '';
+                document.getElementById('remedio-dose').value = remedio.dose ?? '';
+                document.getElementById('remedio-estoqueBaixo').value = remedio.estoqueBaixo ?? '';
+                document.getElementById('remedio-descricao').value = remedio.descricao ?? '';
+                document.getElementById('remedio-posologia').value = remedio.posologia ?? '';
+                document.getElementById('remedio-contraIndicacao').value = remedio.contraIndicacao ?? '';
+            }
+
+            const modalElement = document.getElementById('modal-remedio');
+            modalElement.addEventListener('shown.bs.modal', () => document.getElementById('remedio-nome').focus(), { once: true });
+            bootstrap.Modal.getOrCreateInstance(modalElement).show();
+        }
+
+        async function salvarRemedio() {
+            esconderAlertaRemedio();
+            if (!validarFormularioRemedio()) return;
+
+            const valor = id => document.getElementById(id).value.trim();
+            const dados = {
+                nome: valor('remedio-nome'),
+                validade: valor('remedio-validade'),
+                quantidade: Number(valor('remedio-quantidade')),
+                dose: Number(valor('remedio-dose')),
+                estoqueBaixo: Number(valor('remedio-estoqueBaixo')),
+                descricao: valor('remedio-descricao'),
+                posologia: valor('remedio-posologia'),
+                contraIndicacao: valor('remedio-contraIndicacao'),
+                sintomas: sintomasMarcadosRemedio()
+            };
+
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-remedio'));
+            const botaoSalvar = document.getElementById('remedio-salvar');
+            botaoSalvar.disabled = true;
+            botaoSalvar.textContent = 'Salvando...';
+
+            try {
+                await apiRequest({
+                    url: remedioEmEdicao ? `${REMEDIOS_URL}/${remedioEmEdicao.id}` : REMEDIOS_URL,
+                    method: remedioEmEdicao ? 'PUT' : 'POST',
+                    body: dados
+                });
+
+                modal.hide();
+                mostrarAlertaRemedios(`${dados.nome} ${remedioEmEdicao ? 'atualizado' : 'cadastrado'}.`, 'success');
+
+                // Fica num sintoma onde o remédio salvo aparece.
+                if (!dados.sintomas.some(id => String(id) === String(sintomaSelecionadoId))) {
+                    sintomaSelecionadoId = dados.sintomas[0];
+                }
+
+                await carregarRemediosDashboard();
+            } catch (error) {
+                console.error(error);
+
+                if (
+                    String(error.message || '').includes('Sessão expirada') ||
+                    String(error.message || '').includes('autenticado')
+                ) {
+                    modal.hide();
+                    limparSessaoCompleta();
+                    mostrarLogin();
+                    setLoginError('Sua sessão expirou. Faça login novamente.');
+                    return;
+                }
+
+                mostrarAlertaRemedio(error.message || 'Não foi possível salvar o remédio.');
+            } finally {
+                botaoSalvar.disabled = false;
+                botaoSalvar.textContent = 'Salvar';
+            }
+        }
+
+        // O backend apaga junto o histórico de consumo do remédio.
+        async function removerRemedio(remedio) {
+            const nome = remedio?.nome || 'remédio';
+            if (!confirm(`Remover ${nome}? O histórico de consumo dele também será apagado.`)) return;
+
+            esconderAlertaRemedios();
+            toggleDashboardLoading(true);
+
+            try {
+                await apiRequest({ url: `${REMEDIOS_URL}/${remedio.id}`, method: 'DELETE' });
+                mostrarAlertaRemedios(`${nome} removido.`, 'success');
+                await carregarRemediosDashboard();
+            } catch (error) {
+                console.error(error);
+
+                if (
+                    String(error.message || '').includes('Sessão expirada') ||
+                    String(error.message || '').includes('autenticado')
+                ) {
+                    limparSessaoCompleta();
+                    mostrarLogin();
+                    setLoginError('Sua sessão expirou. Faça login novamente.');
+                    return;
+                }
+
+                mostrarAlertaRemedios(error.message || `Não foi possível remover ${nome}.`, 'danger');
             } finally {
                 toggleDashboardLoading(false);
             }
@@ -6820,7 +7095,7 @@
         });
 
         // Máscaras e validação campo a campo valem para todos os formulários de cadastro.
-        ['form-novo-acompanhamento', 'form-nova-folha', 'form-item-folha', 'form-admin-usuario', 'form-troca-senha', ...FORMULARIOS_GASTOS].forEach(idFormulario => {
+        ['form-novo-acompanhamento', 'form-remedio', 'form-nova-folha', 'form-item-folha', 'form-admin-usuario', 'form-troca-senha', ...FORMULARIOS_GASTOS].forEach(idFormulario => {
             const form = document.getElementById(idFormulario);
 
             form.addEventListener('input', function(event) {
@@ -7005,7 +7280,29 @@
             }, 250);
         });
 
+        document.getElementById('btn-novo-remedio').addEventListener('click', () => abrirModalRemedio());
+
+        document.getElementById('form-remedio').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            await salvarRemedio();
+        });
+
+        document.getElementById('remedio-sintomas').addEventListener('change', function() {
+            if (document.getElementById('remedio-sintomas-erro').textContent) validarSintomasRemedio();
+        });
+
         document.getElementById('remedios-do-sintoma').addEventListener('click', async function(event) {
+            const editar = event.target.closest('button[data-editar-remedio-id]');
+            const remover = event.target.closest('button[data-remover-remedio-id]');
+            if (editar || remover) {
+                const id = (editar || remover).getAttribute(editar ? 'data-editar-remedio-id' : 'data-remover-remedio-id');
+                const remedio = remediosCarregados.find(r => String(r.id) === String(id));
+                if (!remedio) return;
+                if (editar) abrirModalRemedio(remedio);
+                else await removerRemedio(remedio);
+                return;
+            }
+
             const botao = event.target.closest('button[data-consumir-id]');
             if (!botao || botao.disabled) return;
 
