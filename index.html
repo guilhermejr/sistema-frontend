@@ -1730,10 +1730,10 @@
                     <div class="col-12 col-md-6 col-xl-4 mb-3">
                         <div class="card card-resumo h-100">
                             <div class="card-body d-flex align-items-center gap-3">
-                                <span class="icone-chip tom-indigo"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M6 .278a.77.77 0 0 1 .08.858 7.2 7.2 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277q.792-.001 1.533-.16a.79.79 0 0 1 .81.316.73.73 0 0 1-.031.893A8.35 8.35 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.75.75 0 0 1 6 .278"/><path d="M10.794 3.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387a1.73 1.73 0 0 0-1.097 1.097l-.387 1.162a.217.217 0 0 1-.412 0l-.387-1.162A1.73 1.73 0 0 0 9.31 6.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387a1.73 1.73 0 0 0 1.097-1.097zM13.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.16 1.16 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.16 1.16 0 0 0-.732-.732l-.774-.258a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732z"/></svg></span>
+                                <span class="icone-chip tom-ciano"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1a2 2 0 0 1 2 2v.07h1.68a1.5 1.5 0 0 1 1.47 1.2l1.82 9.1A1.5 1.5 0 0 1 13.5 15h-11a1.5 1.5 0 0 1-1.47-1.8l1.82-9.1a1.5 1.5 0 0 1 1.47-1.2H6V3a2 2 0 0 1 2-2m0 1a1 1 0 0 0-1 1v.07h2V3a1 1 0 0 0-1-1"/></svg></span>
                                 <div class="text-start">
-                                    <h6 class="text-muted mb-1">Sono profundo</h6>
-                                    <div><span id="card-saude-sono-profundo" class="fs-4 fw-bold">--</span> <span id="card-saude-sono-profundo-periodo" class="small-muted">--</span></div>
+                                    <h6 class="text-muted mb-1">Último peso</h6>
+                                    <div><span id="card-saude-peso" class="fs-4 fw-bold">--</span> <span id="card-saude-peso-data" class="small-muted">--</span></div>
                                 </div>
                             </div>
                         </div>
@@ -1802,7 +1802,7 @@
 
                 <div class="card grafico-card">
                     <div class="card-body">
-                        <canvas id="saude-sono-profundo-medio"></canvas>
+                        <canvas id="saude-pesos"></canvas>
                     </div>
                 </div>
 
@@ -2864,7 +2864,7 @@
         const SAUDE_EXPOSICAO_SOL_URL = `${API_BASE}/saude-service/metricas/exposicao_ao_sol`;
         const SAUDE_FREQUENCIA_CARDIACA_REPOUSO_URL = `${API_BASE}/saude-service/metricas/frequencia_cardiaca_em_repouso_media_movel_8_dias`;
         const SAUDE_PASSOS_MEDIOS_DIARIOS_URL = `${API_BASE}/saude-service/metricas/passos_medios_diarios_media_movel_8_dias`;
-        const SAUDE_SONO_PROFUNDO_MEDIO_URL = `${API_BASE}/saude-service/metricas/sono_profundo_medio_media_movel_8_dias`;
+        const SAUDE_ULTIMOS_PESOS_URL = `${API_BASE}/saude-service/metricas/ultimos_pesos`;
         const SAUDE_SONO_TOTAL_MEDIO_URL = `${API_BASE}/saude-service/metricas/sono_total_medio_media_movel_8_dias`;
         const SAUDE_METRICAS_MAIS_RECENTES_URL = `${API_BASE}/saude-service/metricas/mais_recente`;
 
@@ -2896,7 +2896,7 @@
         let graficoSaudeSol = null;
         let graficoSaudeFrequenciaCardiacaRepouso = null;
         let graficoSaudePassosMediosDiarios = null;
-        let graficoSaudeSonoProfundoMedio = null;
+        let graficoSaudePesos = null;
         let graficoSaudeSonoTotalMedio = null;
 
         let graficoGastosDespesas = null;
@@ -3822,7 +3822,7 @@
             if (graficoSaudeSol) { graficoSaudeSol.destroy(); graficoSaudeSol = null; }
             if (graficoSaudeFrequenciaCardiacaRepouso) { graficoSaudeFrequenciaCardiacaRepouso.destroy(); graficoSaudeFrequenciaCardiacaRepouso = null; }
             if (graficoSaudePassosMediosDiarios) { graficoSaudePassosMediosDiarios.destroy(); graficoSaudePassosMediosDiarios = null; }
-            if (graficoSaudeSonoProfundoMedio) { graficoSaudeSonoProfundoMedio.destroy(); graficoSaudeSonoProfundoMedio = null; }
+            if (graficoSaudePesos) { graficoSaudePesos.destroy(); graficoSaudePesos = null; }
             if (graficoSaudeSonoTotalMedio) { graficoSaudeSonoTotalMedio.destroy(); graficoSaudeSonoTotalMedio = null; }
         }
 
@@ -4408,15 +4408,14 @@
             });
         }
 
-        function criarGraficoSaudeSonoProfundoMedio(labels, dados, textos) {
-            const ctx = document.getElementById('saude-sono-profundo-medio');
-            graficoSaudeSonoProfundoMedio = new Chart(ctx, {
+        function criarGraficoSaudePesos(labels, dados) {
+            const ctx = document.getElementById('saude-pesos');
+            graficoSaudePesos = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels,
-                    texto: textos,
                     datasets: [{
-                        label: 'Horas',
+                        label: 'Kg',
                         data: dados,
                         borderWidth: 2,
                         tension: 0.3,
@@ -4424,19 +4423,15 @@
                     }]
                 },
                 options: {
-                    ...opcoesPadraoComDatalabels('Sono profundo médio', (value, context) => {
-                        const index = context.dataIndex;
-                        const texto = context.chart.data.texto[index];
-                        return `${texto}`;
-                    }),
+                    ...opcoesPadraoComDatalabels('Últimos pesos', value => formatarNumero(value, 2)),
                     scales: {
                         x: {
                             ticks: {
                                 padding: 10
                             }
                         },
+                        // Sem começar do zero: a variação é de poucos quilos.
                         y: { 
-                            beginAtZero: true,
                             ticks: {
                                 padding: 20
                             },
@@ -4708,7 +4703,7 @@
                 exposicaoSolResposta,
                 frequenciaCardiacaRepousoResposta,
                 passosMediosDiariosResposta,
-                sonoProfundoMedioResposta,
+                ultimosPesosResposta,
                 sonoTotalMedioResposta,
                 treinosMaisRecentesResposta,
                 metricasMaisRecentesResposta,
@@ -4722,7 +4717,7 @@
                 apiRequest({ url: SAUDE_EXPOSICAO_SOL_URL }),
                 apiRequest({ url: SAUDE_FREQUENCIA_CARDIACA_REPOUSO_URL }),
                 apiRequest({ url: SAUDE_PASSOS_MEDIOS_DIARIOS_URL }),
-                apiRequest({ url: SAUDE_SONO_PROFUNDO_MEDIO_URL }),
+                apiRequest({ url: SAUDE_ULTIMOS_PESOS_URL }),
                 apiRequest({ url: SAUDE_SONO_TOTAL_MEDIO_URL }),
                 apiRequest({ url: SAUDE_TREINOS_MAIS_RECENTES_URL }),
                 apiRequest({ url: SAUDE_METRICAS_MAIS_RECENTES_URL }),
@@ -4737,7 +4732,7 @@
             const exposicaoSol = ordenarCrescente(normalizarDadosSaude(exposicaoSolResposta));
             const frequenciaCardiacaRepouso = ordenarCrescente(normalizarDadosSaude(frequenciaCardiacaRepousoResposta));
             const passosMediosDiarios = ordenarCrescente(normalizarDadosSaude(passosMediosDiariosResposta));
-            const sonoProfundoMedio = ordenarCrescente(normalizarDadosSaudeSono(sonoProfundoMedioResposta));
+            const ultimosPesos = ordenarCrescente(normalizarDadosSaude(ultimosPesosResposta));
             const sonoTotalMedio = ordenarCrescente(normalizarDadosSaudeSono(sonoTotalMedioResposta));
 
             const dadosDistancia = extrairDadosSaude(distancia);
@@ -4748,7 +4743,6 @@
             const dadosSol = extrairDadosSaude(exposicaoSol);
             const dadosFrequenciaCardiacaRepouso = extrairDadosSaude(frequenciaCardiacaRepouso);
             const dadosPassosMediosDiarios = extrairDadosSaude(passosMediosDiarios);
-            const dadosSonoProfundoMedio = extrairDadosSaudeSono(sonoProfundoMedio);
             const dadosSonoTotalMedio = extrairDadosSaudeSono(sonoTotalMedio);
 
             criarGraficoSaudeDistancia(dadosDistancia.labels, dadosDistancia.valores);
@@ -4759,14 +4753,15 @@
             criarGraficoSaudeSol(dadosSol.labels, dadosSol.valores);
             criarGraficoSaudeFrequenciaCardiacaRepouso(dadosFrequenciaCardiacaRepouso.labels, dadosFrequenciaCardiacaRepouso.valores);
             criarGraficoSaudePassosMediosDiarios(dadosPassosMediosDiarios.labels, dadosPassosMediosDiarios.valores);
-            criarGraficoSaudeSonoProfundoMedio(dadosSonoProfundoMedio.labels, dadosSonoProfundoMedio.valores, dadosSonoProfundoMedio.textos);
+            // O período vem DD/MM/AAAA; no eixo basta DD/MM/AA.
+            criarGraficoSaudePesos(ultimosPesos.map(item => item.periodo.replace(/\/(\d{2})(\d{2})$/, '/$2')), ultimosPesos.map(item => Number(item.valor)));
             criarGraficoSaudeSonoTotalMedio(dadosSonoTotalMedio.labels, dadosSonoTotalMedio.valores, dadosSonoTotalMedio.textos);
 
             const ultimoTempoPe = obterUltimoItem(tempoPe);
             const ultimoSol = obterUltimoItem(exposicaoSol);
             const ultimoFcRepouso = obterUltimoItem(frequenciaCardiacaRepouso);
             const ultimoPassos = obterUltimoItem(passosMediosDiarios);
-            const ultimoSonoProfundo = obterUltimoItem(sonoProfundoMedio);
+            const ultimoPeso = obterUltimoItem(ultimosPesos);
             const ultimoSonoTotal = obterUltimoItem(sonoTotalMedio);
 
             document.getElementById('titulo-treinos').textContent = `Treinos dos últimos 7 dias atualizados em ${formatarDataUTC(treinosMaisRecentesResposta.criado)}`;
@@ -4796,8 +4791,8 @@
             document.getElementById('card-saude-passos').textContent = ultimoPassos ? formatarNumero(ultimoPassos.valor, 0) : '--';
             document.getElementById('card-saude-passos-periodo').textContent = ultimoPassos ? 'Passos' : '--';
 
-            document.getElementById('card-saude-sono-profundo').textContent = ultimoSonoProfundo ? `${ultimoSonoProfundo.texto}` : '--';
-            document.getElementById('card-saude-sono-profundo-periodo').textContent = ultimoSonoProfundo ? 'Horas' : '--';
+            document.getElementById('card-saude-peso').textContent = ultimoPeso ? formatarNumero(ultimoPeso.valor, 2) : '--';
+            document.getElementById('card-saude-peso-data').textContent = ultimoPeso ? `Kg em ${ultimoPeso.periodo}` : '--';
 
             document.getElementById('card-saude-sono-total').textContent = ultimoSonoTotal ? `${ultimoSonoTotal.texto}` : '--';
             document.getElementById('card-saude-sono-total-periodo').textContent = ultimoSonoTotal ? 'Horas' : '--';
