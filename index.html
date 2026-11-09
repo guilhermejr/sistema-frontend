@@ -107,6 +107,29 @@
             max-width: 100%;
         }
 
+        .cabecalho-acoes {
+            min-width: 0;
+        }
+
+        /* Atualizar só no celular: no computador já existe o F5. */
+        #btn-atualizar-tela {
+            flex-shrink: 0;
+        }
+
+        @media (min-width: 769px) {
+            #btn-atualizar-tela {
+                display: none !important;
+            }
+        }
+
+        #btn-atualizar-tela.girando svg {
+            animation: girar-atualizar 0.8s linear infinite;
+        }
+
+        @keyframes girar-atualizar {
+            to { transform: rotate(360deg); }
+        }
+
         #usuario-logado {
             min-width: 0;
             overflow: hidden;
@@ -731,6 +754,10 @@
                     <h2 class="mb-0">Dashboard</h2>
                 </div>
 
+                <div class="d-flex align-items-stretch gap-2 cabecalho-acoes">
+                <button id="btn-atualizar-tela" class="btn btn-outline-secondary d-flex align-items-center" type="button" title="Atualizar" aria-label="Atualizar">
+                    <svg class="icone-botao m-0" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/></svg>
+                </button>
                 <div class="dropdown cabecalho-usuario">
                     <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Opções da conta">
                         <svg class="icone-botao" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/><path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/></svg><span id="usuario-logado">Usuário</span>
@@ -741,6 +768,7 @@
                         <li><hr class="dropdown-divider"></li>
                         <li><button class="dropdown-item text-danger" type="button" onclick="sair()"><svg class="icone-botao" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/><path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/></svg>Sair</button></li>
                     </ul>
+                </div>
                 </div>
             </div>
         </div>
@@ -5083,7 +5111,21 @@
             await carregarAba(idAbaAtiva());
         }
 
-        document.getElementById('dashboardTabs').addEventListener('shown.bs.tab', function(event) {
+        // Botão do cabeçalho no celular: recarrega a aba aberta sem perder a aba.
+        // As outras recarregam quando forem abertas, porque carregarDashboard() limpa abasCarregadas.
+        document.getElementById('btn-atualizar-tela').addEventListener('click', async function() {
+            if (this.disabled) return;
+            this.disabled = true;
+            this.classList.add('girando');
+            try {
+                await carregarDashboard();
+            } finally {
+                this.disabled = false;
+                this.classList.remove('girando');
+            }
+        });
+
+                document.getElementById('dashboardTabs').addEventListener('shown.bs.tab', function(event) {
             const idAba = idAbaDoBotao(event.target);
             if (!abasCarregadas.has(idAba)) carregarAba(idAba);
         });
