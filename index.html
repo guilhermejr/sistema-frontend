@@ -502,25 +502,25 @@
             flex-grow: 1;
         }
 
-        /* Fora da grade do celular o Gráficos fica na largura do texto. */
-        .gastos-acoes > .btn-group.menu-graficos {
+        /* Fora da grade do celular o Relatório e o Gráficos ficam na largura do texto. */
+        .gastos-acoes > .btn-group.menu-opcoes {
             min-width: 0;
         }
 
-        /* As duas metades do Gráficos são um botão só: as duas abrem o menu, sem a linha
+        /* As duas metades do Relatório e do Gráficos são um botão só: as duas abrem o menu, sem a linha
            entre elas, e o realce de passar o mouse ou de menu aberto pinta as duas. A
            divisão fica só para a seta cair no mesmo lugar da seta do Despesa. */
-        .menu-graficos > .btn:first-child {
+        .menu-opcoes > .btn:first-child {
             border-right-width: 0;
         }
 
-        .menu-graficos > .dropdown-toggle-split {
+        .menu-opcoes > .dropdown-toggle-split {
             border-left-width: 0;
             margin-left: 0;
         }
 
-        .menu-graficos:hover > .btn,
-        .menu-graficos:has(.show) > .btn {
+        .menu-opcoes:hover > .btn,
+        .menu-opcoes:has(.show) > .btn {
             color: var(--bs-btn-hover-color);
             background-color: var(--bs-btn-hover-bg);
             border-color: var(--bs-btn-hover-border-color);
@@ -1510,8 +1510,15 @@
                                 <li><button type="button" class="dropdown-item" id="btn-gastos-transferencia"><svg class="icone-botao" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M1 11.5a.5.5 0 0 0 .5.5h11.793l-3.147 3.146a.5.5 0 0 0 .708.708l4-4a.5.5 0 0 0 0-.708l-4-4a.5.5 0 0 0-.708.708L13.293 11H1.5a.5.5 0 0 0-.5.5m14-7a.5.5 0 0 1-.5.5H2.707l3.147 3.146a.5.5 0 1 1-.708.708l-4-4a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 4H14.5a.5.5 0 0 1 .5.5"/></svg>Transferência</button></li>
                             </ul>
                         </div>
-                        <button type="button" class="btn btn-outline-secondary" id="btn-gastos-relatorio"><svg class="icone-botao" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M10 13.5a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-6a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5zm-2.5.5a.5.5 0 0 1-.5-.5v-4a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5zm-3 0a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5z"/><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/></svg>Relatório</button>
-                        <div class="btn-group menu-graficos">
+                        <div class="btn-group menu-opcoes">
+                            <button type="button" class="btn btn-outline-secondary" id="btn-gastos-relatorio" data-bs-toggle="dropdown" data-bs-reference="parent" aria-expanded="false"><svg class="icone-botao" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M10 13.5a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-6a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5zm-2.5.5a.5.5 0 0 1-.5-.5v-4a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5zm-3 0a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5z"/><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/></svg>Relatório</button>
+                            <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" data-bs-reference="parent" aria-expanded="false" aria-label="Escolher relatório"></button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><button type="button" class="dropdown-item" id="btn-gastos-relatorio-mes"><svg class="icone-botao" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M10 13.5a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-6a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5zm-2.5.5a.5.5 0 0 1-.5-.5v-4a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5zm-3 0a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5z"/><path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/></svg>Do mês</button></li>
+                                <li><button type="button" class="dropdown-item" id="btn-gastos-extrato"><svg class="icone-botao" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5 11.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5m-3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2m0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2m0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2"/></svg>Extrato da conta</button></li>
+                            </ul>
+                        </div>
+                        <div class="btn-group menu-opcoes">
                             <button type="button" class="btn btn-outline-secondary" id="btn-gastos-graficos" data-bs-toggle="dropdown" data-bs-reference="parent" aria-expanded="false"><svg class="icone-botao" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M7.5 1.018a7 7 0 0 0-4.79 11.566L7.5 7.793zm1 0V7.5h6.482A7 7 0 0 0 8.5 1.018M14.982 8.5H8.207l-4.79 4.79A7 7 0 0 0 14.982 8.5M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8"/></svg>Gráficos</button>
                             <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" data-bs-reference="parent" aria-expanded="false" aria-label="Escolher gráfico"></button>
                             <ul class="dropdown-menu dropdown-menu-end">
@@ -2618,6 +2625,60 @@
         </div>
     </div>
 
+    <!-- MODAL EXTRATO DA CONTA -->
+    <div class="modal fade" id="modal-gastos-extrato" tabindex="-1" aria-labelledby="ge-titulo" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ge-titulo">Extrato da conta</h5>
+                    <div class="d-flex gap-2 ms-auto me-3">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-imprimir-extrato title="Imprimir" aria-label="Imprimir"><svg class="icone-botao me-0 me-sm-1" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1"/></svg><span class="d-none d-sm-inline">Imprimir</span></button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-exportar-extrato title="Exportar CSV" aria-label="Exportar CSV"><svg class="icone-botao me-0 me-sm-1" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"/></svg><span class="d-none d-sm-inline">Exportar CSV</span></button>
+                    </div>
+                    <button type="button" class="btn-close ms-0" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-gastos-extrato" class="row g-2 align-items-start form-validado mb-2" novalidate>
+                        <div class="col-12 col-md-4">
+                            <label for="ge-conta" class="form-label">Conta</label>
+                            <select class="form-select" id="ge-conta"></select>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label for="ge-inicio" class="form-label">Data inicial</label>
+                            <div class="campo-data">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="ge-inicio" data-tipo="data" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10" autocomplete="off">
+                                    <button type="button" class="btn btn-outline-secondary botao-calendario" data-calendario aria-label="Abrir calendário" aria-expanded="false"></button>
+                                </div>
+                                <div class="mini-calendario hidden" role="dialog" aria-label="Escolher data"></div>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label for="ge-fim" class="form-label">Data final</label>
+                            <div class="campo-data">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="ge-fim" data-tipo="data" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10" autocomplete="off">
+                                    <button type="button" class="btn btn-outline-secondary botao-calendario" data-calendario aria-label="Abrir calendário" aria-expanded="false"></button>
+                                </div>
+                                <div class="mini-calendario hidden" role="dialog" aria-label="Escolher data"></div>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-2 d-flex flex-column">
+                            <label class="form-label d-none d-md-block">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary">Filtrar</button>
+                        </div>
+                    </form>
+                    <div class="d-none d-print-block text-center mb-2" id="ge-filtro-impressao"></div>
+                    <div id="ge-alerta" class="alert alert-danger hidden" role="alert"></div>
+                    <div id="ge-conteudo"></div>
+                    <div class="d-none d-print-block small-muted text-end mt-3" data-data-impressao></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="modal-gastos-graficos" tabindex="-1" aria-labelledby="gg-titulo" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
@@ -2958,7 +3019,7 @@
         const PERFIS_URL = `${API_BASE}/autenticacao-service/perfis`;
         // Formulários da aba Gastos que usam as máscaras e a validação compartilhadas.
         const FORMULARIOS_GASTOS = ['form-gastos-lancamento', 'form-gastos-movimentacao', 'form-gastos-pagamento',
-            'form-gastos-conta', 'form-gastos-cartao', 'form-gastos-categoria', 'form-gastos-configuracao'];
+            'form-gastos-conta', 'form-gastos-cartao', 'form-gastos-categoria', 'form-gastos-configuracao', 'form-gastos-extrato'];
 
         // Próximos a pagar e a receber: cada lista mostra 5 e "Mostrar mais" pede mais 5,
         // sempre desde o início (o serviço aceita até 100). O tamanho sobrevive às recargas
@@ -7703,6 +7764,16 @@
         // { ano, mes, filtro (chave de FILTROS_RELATORIO_GASTOS), origem ('' = todas, 'conta:ID' ou 'cartao:ID'),
         //   dados (o último relatório carregado) }
         let gastosRelatorio = null;
+        // { contaId, inicio, fim (dd/mm/aaaa, o que está nos campos), dados (o último extrato carregado) }.
+        // A conta e o período ficam enquanto a página está aberta; o primeiro é o ciclo atual.
+        let gastosExtrato = null;
+        // Na coluna Categoria do extrato, o que é uma movimentação (ela não tem categoria).
+        const NOMES_MOVIMENTACAO_EXTRATO = {
+            DEPOSITO: 'Depósito',
+            SAQUE: 'Saque',
+            TRANSFERENCIA: 'Transferência',
+            PAGAMENTO_FATURA: 'Pagamento de fatura'
+        };
         // Situação de cada linha do relatório, para os botões de filtro.
         const FILTROS_RELATORIO_GASTOS = {
             todos: 'Todos',
@@ -9711,6 +9782,162 @@
             }
         }
 
+        // ---------- extrato da conta
+
+        // Pelo menu abre na última conta escolhida (ou na primeira ativa) e no ciclo atual;
+        // voltando de uma edição (manter), com a conta e o período que estavam.
+        async function abrirExtratoGastos(manter = false) {
+            if (!gastosDados) return;
+            const contas = gastosDados.contas;
+            const atual = gastosExtrato?.contaId;
+            const contaId = contas.some(c => c.id === atual) ? atual : (contas.find(c => c.ativo) || contas[0])?.id;
+            const dashboard = gastosDados.dashboard;
+            gastosExtrato = {
+                contaId,
+                inicio: manter && gastosExtrato ? gastosExtrato.inicio : (dashboard?.inicio ? formatarDataISO(dashboard.inicio) : ''),
+                fim: manter && gastosExtrato ? gastosExtrato.fim : (dashboard?.fim ? formatarDataISO(dashboard.fim) : ''),
+                dados: null
+            };
+
+            document.getElementById('ge-conta').innerHTML = contas.map(c =>
+                `<option value="${c.id}" ${c.id === contaId ? 'selected' : ''}>${escapeHtml(c.nome)}${c.ativo ? '' : ' (desativada)'}</option>`).join('');
+            const inicio = document.getElementById('ge-inicio');
+            const fim = document.getElementById('ge-fim');
+            inicio.value = gastosExtrato.inicio;
+            fim.value = gastosExtrato.fim;
+            [inicio, fim].forEach(campo => marcarCampo(campo, null));
+            esconderAlertaModalGastos('ge-alerta');
+            document.getElementById('ge-conteudo').innerHTML = contaId
+                ? '<p class="text-muted text-center my-3">Carregando...</p>'
+                : '<p class="text-muted text-center my-3">Nenhuma conta cadastrada.</p>';
+
+            await trocarModalGastos('modal-gastos-extrato');
+            if (contaId) await carregarExtratoGastos();
+        }
+
+        // Lê os campos, confere as datas e busca. Sem conta não faz nada.
+        async function filtrarExtratoGastos() {
+            if (!gastosExtrato) return;
+            const inicio = document.getElementById('ge-inicio');
+            const fim = document.getElementById('ge-fim');
+            let valido = true;
+            [inicio, fim].forEach(campo => {
+                const mensagem = validarCampo(campo);
+                marcarCampo(campo, mensagem);
+                if (mensagem) valido = false;
+            });
+            if (valido && parseDataBR(inicio.value.trim()) > parseDataBR(fim.value.trim())) {
+                marcarCampo(fim, 'Antes da inicial.');
+                valido = false;
+            }
+            if (!valido) return;
+
+            gastosExtrato = {
+                contaId: Number(document.getElementById('ge-conta').value),
+                inicio: inicio.value.trim(),
+                fim: fim.value.trim(),
+                dados: null
+            };
+            esconderAlertaModalGastos('ge-alerta');
+            document.getElementById('ge-conteudo').innerHTML = '<p class="text-muted text-center my-3">Carregando...</p>';
+            await carregarExtratoGastos();
+        }
+
+        async function carregarExtratoGastos() {
+            const { contaId, inicio, fim } = gastosExtrato;
+            if (!contaId) return;
+            const parametros = inicio && fim ? `?inicio=${encodeURIComponent(inicio)}&fim=${encodeURIComponent(fim)}` : '';
+
+            try {
+                const extrato = await apiRequest({ url: `${GASTOS_URL}/contas/${contaId}/extrato${parametros}` });
+                // Uma resposta que chegou depois de outro filtro não vale mais.
+                if (gastosExtrato.contaId !== contaId || gastosExtrato.inicio !== inicio || gastosExtrato.fim !== fim) return;
+                gastosExtrato.dados = extrato;
+                renderizarExtratoGastos(extrato);
+            } catch (error) {
+                console.error(error);
+                document.getElementById('ge-conteudo').innerHTML = '';
+                if (!sessaoExpirouGastos(error)) mostrarAlertaModalGastos('ge-alerta', error.message || 'Não foi possível carregar o extrato.', 'danger');
+            }
+        }
+
+        // Do mais antigo para o mais novo, como um extrato de banco: o saldo anterior em cima,
+        // cada linha com o saldo depois dela e o saldo final embaixo.
+        function renderizarExtratoGastos(extrato) {
+            const vespera = (() => {
+                const [ano, mes, dia] = extrato.inicio.split('-').map(Number);
+                const data = new Date(ano, mes - 1, dia - 1);
+                return `${doisDigitos(data.getDate())}/${doisDigitos(data.getMonth() + 1)}/${data.getFullYear()}`;
+            })();
+            const classeSaldo = valor => valor < 0 ? 'valor-despesa' : '';
+            const card = (titulo, valor, classe, detalhe) => `
+                <div class="col-6 col-md-3">
+                    <div class="card card-resumo h-100">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted">${titulo}</h6>
+                            <div class="fs-5 fw-bold ${classe}">${formatarMoedaBR(valor)}</div>
+                            <div class="small-muted">${detalhe}</div>
+                        </div>
+                    </div>
+                </div>`;
+            const celulaData = data => `<td class="text-nowrap"><span class="d-none d-sm-inline">${formatarDataISO(data)}</span><span class="d-sm-none">${formatarDataISO(data).slice(0, 5)}</span></td>`;
+
+            const linhas = extrato.linhas.map(l => `
+                <tr ${l.lancamentoId ? `class="item-clicavel" data-editar-lancamento="${l.lancamentoId}" title="Editar lançamento"` : ''}>
+                    ${celulaData(l.data)}
+                    <td>${escapeHtml(l.descricao || '')}<div class="small text-muted d-sm-none">${escapeHtml(l.categoria || '')}</div></td>
+                    <td class="d-none d-sm-table-cell ${l.categoria ? '' : 'text-muted'}">${escapeHtml(l.categoria || NOMES_MOVIMENTACAO_EXTRATO[l.movimentacao] || '')}</td>
+                    <td class="text-end text-nowrap ${l.tipo === 'R' ? 'valor-receita' : 'valor-despesa'}">${l.tipo === 'R' ? '+' : '−'} ${formatarMoedaBR(l.valor)}</td>
+                    <td class="text-end text-nowrap ${classeSaldo(l.saldo)}">${formatarMoedaBR(l.saldo)}</td>
+                </tr>`).join('');
+
+            document.getElementById('ge-filtro-impressao').textContent =
+                `${extrato.conta.nome} · ${formatarDataISO(extrato.inicio)} a ${formatarDataISO(extrato.fim)}`;
+            document.getElementById('ge-conteudo').innerHTML = `
+                <div class="row g-3 mb-3">
+                    ${card('Saldo anterior', extrato.saldoAnterior, classeSaldo(extrato.saldoAnterior), `em ${vespera}`)}
+                    ${card('Entradas', extrato.entradas, 'valor-receita', `${extrato.linhas.filter(l => l.tipo === 'R').length} no período`)}
+                    ${card('Saídas', extrato.saidas, 'valor-despesa', `${extrato.linhas.filter(l => l.tipo === 'D').length} no período`)}
+                    ${card('Saldo final', extrato.saldoFinal, classeSaldo(extrato.saldoFinal), `em ${formatarDataISO(extrato.fim)}`)}
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped align-middle">
+                        <thead><tr><th>Data</th><th>Descrição</th><th class="d-none d-sm-table-cell">Categoria</th><th class="text-end">Valor</th><th class="text-end">Saldo</th></tr></thead>
+                        <tbody>
+                            <tr class="fw-bold">
+                                ${celulaData(extrato.inicio)}
+                                <td colspan="2" class="d-none d-sm-table-cell">Saldo anterior</td>
+                                <td class="d-sm-none">Saldo anterior</td>
+                                <td></td>
+                                <td class="text-end text-nowrap ${classeSaldo(extrato.saldoAnterior)}">${formatarMoedaBR(extrato.saldoAnterior)}</td>
+                            </tr>
+                            ${linhas || '<tr><td colspan="5" class="text-muted text-center">Nada realizado nesta conta no período.</td></tr>'}
+                        </tbody>
+                        <tfoot><tr class="fw-bold">
+                            ${celulaData(extrato.fim)}
+                            <td colspan="2" class="d-none d-sm-table-cell">Saldo final</td>
+                            <td class="d-sm-none">Saldo final</td>
+                            <td></td>
+                            <td class="text-end text-nowrap ${classeSaldo(extrato.saldoFinal)}">${formatarMoedaBR(extrato.saldoFinal)}</td>
+                        </tr></tfoot>
+                    </table>
+                </div>
+                <div class="item-dica">Só o que já foi realizado: lançamentos pendentes não mexem no saldo e ficam de fora.</div>`;
+        }
+
+        // Entrada positiva e saída negativa, com o saldo depois de cada linha.
+        function exportarExtratoGastos() {
+            const extrato = gastosExtrato.dados;
+            const linhas = [
+                [formatarDataISO(extrato.inicio), 'Saldo anterior', '', '', numeroCsv(extrato.saldoAnterior)],
+                ...extrato.linhas.map(l => [formatarDataISO(l.data), l.descricao || '', l.categoria || NOMES_MOVIMENTACAO_EXTRATO[l.movimentacao] || '',
+                    numeroCsv(l.tipo === 'R' ? l.valor : -l.valor), numeroCsv(l.saldo)]),
+                [formatarDataISO(extrato.fim), 'Saldo final', '', '', numeroCsv(extrato.saldoFinal)]
+            ];
+            baixarCsv(`extrato-${slugArquivo(extrato.conta.nome)}-${extrato.inicio}-a-${extrato.fim}.csv`,
+                ['Data', 'Descrição', 'Categoria', 'Valor', 'Saldo'], linhas);
+        }
+
         async function alterarRealizadoGastos(checkbox) {
             esconderAlertaModalGastos('gr-alerta');
             checkbox.disabled = true;
@@ -10158,7 +10385,8 @@
         });
 
         document.getElementById('btn-gastos-transferencia').addEventListener('click', abrirMovimentacaoGastos);
-        document.getElementById('btn-gastos-relatorio').addEventListener('click', () => abrirRelatorioGastos());
+        document.getElementById('btn-gastos-relatorio-mes').addEventListener('click', () => abrirRelatorioGastos());
+        document.getElementById('btn-gastos-extrato').addEventListener('click', () => abrirExtratoGastos());
         document.getElementById('btn-gastos-graficos-mes').addEventListener('click', abrirGraficosGastos);
         document.getElementById('btn-gastos-graficos-cartao').addEventListener('click', abrirFaturasMesesGastos);
         document.getElementById('btn-gastos-cadastros').addEventListener('click', abrirCadastrosGastos);
@@ -10196,6 +10424,8 @@
                 abrirFaturaGastos(gastosFatura.cartaoId, gastosFatura.ano, gastosFatura.mes, gastosFatura.retorno);
             } else if (retorno === 'modal-gastos-relatorio' && gastosRelatorio) {
                 abrirRelatorioGastos(gastosRelatorio.ano, gastosRelatorio.mes);
+            } else if (retorno === 'modal-gastos-extrato' && gastosExtrato) {
+                abrirExtratoGastos(true);
             }
         });
 
@@ -10409,6 +10639,27 @@
                 gastosRelatorio.origem = event.target.value;
                 renderizarRelatorioGastos(gastosRelatorio.dados);
             }
+        });
+
+        // Extrato
+        document.getElementById('form-gastos-extrato').addEventListener('submit', function(event) {
+            event.preventDefault();
+            filtrarExtratoGastos();
+        });
+        // Trocar de conta já filtra, com o período que está nos campos.
+        document.getElementById('ge-conta').addEventListener('change', filtrarExtratoGastos);
+        document.getElementById('modal-gastos-extrato').addEventListener('click', function(event) {
+            if (event.target.closest('[data-imprimir-extrato]')) {
+                const dados = gastosExtrato?.dados;
+                if (dados) imprimirComTitulo(`Extrato - ${dados.conta.nome} - ${formatarDataISO(dados.inicio).replace(/\//g, '-')} a ${formatarDataISO(dados.fim).replace(/\//g, '-')}`);
+                return;
+            }
+            if (event.target.closest('[data-exportar-extrato]')) {
+                if (gastosExtrato?.dados) exportarExtratoGastos();
+                return;
+            }
+            const linha = event.target.closest('[data-editar-lancamento]');
+            if (linha) abrirEdicaoLancamentoGastos(linha.dataset.editarLancamento, 'modal-gastos-extrato');
         });
 
         // Cadastros
