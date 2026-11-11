@@ -1037,24 +1037,19 @@
                 <div class="card filtro-card">
                     <div class="card-body">
                         <div class="row g-3 align-items-end">
-                            <div class="col-12 col-md-3">
+                            <div class="col-12 col-md-4">
                                 <label for="salario-ano" class="form-label">Ano da folha</label>
                                 <!-- Opções montadas por carregarAnosSalario() a partir do GET /ano -->
                                 <select id="salario-ano" class="form-select">
                                     <option value="" disabled>Selecione o ano</option>
                                 </select>
                             </div>
-                            <div class="col-12 col-md-3">
-                                <button id="btn-recarregar-salario" class="btn btn-primary w-100" type="button">
-                                    Atualizar salário
-                                </button>
-                            </div>
-                            <div class="col-12 col-md-3">
-                                <button id="btn-nova-folha" class="btn btn-outline-primary w-100" type="button">
+                            <div class="col-12 col-md-4">
+                                <button id="btn-nova-folha" class="btn btn-primary w-100" type="button">
                                     Nova folha
                                 </button>
                             </div>
-                            <div class="col-12 col-md-3">
+                            <div class="col-12 col-md-4">
                                 <button id="btn-itens-folha" class="btn btn-outline-secondary w-100" type="button">
                                     Itens da folha
                                 </button>
@@ -7354,10 +7349,6 @@
             event.preventDefault();
             await enviarCodigoDoisFatores('desativar', 'dois-fatores-codigo-desativar', 'dois-fatores-desativar',
                 'Dois fatores desativado.');
-        });
-
-        document.getElementById('btn-recarregar-salario').addEventListener('click', async function() {
-            await carregarSomenteSalario();
         });
 
         document.getElementById('salario-ano').addEventListener('change', async function() {
