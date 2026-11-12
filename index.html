@@ -789,7 +789,7 @@
             </button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" id="energia-tab" data-perfil="ROLE_ENERGIA" data-bs-toggle="tab" data-bs-target="#tab-energia" type="button" role="tab">
+            <button class="nav-link" id="energia-tab" data-perfil="ROLE_ENERGIA ROLE_ENERGIA_LEITURA" data-bs-toggle="tab" data-bs-target="#tab-energia" type="button" role="tab">
                 <svg class="icone-aba" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M11.251.068a.5.5 0 0 1 .227.58L9.677 6.5H13a.5.5 0 0 1 .364.843l-8 8.5a.5.5 0 0 1-.842-.49L6.323 9.5H3a.5.5 0 0 1-.364-.843l8-8.5a.5.5 0 0 1 .615-.09zM4.157 8.5H7a.5.5 0 0 1 .478.647L6.11 13.59l5.732-6.09H9a.5.5 0 0 1-.478-.647L9.89 2.41z"/></svg>Energia
             </button>
           </li>
@@ -838,7 +838,7 @@
 
                 <div id="energia-alerta" class="alert hidden" role="alert"></div>
 
-                <div class="d-flex justify-content-end mb-3">
+                <div class="d-flex justify-content-end mb-3" data-perfil="ROLE_ENERGIA">
                     <button id="btn-novo-acompanhamento" class="btn btn-primary" type="button">
                         Novo acompanhamento
                     </button>
@@ -5017,7 +5017,9 @@
         const abasCarregadas = new Set();
 
         // A claim "perfis" do token é a lista separada por vírgula (JwtProvider do
-        // autenticacao-service). Cada botão de aba diz o perfil que exige em data-perfil.
+        // autenticacao-service). Cada botão de aba diz em data-perfil os perfis que a
+        // liberam, separados por espaço; dentro das abas, o mesmo atributo esconde o que
+        // grava (ex.: "Novo acompanhamento" fica só para ROLE_ENERGIA, não para a leitura).
         // Esconder é só conveniência — quem barra é o @PreAuthorize de cada serviço —
         // mas a aba ativa precisa ser permitida: o apiRequest trata o 403 como sessão
         // expirada e derrubaria o login.
@@ -5026,9 +5028,13 @@
             return new Set(String((token && parseJwt(token)?.perfis) || '').split(',').filter(Boolean));
         }
 
+        function temAlgumPerfil(elemento, perfis) {
+            return elemento.dataset.perfil.split(' ').some(perfil => perfis.has(perfil));
+        }
+
         function abasPermitidas() {
             const perfis = perfisDoUsuario();
-            return [...document.querySelectorAll('#dashboardTabs [data-perfil]')].filter(botao => perfis.has(botao.dataset.perfil));
+            return [...document.querySelectorAll('#dashboardTabs [data-perfil]')].filter(botao => temAlgumPerfil(botao, perfis));
         }
 
         // Mostra só as abas do usuário e, se a ativa não é uma delas, ativa a primeira que for.
@@ -5036,6 +5042,11 @@
             const permitidas = abasPermitidas();
             document.querySelectorAll('#dashboardTabs [data-perfil]').forEach(botao => {
                 botao.closest('.nav-item').classList.toggle('hidden', !permitidas.includes(botao));
+            });
+
+            const perfis = perfisDoUsuario();
+            document.querySelectorAll('#dashboard-abas-conteudo [data-perfil]').forEach(elemento => {
+                elemento.classList.toggle('hidden', !temAlgumPerfil(elemento, perfis));
             });
 
             const nenhuma = !permitidas.length;
@@ -11196,7 +11207,7 @@
         const USUARIOS_POR_PAGINA = 10;
         const PERFIL_ADMIN = 'ROLE_ADMIN';
         const NOMES_PERFIS = {
-            ROLE_ADMIN: 'Administração', ROLE_GASTOS: 'Gastos', ROLE_SAUDE: 'Saúde', ROLE_ENERGIA: 'Energia',
+            ROLE_ADMIN: 'Administração', ROLE_GASTOS: 'Gastos', ROLE_SAUDE: 'Saúde', ROLE_ENERGIA: 'Energia', ROLE_ENERGIA_LEITURA: 'Energia (leitura)',
             ROLE_REMEDIOS: 'Remédios', ROLE_SALARIO: 'Salário', ROLE_SUPERMERCADO: 'Supermercado', ROLE_PONTO: 'Ponto', ROLE_LIVROS: 'Livros'
         };
         // { pagina, usuarios, perfis }
