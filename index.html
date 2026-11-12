@@ -11210,6 +11210,8 @@
             ROLE_ADMIN: 'Administração', ROLE_GASTOS: 'Gastos', ROLE_SAUDE: 'Saúde', ROLE_ENERGIA: 'Energia', ROLE_ENERGIA_LEITURA: 'Energia (leitura)',
             ROLE_REMEDIOS: 'Remédios', ROLE_SALARIO: 'Salário', ROLE_SUPERMERCADO: 'Supermercado', ROLE_PONTO: 'Ponto', ROLE_LIVROS: 'Livros'
         };
+        // Perfis que não fazem sentido juntos: marcar um desmarca os outros do grupo.
+        const PERFIS_EXCLUSIVOS = [['ROLE_ENERGIA', 'ROLE_ENERGIA_LEITURA']];
         // { pagina, usuarios, perfis }
         let administracao = null;
         // Usuário aberto no modal; null ao incluir.
@@ -11217,6 +11219,14 @@
 
         function nomePerfil(descricao) {
             return NOMES_PERFIS[descricao] || descricao.replace(/^ROLE_/, '');
+        }
+
+        // O marcar/desmarcar do change já evita o conflito; isto cobre o usuário que
+        // chegou do banco com os dois perfis do grupo.
+        function erroPerfisAdministracao(perfis) {
+            if (!perfis.length) return 'Escolha ao menos um perfil.';
+            const grupo = PERFIS_EXCLUSIVOS.find(g => g.filter(p => perfis.includes(p)).length > 1);
+            return grupo ? `Escolha só um: ${grupo.map(nomePerfil).join(' ou ')}.` : '';
         }
 
 
@@ -11379,8 +11389,9 @@
                 valido = false;
             }
             const perfis = [...document.querySelectorAll('#admin-usuario-perfis input:checked')].map(c => c.value);
-            document.getElementById('admin-usuario-perfis-erro').textContent = perfis.length ? '' : 'Escolha ao menos um perfil.';
-            if (!valido || !perfis.length) return;
+            const erroPerfis = erroPerfisAdministracao(perfis);
+            document.getElementById('admin-usuario-perfis-erro').textContent = erroPerfis;
+            if (!valido || erroPerfis) return;
 
             const nome = document.getElementById('admin-usuario-nome').value.trim();
             const botao = document.getElementById('admin-usuario-salvar');
@@ -11424,8 +11435,16 @@
             event.preventDefault();
             await salvarUsuarioAdministracao();
         });
-        document.getElementById('admin-usuario-perfis').addEventListener('change', function() {
-            if (this.querySelector('input:checked')) document.getElementById('admin-usuario-perfis-erro').textContent = '';
+        document.getElementById('admin-usuario-perfis').addEventListener('change', function(event) {
+            const marcado = event.target;
+            if (marcado.checked) {
+                const grupo = PERFIS_EXCLUSIVOS.find(g => g.includes(marcado.value)) || [];
+                this.querySelectorAll('input:checked').forEach(c => {
+                    if (c !== marcado && grupo.includes(c.value)) c.checked = false;
+                });
+            }
+            const perfis = [...this.querySelectorAll('input:checked')].map(c => c.value);
+            if (!erroPerfisAdministracao(perfis)) document.getElementById('admin-usuario-perfis-erro').textContent = '';
         });
         document.getElementById('tab-administracao').addEventListener('click', function(event) {
             const status = event.target.closest('[data-admin-status]');
