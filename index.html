@@ -8065,11 +8065,16 @@
         function renderizarConexaoBancoGastos() {
             const conexao = gastosConexaoBanco?.disponivel ? gastosConexaoBanco : null;
             const linha = document.getElementById('gastos-banco');
-            // Cada parte inteira: no celular a próxima atualização desce para a linha de baixo.
-            const partes = conexao?.atualizado ? [`Banco atualizado na Pluggy em ${formatarDataHoraUTC(conexao.atualizado)}`] : [];
-            if (partes.length && conexao.proximaAtualizacao) partes.push(`próxima ${formatarDataHoraUTC(conexao.proximaAtualizacao)}`);
-            linha.innerHTML = partes.map(p => `<span class="text-nowrap">${p}</span>`).join(' · ');
-            linha.classList.toggle('hidden', !partes.length);
+            // Com mais de um banco, uma linha para cada: cada um atualiza no seu horário.
+            const conexoes = conexao?.conexoes?.length > 1 ? conexao.conexoes : (conexao ? [conexao] : []);
+            const linhas = conexoes.filter(c => c.atualizado).map(c => {
+                // Cada parte inteira: no celular a próxima atualização desce para a linha de baixo.
+                const partes = [`${escapeHtml(c.banco || 'Banco')} atualizado na Pluggy em ${formatarDataHoraUTC(c.atualizado)}`];
+                if (c.proximaAtualizacao) partes.push(`próxima ${formatarDataHoraUTC(c.proximaAtualizacao)}`);
+                return `<div>${partes.map(p => `<span class="text-nowrap">${p}</span>`).join(' · ')}</div>`;
+            });
+            linha.innerHTML = linhas.join('');
+            linha.classList.toggle('hidden', !linhas.length);
             const alerta = document.getElementById('gastos-banco-alerta');
             alerta.innerHTML = (conexao?.alertas || []).map(escapeHtml).join('<br>');
             alerta.classList.toggle('hidden', !alerta.innerHTML);
