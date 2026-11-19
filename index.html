@@ -1013,9 +1013,9 @@
                                         <th class="text-end">Saldo</th>
                                         <th class="text-end">TUSD</th>
                                         <th class="text-end">TE</th>
-                                        <th class="text-end">Bandeira</th>
+                                        <th class="text-end" id="tabela-energia-contas-bandeira">Bandeira</th>
                                         <th class="text-end">IP</th>
-                                        <th class="text-end">Desconto</th>
+                                        <th class="text-end" id="tabela-energia-contas-desconto">Desconto</th>
                                         <th class="text-end">Total</th>
                                     </tr>
                                 </thead>
@@ -4704,6 +4704,14 @@
 
             const tbody = document.getElementById('tabela-energia-contas-body');
             const tfoot = document.getElementById('tabela-energia-contas-total');
+
+            // Bandeira e Desconto somem quando todas as contas exibidas estão zeradas.
+            const temValor = campo => contas.some(conta => Number(conta[campo] || 0) !== 0);
+            const mostrarBandeira = !contas.length || temValor('bandeira');
+            const mostrarDesconto = !contas.length || temValor('desconto');
+            document.getElementById('tabela-energia-contas-bandeira').classList.toggle('d-none', !mostrarBandeira);
+            document.getElementById('tabela-energia-contas-desconto').classList.toggle('d-none', !mostrarDesconto);
+
             if (!contas.length) {
                 tbody.innerHTML = '<tr><td colspan="13" class="text-center text-muted">Nenhuma conta cadastrada.</td></tr>';
                 tfoot.innerHTML = '';
@@ -4722,9 +4730,9 @@
                     <td class="text-end">${kwhContaEnergia(soma('saldoMes'))}</td>
                     <td class="text-end">${formatarMoedaBR(soma('tusd'))}</td>
                     <td class="text-end">${formatarMoedaBR(soma('te'))}</td>
-                    <td class="text-end">${formatarMoedaBR(soma('bandeira'))}</td>
+                    ${mostrarBandeira ? `<td class="text-end">${formatarMoedaBR(soma('bandeira'))}</td>` : ''}
                     <td class="text-end">${formatarMoedaBR(soma('iluminacaoPublica'))}</td>
-                    <td class="text-end">${formatarMoedaBR(soma('desconto'))}</td>
+                    ${mostrarDesconto ? `<td class="text-end">${formatarMoedaBR(soma('desconto'))}</td>` : ''}
                     <td class="text-end">${formatarMoedaBR(soma('valorTotal'))}</td>
                 </tr>`;
 
@@ -4739,9 +4747,9 @@
                     <td class="text-end">${kwhContaEnergia(conta.saldoMes)}</td>
                     <td class="text-end">${formatarMoedaBR(conta.tusd)}</td>
                     <td class="text-end">${formatarMoedaBR(conta.te)}</td>
-                    <td class="text-end">${formatarMoedaBR(conta.bandeira)}</td>
+                    ${mostrarBandeira ? `<td class="text-end">${formatarMoedaBR(conta.bandeira)}</td>` : ''}
                     <td class="text-end">${formatarMoedaBR(conta.iluminacaoPublica)}</td>
-                    <td class="text-end">${formatarMoedaBR(conta.desconto)}</td>
+                    ${mostrarDesconto ? `<td class="text-end">${formatarMoedaBR(conta.desconto)}</td>` : ''}
                     <td class="text-end fw-semibold">${formatarMoedaBR(conta.valorTotal)}</td>
                 </tr>`).join('');
         }
