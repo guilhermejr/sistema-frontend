@@ -911,8 +911,12 @@
                 </div>
 
                 <div class="row mb-2">
-                    <div class="col-12">
-                        <h5 class="mb-3">Últimos 12 meses</h5>
+                    <div class="col-12 d-flex align-items-center justify-content-between gap-2 mb-3">
+                        <h5 id="energia-periodo-titulo" class="mb-0">Últimos 12 meses</h5>
+                        <!-- Anos montados por preencherAnosEnergia() a partir das contas cadastradas -->
+                        <select id="energia-ano" class="form-select form-select-sm w-auto" aria-label="Período">
+                            <option value="">Últimos 12 meses</option>
+                        </select>
                     </div>
 
                     <div class="col-12 col-lg-4 mb-3">
@@ -999,7 +1003,7 @@
                 </div>
                 <div class="card table-card">
                     <div class="card-body">
-                        <h5 class="mb-3">Últimas 12 contas</h5>
+                        <h5 id="energia-contas-titulo" class="mb-3">Últimas 12 contas</h5>
                         <div class="table-responsive">
                             <table class="table table-striped align-middle tabela-contas-energia">
                                 <thead class="table-light">
@@ -4045,6 +4049,8 @@
             document.getElementById('card-total-pago').textContent = '--';
             document.getElementById('card-total-real').textContent = '--';
             document.getElementById('card-total-diferenca').textContent = '--';
+            preencherAnosEnergia([]);
+            document.getElementById('energia-periodo-titulo').textContent = 'Últimos 12 meses';
             renderizarContasEnergia([]);
 
 
@@ -4695,12 +4701,15 @@
             return formatarNumero(valor, Number.isInteger(Number(valor)) ? 0 : 1);
         }
 
-        // Resumo de cada conta; a mais recente primeiro.
-        function renderizarContasEnergia(acompanhamentos) {
+        // Resumo de cada conta; a mais recente primeiro. Com ano, todas as contas
+        // que terminam nele; sem ano, as 12 últimas.
+        function renderizarContasEnergia(acompanhamentos, ano) {
             const contas = (Array.isArray(acompanhamentos) ? acompanhamentos : [])
-                .slice()
+                .filter(conta => !ano || String(conta.fim).startsWith(`${ano}-`))
                 .sort((a, b) => String(b.fim).localeCompare(String(a.fim)))
-                .slice(0, 12);
+                .slice(0, ano ? undefined : 12);
+
+            document.getElementById('energia-contas-titulo').textContent = ano ? `Contas de ${ano}` : 'Últimas 12 contas';
 
             const tbody = document.getElementById('tabela-energia-contas-body');
             const tfoot = document.getElementById('tabela-energia-contas-total');
@@ -4754,8 +4763,34 @@
                 </tr>`).join('');
         }
 
+        function obterAnoEnergia() {
+            return document.getElementById('energia-ano').value;
+        }
+
+        // Séries mensais: sem ano, os últimos 12 meses; com ano, as contas daquele ano.
+        function urlSerieEnergia(caminho, ano) {
+            return `${ENERGIA_BASE_URL}${caminho}${ano ? `?ano=${encodeURIComponent(ano)}` : ''}`;
+        }
+
+        // Os anos saem das contas cadastradas (ano do fim da leitura), o mais recente
+        // primeiro. O ano escolhido se mantém se ainda existir.
+        function preencherAnosEnergia(acompanhamentos) {
+            const anos = [...new Set((Array.isArray(acompanhamentos) ? acompanhamentos : [])
+                .map(conta => String(conta.fim || '').slice(0, 4))
+                .filter(ano => /^\d{4}$/.test(ano)))]
+                .sort((a, b) => b - a);
+
+            const select = document.getElementById('energia-ano');
+            const atual = select.value;
+            select.innerHTML = '<option value="">Últimos 12 meses</option>' +
+                anos.map(ano => `<option value="${ano}">${ano}</option>`).join('');
+            select.value = anos.includes(atual) ? atual : '';
+        }
+
         async function carregarEnergiaDashboard() {
             destruirGraficosEnergia();
+
+            const ano = obterAnoEnergia();
 
             const [
                 geracao30Dias,
@@ -4771,19 +4806,21 @@
                 acompanhamentos
             ] = await Promise.all([
                 apiRequest({ url: `${ENERGIA_BASE_URL}geracaoultimos30dias` }),
-                apiRequest({ url: `${ENERGIA_BASE_URL}geracaoultimos12meses` }),
-                apiRequest({ url: `${ENERGIA_BASE_URL}consumoultimos12meses` }),
-                apiRequest({ url: `${ENERGIA_BASE_URL}saldoultimos12meses` }),
+                apiRequest({ url: urlSerieEnergia('geracaoultimos12meses', ano) }),
+                apiRequest({ url: urlSerieEnergia('consumoultimos12meses', ano) }),
+                apiRequest({ url: urlSerieEnergia('saldoultimos12meses', ano) }),
                 apiRequest({ url: `${ENERGIA_BASE_URL}contaultimomes` }),
                 apiRequest({ url: `${ENERGIA_TOTAL_URL}` }),
                 apiRequest({ url: `${ENERGIA_BASE_URL}geradosdesdeultimaleitura` }),
-                apiRequest({ url: `${ENERGIA_BASE_URL}valorultimos12meses` }),
-                apiRequest({ url: `${ENERGIA_BASE_URL}geracao12mesesanteriores` }),
-                apiRequest({ url: `${ENERGIA_BASE_URL}consumo12mesesanteriores` }),
+                apiRequest({ url: urlSerieEnergia('valorultimos12meses', ano) }),
+                apiRequest({ url: urlSerieEnergia('geracao12mesesanteriores', ano) }),
+                apiRequest({ url: urlSerieEnergia('consumo12mesesanteriores', ano) }),
                 apiRequest({ url: ENERGIA_ACOMPANHAMENTOS_URL })
             ]);
 
-            renderizarContasEnergia(acompanhamentos);
+            preencherAnosEnergia(acompanhamentos);
+            document.getElementById('energia-periodo-titulo').textContent = ano || 'Últimos 12 meses';
+            renderizarContasEnergia(acompanhamentos, ano);
 
             const geracao12Ordenado = ordenarCrescente(geracao12Meses);
             const consumo12Ordenado = ordenarCrescente(consumo12Meses);
@@ -7377,6 +7414,8 @@
             salvarAnoSalario(this.value);
             await carregarSomenteSalario();
         });
+
+        document.getElementById('energia-ano').addEventListener('change', carregarSomenteEnergia);
 
         document.getElementById('btn-novo-acompanhamento').addEventListener('click', abrirNovoAcompanhamento);
 
