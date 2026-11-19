@@ -1010,6 +1010,7 @@
                                         <th class="text-end">Injetada</th>
                                         <th class="text-end" title="Concessionária">Conc.</th>
                                         <th class="text-end">Consumo</th>
+                                        <th class="text-end">Saldo</th>
                                         <th class="text-end">TUSD</th>
                                         <th class="text-end">TE</th>
                                         <th class="text-end">Bandeira</th>
@@ -1020,7 +1021,7 @@
                                 </thead>
                                 <tbody id="tabela-energia-contas-body">
                                     <tr>
-                                        <td colspan="12" class="text-center text-muted">Nenhum dado carregado.</td>
+                                        <td colspan="13" class="text-center text-muted">Nenhum dado carregado.</td>
                                     </tr>
                                 </tbody>
                                 <tfoot id="tabela-energia-contas-total"></tfoot>
@@ -4704,7 +4705,7 @@
             const tbody = document.getElementById('tabela-energia-contas-body');
             const tfoot = document.getElementById('tabela-energia-contas-total');
             if (!contas.length) {
-                tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted">Nenhuma conta cadastrada.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="13" class="text-center text-muted">Nenhuma conta cadastrada.</td></tr>';
                 tfoot.innerHTML = '';
                 return;
             }
@@ -4718,6 +4719,7 @@
                     <td class="text-end">${kwhContaEnergia(soma('energiaInjetada'))}</td>
                     <td class="text-end">${kwhContaEnergia(soma('energiaConsumidaConcessionaria'))}</td>
                     <td class="text-end">${kwhContaEnergia(soma('energiaConsumidaTotal'))}</td>
+                    <td class="text-end">${kwhContaEnergia(soma('saldoMes'))}</td>
                     <td class="text-end">${formatarMoedaBR(soma('tusd'))}</td>
                     <td class="text-end">${formatarMoedaBR(soma('te'))}</td>
                     <td class="text-end">${formatarMoedaBR(soma('bandeira'))}</td>
@@ -4734,6 +4736,7 @@
                     <td class="text-end">${kwhContaEnergia(conta.energiaInjetada)}</td>
                     <td class="text-end">${kwhContaEnergia(conta.energiaConsumidaConcessionaria)}</td>
                     <td class="text-end">${kwhContaEnergia(conta.energiaConsumidaTotal)}</td>
+                    <td class="text-end">${kwhContaEnergia(conta.saldoMes)}</td>
                     <td class="text-end">${formatarMoedaBR(conta.tusd)}</td>
                     <td class="text-end">${formatarMoedaBR(conta.te)}</td>
                     <td class="text-end">${formatarMoedaBR(conta.bandeira)}</td>
