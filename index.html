@@ -1643,7 +1643,10 @@
                     <div class="col-12 col-lg-6">
                         <div class="card table-card">
                             <div class="card-body">
-                                <h5 class="mb-1">Próximos a pagar</h5>
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <h5 class="mb-0">Próximos a pagar</h5>
+                                    <button type="button" class="btn btn-link btn-sm p-0 botao-olho" data-ocultar="aPagar" aria-label="Mostrar ou ocultar valores a pagar"></button>
+                                </div>
                                 <div class="item-dica mb-2">Despesas pendentes e faturas, atrasadas primeiro.</div>
                                 <ul id="gastos-a-pagar" class="list-group list-group-flush lista-gastos"></ul>
                             </div>
@@ -1652,7 +1655,10 @@
                     <div class="col-12 col-lg-6">
                         <div class="card table-card">
                             <div class="card-body">
-                                <h5 class="mb-1">Próximos a receber</h5>
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <h5 class="mb-0">Próximos a receber</h5>
+                                    <button type="button" class="btn btn-link btn-sm p-0 botao-olho" data-ocultar="aReceber" aria-label="Mostrar ou ocultar valores a receber"></button>
+                                </div>
                                 <div class="item-dica mb-2">Receitas pendentes, atrasadas primeiro.</div>
                                 <ul id="gastos-a-receber" class="list-group list-group-flush lista-gastos"></ul>
                             </div>
@@ -3054,8 +3060,8 @@
         // da aba, para a lista não encolher depois de efetivar um item lá de baixo. Fica
         // aqui porque limparAbaGastos() roda na carga da página.
         const AGENDA_GASTOS = {
-            pagar: { lista: 'gastos-a-pagar', chave: 'proximosPagar', vazio: 'Nada a pagar.', rotulo: 'Pagar' },
-            receber: { lista: 'gastos-a-receber', chave: 'proximosReceber', vazio: 'Nada a receber.', rotulo: 'Receber' }
+            pagar: { lista: 'gastos-a-pagar', chave: 'proximosPagar', vazio: 'Nada a pagar.', rotulo: 'Pagar', ocultar: 'aPagar' },
+            receber: { lista: 'gastos-a-receber', chave: 'proximosReceber', vazio: 'Nada a receber.', rotulo: 'Receber', ocultar: 'aReceber' }
         };
         const ITENS_AGENDA_GASTOS = 5;
         const MAXIMO_AGENDA_GASTOS = 100;
@@ -8265,14 +8271,14 @@
         }
 
         function renderizarListaAgendaGastos(lado) {
-            const { lista, chave, vazio, rotulo } = AGENDA_GASTOS[lado];
+            const { lista, chave, vazio, rotulo, ocultar } = AGENDA_GASTOS[lado];
             const agenda = gastosDados.dashboard[chave];
             const mais = agenda.temMais && agenda.itens.length < MAXIMO_AGENDA_GASTOS
                 ? `<li class="list-group-item text-center">
                         <button type="button" class="btn btn-sm btn-link text-decoration-none" data-agenda-mais="${lado}">Mostrar mais ${ITENS_AGENDA_GASTOS}</button>
                    </li>`
                 : '';
-            document.getElementById(lista).innerHTML = renderizarAgendaGastos(agenda.itens, vazio, rotulo) + mais;
+            document.getElementById(lista).innerHTML = renderizarAgendaGastos(agenda.itens, vazio, rotulo, valoresOcultosGastos().has(ocultar)) + mais;
         }
 
         async function mostrarMaisAgendaGastos(botao) {
@@ -8295,8 +8301,9 @@
             }
         }
 
-        // A linha abre a edição (ou a fatura); o botão efetiva com um clique.
-        function renderizarAgendaGastos(itens, vazio, rotuloEfetivar) {
+        // A linha abre a edição (ou a fatura); o botão efetiva com um clique. Com o olho
+        // fechado só o valor some; descrição e data continuam.
+        function renderizarAgendaGastos(itens, vazio, rotuloEfetivar, oculto) {
             if (!itens?.length) return itemVazioGastos(vazio);
 
             return itens.map(item => {
@@ -8310,7 +8317,7 @@
                             <div class="small-muted">${formatarDataISO(item.data)}${seloVencimentoAgendaGastos(item)}</div>
                         </div>
                         <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                            <span class="fw-semibold">${formatarMoedaBR(item.valor)}</span>
+                            <span class="fw-semibold">${oculto ? 'R$ ••••' : formatarMoedaBR(item.valor)}</span>
                             ${botaoEfetivarAgendaGastos(item, rotuloEfetivar)}
                         </div>
                     </li>`;
