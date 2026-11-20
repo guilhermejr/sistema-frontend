@@ -9398,6 +9398,8 @@
         async function moverFaturaGastos(botao) {
             const destino = somarMeses(gastosFatura.ano, gastosFatura.mes, Number(botao.dataset.delta));
             const lancamento = gastosFatura.dados.lancamentos.find(l => String(l.id) === botao.dataset.moverFatura);
+            if (Number(botao.dataset.delta) > 0
+                && !confirm(`Levar "${lancamento?.descricao || 'esta compra'}" para a fatura de ${nomeMes(destino.ano, destino.mes)}?`)) return;
             esconderAlertaModalGastos('gf-alerta');
             botao.disabled = true;
 
