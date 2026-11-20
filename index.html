@@ -656,6 +656,12 @@
                 font-size: 9pt;
             }
 
+            /* Extrato: os valores dos cards cabem numa linha mesmo acima de R$ 10.000,00. */
+            #ge-conteudo .ge-valor {
+                font-size: 1rem !important;
+                white-space: nowrap;
+            }
+
             /* Fatura: uma linha por compra. A descrição fica com o espaço que sobra e é
                cortada com reticências; a parcela e as marcas (fixa, transferida, não conciliado) ficam. */
             #gf-conteudo td {
@@ -9981,7 +9987,7 @@
                     <div class="card card-resumo h-100">
                         <div class="card-body text-center">
                             <h6 class="text-muted">${titulo}</h6>
-                            <div class="fs-5 fw-bold ${classe}">${formatarMoedaBR(valor)}</div>
+                            <div class="ge-valor fs-5 fw-bold ${classe}">${formatarMoedaBR(valor)}</div>
                             <div class="small-muted">${detalhe}</div>
                         </div>
                     </div>
